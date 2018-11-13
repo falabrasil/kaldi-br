@@ -46,19 +46,20 @@ This script specially fulfills the files inside `local/dict` dir. A dependency
 is the `g2p` software, which files must be in the same directory of the `fb_02_define_localdict.sh` script. 
 The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.
 
-A [Demo Audio Corpora][1] is available   
+A Demo Audio Corpora is available at [https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
 
 If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the DNN script works properly[][2].   
 
 
 
-A nice tutorial by [Eleanor Chodroff][3]
-might also be worthy taking a look at.
+A nice tutorial by [Eleanor Chodroff][3](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html)
+might also be worthy taking a look at.   
+
 
 [1]:https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git
 [2]:https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ
 [3]:https://www.eleanorchodroff.com/tutorial/kaldi/
 
 __Grupo FalaBrasil (2018)__   
-__Author: Cassio Batista - cassio.batista.13@gmail.com__   
-       Ana Larissa Dias - larissa.engcomp@gmail.com__    
+__Author: Cassio Batista - cassio.batista.13@gmail.com__
+        __Ana Larissa Dias - larissa.engcomp@gmail.com__
