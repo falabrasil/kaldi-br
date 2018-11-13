@@ -47,7 +47,9 @@ is the `g2p` software, which files must be in the same directory of the fb\_02\_
 The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.
 
 A Demo Audio Corpora is available at https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git
-If you are using the Demo corpora or another small corpora, you will need to change the value of the num\_utts\_subset parameter in the file kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh, from 300 to 20 in order to the DNN script works properly.(https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ)
+If you are using the Demo corpora or another similar small corpora, you will need to change the value of the num\_utts\_subset parameter in the file kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh, from 300 to 20 in order to the DNN script works properly.
+Reference:
+(https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ)
 
  
 
