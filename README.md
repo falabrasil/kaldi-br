@@ -46,10 +46,10 @@ This script specially fulfills the files inside `local/dict` dir. A dependency
 is the `g2p` software, which files must be in the same directory of the `fb_02_define_localdict.sh` script. 
 The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.
 
-* __utils\run.sh__:
+* __util\run.sh__:
 This file is the script for training the acoustic models.
 
-* __utils\RESULTS__:
+* __util\RESULTS__:
 This file contains the results of the acoustic models obtained using the Demo Audio Corpora, which is available at [https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
 
 
