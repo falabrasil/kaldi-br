@@ -48,7 +48,7 @@ The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.
 
 A Demo Audio Corpora is available at [https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
 
-If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the DNN script works properly[][2].   
+If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the DNN script works properly[Reference][2].   
 
 
 
@@ -61,5 +61,5 @@ might also be worthy taking a look at.
 [3]:https://www.eleanorchodroff.com/tutorial/kaldi/
 
 __Grupo FalaBrasil (2018)__   
-__Author: Cassio Batista - cassio.batista.13@gmail.com__
+__Author: Cassio Batista - cassio.batista.13@gmail.com__   
        __Ana Larissa Dias - larissa.engcomp@gmail.com__
