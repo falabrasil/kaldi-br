@@ -41,12 +41,17 @@ divided as training set and test set, and the files within the dirs are
 data-dependent. The folders `train/spkTR_n` and `test/spkTE_n` contain
 symbolic links to the actual wav-transcription base dir.
 
-* __fb\_02\_define\_localdict.sh__
+* __fb\_02\_define\_localdict.sh__:
 This script specially fulfills the files inside `local/dict` dir. A dependency
 is the `g2p` software, which files must be in the same directory of the `fb_02_define_localdict.sh` script. 
 The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.
 
-A Demo Audio Corpora is available at [https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
+* __utils\run.sh__:
+This file is the script for training the acoustic models.
+
+* __utils\RESULTS__:
+This file contains the results of the acoustic models obtained using the Demo Audio Corpora, which is available at [https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
+
 
 If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the [DNN script works properly][2].   
 
