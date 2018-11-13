@@ -11,8 +11,8 @@
 # Reference:
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
-SPLIT_RANDOM=false
-dir_test="frases16k"
+SPLIT_RANDOM=true
+#dir_test="frases16k"
 
 if test $# -ne 2
 then
@@ -116,7 +116,8 @@ function create_wav_scp() {
 		uttID="${spkrID}_$(basename $line)"
 		
 		# FIXME: readlink doesn't work on symlinks, it gets the original abs path
-		echo "$uttID ${filepath}/${filename}" >> ${1}/data/${2}/wav.scp
+		#echo "$uttID ${filepath}/${filename}" >> ${1}/data/${2}/wav.scp
+		echo "$uttID ${filepath}" >> ${1}/data/${2}/wav.scp
 	done < ${2}.${3}.list
 }
 

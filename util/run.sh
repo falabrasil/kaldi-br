@@ -1,11 +1,33 @@
+#!/bin/bash
+#
+# Cassio Batista   - cassio.batista.13@gmail.com
+# Ana Larissa Dias - larissa.engcomp@gmail.com
+# Ter Nov  6 14:11:05 -03 2018
+# http://kaldi-asr.org/doc/kaldi_for_dummies.html
+
 . ./path.sh || exit 1
 . ./cmd.sh || exit 1
 
-nj=12      # number of parallel jobs 
+nj=2      # number of parallel jobs 
 lm_order=3 # language model order (n-gram quantity)
 
 # Safety mechanism (possible running this script with modified arguments)
 . utils/parse_options.sh || exit 1
+
+#DNN parameters 
+minibatch_size=512
+num_epochs=8 
+num_epochs_extra=5 
+num_hidden_layers=2
+initial_learning_rate=0.02 
+final_learning_rate=0.004
+#pnorm_input_dim=300 
+#pnorm_output_dim=3000
+
+#DNN parameters for small data
+pnorm_input_dim=1000 
+pnorm_output_dim=200
+
 
 
 # Removing previously created data (from last run.sh execution)
@@ -79,6 +101,8 @@ if [ -z $loc ]; then
    fi
 fi
 
+cat data/train/corpus.txt data/test/corpus.txt > data/local/corpus.txt
+
 local=data/local
 mkdir $local/tmp
 ngram-count -order $lm_order -write-vocab $local/tmp/vocab-full.txt -wbdiscount -text $local/corpus.txt -lm $local/tmp/lm.arpa
@@ -121,11 +145,9 @@ echo
 echo "===== GETTING MONOPHONE RESULTS ====="
 echo
 
-
 echo "====== MONOPHONE ======" >> RESULTS
 for x in exp/mono*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
 echo >> RESULTS
-
 
 
 echo
@@ -1119,6 +1141,8 @@ echo "====== TRI3(LDA-MLLT) ======" >> RESULTS
 for x in exp/tri3_*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
 echo >> RESULTS
 
+
+ 
 echo
 echo "============== DNN =============="
 echo
@@ -1127,42 +1151,61 @@ echo
 echo "===== DNN 500 TRAINING AND DECODING ====="
 echo
 
+
 steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
-	--minibatch-size 128 --parallel-opts "--num-threads 16" \
-	--num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 \
-	--add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 \
-	--initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd \
-	"$decode_cmd" --pnorm-input-dim 1000 \
-	--pnorm-output-dim 200 data/train data/lang exp/tri3_500-2_ali exp/nnet4d_tri3_500-2
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim \
+	--pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_500-2_ali exp/nnet4d2_tri3_500-2
 
 echo ‘finished training dnn_500-2’ >> log
 
 steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
-	--nj $nj --transform-dir exp/tri3_500-2/decode_fmllr exp/tri3_500-2/graph data/test exp/nnet4d_tri3_500-2/decode 
+	--nj $nj --transform-dir exp/tri3_500-2/decode exp/tri3_500-2/graph data/test exp/nnet4d2_tri3_500-2/decode 
 
 echo ‘finished decoding dnn_500-2’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_500-4_ali exp/nnet4d_tri3_500-4
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_500-4_ali exp/nnet4d2_tri3_500-4
 
 echo ‘finished training dnn_500-4’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_500-4/decode_fmllr exp/tri3_500-4/graph data/test exp/nnet4d_tri3_500-4/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_500-4/decode exp/tri3_500-4/graph data/test exp/nnet4d2_tri3_500-4/decode 
 
 echo ‘finished decoding dnn_500-4’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_500-8_ali exp/nnet4d_tri3_500-8
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_500-8_ali exp/nnet4d2_tri3_500-8
 
 echo ‘finished training dnn_500-8’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_500-8/decode_fmllr exp/tri3_500-8/graph data/test exp/nnet4d_tri3_500-8/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_500-8/decode exp/tri3_500-8/graph data/test exp/nnet4d2_tri3_500-8/decode
 
 echo ‘finished decoding dnn_500-8’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_500-16_ali exp/nnet4d_tri3_500-16
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_500-16_ali exp/nnet4d2_tri3_500-16
 
 echo ‘finished training dnn_500-16’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_500-16/decode_fmllr exp/tri3_500-16/graph data/test exp/nnet4d_tri3_500-16/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_500-16/decode exp/tri3_500-16/graph data/test exp/nnet4d2_tri3_500-16/decode
 
 echo ‘finished decoding dnn_500-16’ >> log
 
@@ -1171,35 +1214,59 @@ echo
 echo "===== DNN 1k TRAINING AND DECODING ====="
 echo
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_1k-2_ali exp/nnet4d_tri3_1k-2
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_1k-2_ali exp/nnet4d2_tri3_1k-2
 
 echo ‘finished training dnn_1k-2’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_1k-2/decode_fmllr exp/tri3_1k-2/graph data/test exp/nnet4d_tri3_1k-2/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_1k-2/decode exp/tri3_1k-2/graph data/test exp/nnet4d2_tri3_1k-2/decode 
 
 echo ‘finished decoding dnn_1k-2’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_1k-4_ali exp/nnet4d_tri3_1k-4
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_1k-4_ali exp/nnet4d2_tri3_1k-4
 
 echo ‘finished training dnn_1k-4’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_1k-4/decode_fmllr exp/tri3_1k-4/graph data/test exp/nnet4d_tri3_1k-4/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_1k-4/decode exp/tri3_1k-4/graph data/test exp/nnet4d2_tri3_1k-4/decode 
 
 echo ‘finished decoding dnn_1k-4’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_1k-8_ali exp/nnet4d_tri3_1k-8
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_1k-8_ali exp/nnet4d2_tri3_1k-8
 
 echo ‘finished training dnn_1k-8’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_1k-8/decode_fmllr exp/tri3_1k-8/graph data/test exp/nnet4d_tri3_1k-8/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_1k-8/decode exp/tri3_1k-8/graph data/test exp/nnet4d2_tri3_1k-8/decode 
 
 echo ‘finished decoding dnn_1k-8’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_1k-16_ali exp/nnet4d_tri3_1k-16
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16"\
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_1k-16_ali exp/nnet4d2_tri3_1k-16
 
 echo ‘finished training dnn_1k-16’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_1k-16/decode_fmllr exp/tri3_1k-16/graph data/test exp/nnet4d_tri3_1k-16/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_1k-16/decode exp/tri3_1k-16/graph data/test exp/nnet4d2_tri3_1k-16/decode 
 
 echo ‘finished decoding dnn_1k-16’ >> log
 
@@ -1207,35 +1274,59 @@ echo
 echo "===== DNN 2K TRAINING AND DECODING ====="
 echo
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_2k-2_ali exp/nnet4d_tri3_2k-2
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_2k-2_ali exp/nnet4d2_tri3_2k-2
 
 echo ‘finished training dnn_2k-2’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_2k-2/decode_fmllr exp/tri3_2k-2/graph data/test exp/nnet4d_tri3_2k-2/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	 --nj $nj --transform-dir exp/tri3_2k-2/decode exp/tri3_2k-2/graph data/test exp/nnet4d2_tri3_2k-2/decode 
 
 echo ‘finished decoding dnn_2k-2’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_2k-4_ali exp/nnet4d_tri3_2k-4
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16\
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_2k-4_ali exp/nnet4d2_tri3_2k-4
 
 echo ‘finished training dnn_2k-4’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_2k-4/decode_fmllr exp/tri3_2k-4/graph data/test exp/nnet4d_tri3_2k-4/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_2k-4/decode exp/tri3_2k-4/graph data/test exp/nnet4d2_tri3_2k-4/decode
 
 echo ‘finished decoding dnn_2k-4’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_2k-8_ali exp/nnet4d_tri3_2k-8
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	 --minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_2k-8_ali exp/nnet4d2_tri3_2k-8
 
 echo ‘finished training dnn_2k-8’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_2k-8/decode_fmllr exp/tri3_2k-8/graph data/test exp/nnet4d_tri3_2k-8/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_2k-8/decode exp/tri3_2k-8/graph data/test exp/nnet4d2_tri3_2k-8/decode
 
 echo ‘finished decoding dnn_2k-8’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_2k-16_ali exp/nnet4d_tri3_2k-16
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \	
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_2k-16_ali exp/nnet4d2_tri3_2k-16
 
 echo ‘finished training dnn_2k-16’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_2k-16/decode_fmllr exp/tri3_2k-16/graph data/test exp/nnet4d_tri3_2k-16/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_2k-16/decode exp/tri3_2k-16/graph data/test exp/nnet4d2_tri3_2k-16/decode
 
 echo ‘finished decoding dnn_2k-16’ >> log
 
@@ -1243,35 +1334,59 @@ echo
 echo "===== DNN 4K TRAINING AND DECODING ====="
 echo
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_4k-2_ali exp/nnet4d_tri3_4k-2
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_4k-2_ali exp/nnet4d2_tri3_4k-2
 
 echo ‘finished training dnn_4k-2’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_4k-2/decode_fmllr exp/tri3_4k-2/graph data/test exp/nnet4d_tri3_4k-2/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_4k-2/decode exp/tri3_4k-2/graph data/test exp/nnet4d2_tri3_4k-2/decode 
 
 echo ‘finished decoding dnn_4k-2’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_4k-4_ali exp/nnet4d_tri3_4k-4
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_4k-4_ali exp/nnet4d2_tri3_4k-4
 
 echo ‘finished training dnn_4k-4’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_4k-4/decode_fmllr exp/tri3_4k-4/graph data/test exp/nnet4d_tri3_4k-4/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_4k-4/decode exp/tri3_4k-4/graph data/test exp/nnet4d2_tri3_4k-4/decode 
 
 echo ‘finished decoding dnn_4k-4’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_4k-8_ali exp/nnet4d_tri3_4k-8
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_4k-8_ali exp/nnet4d2_tri3_4k-8
 
 echo ‘finished training dnn_4k-8’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_4k-8/decode_fmllr exp/tri3_4k-8/graph data/test exp/nnet4d_tri3_4k-8/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_4k-8/decode exp/tri3_4k-8/graph data/test exp/nnet4d2_tri3_4k-8/decode 
 
 echo ‘finished decoding dnn_4k-8’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_4k-16_ali exp/nnet4d_tri3_4k-16
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \	
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_4k-16_ali exp/nnet4d2_tri3_4k-16
 
 echo ‘finished training dnn_4k-16’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_4k-16/decode_fmllr exp/tri3_4k-16/graph data/test exp/nnet4d_tri3_4k-16/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_4k-16/decode exp/tri3_4k-16/graph data/test exp/nnet4d2_tri3_4k-16/decode 
 
 echo ‘finished decoding dnn_4k-16’ >> log
 
@@ -1282,35 +1397,59 @@ echo "===== DNN 6K TRAINING AND DECODING ====="
 echo
 
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_6k-2_ali exp/nnet4d_tri3_6k-2
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_6k-2_ali exp/nnet4d2_tri3_6k-2
 
 echo ‘finished training dnn_6k-2’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_6k-2/decode_fmllr exp/tri3_6k-2/graph data/test exp/nnet4d_tri3_6k-2/decode 
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_6k-2/decode exp/tri3_6k-2/graph data/test exp/nnet4d2_tri3_6k-2/decode 
 
 echo ‘finished decoding dnn_6k-2’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_6k-4_ali exp/nnet4d_tri3_6k-4
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_6k-4_ali exp/nnet4d2_tri3_6k-4
 
 echo ‘finished training dnn_6k-4’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_6k-4/decode_fmllr exp/tri3_6k-4/graph data/test exp/nnet4d_tri3_6k-4/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_6k-4/decode exp/tri3_6k-4/graph data/test exp/nnet4d2_tri3_6k-4/decode
 
 echo ‘finished decoding dnn_6k-4’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_6k-8_ali exp/nnet4d_tri3_6k-8
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_6k-8_ali exp/nnet4d2_tri3_6k-8
 
 echo ‘finished training dnn_6k-8’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_6k-8/decode_fmllr exp/tri3_6k-8/graph data/test exp/nnet4d_tri3_6k-8/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_6k-8/decode exp/tri3_6k-8/graph data/test exp/nnet4d2_tri3_6k-8/decode
 
 echo ‘finished decoding dnn_6k-8’ >> log
 
-steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 --minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 --final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 --pnorm-output-dim 200 data/train data/lang exp/tri3_6k-16_ali exp/nnet4d_tri3_6k-16
+steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_6k-16_ali exp/nnet4d2_tri3_6k-16
 
 echo ‘finished training dnn_6k-16’ >> log
 
-steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj --transform-dir exp/tri3_6k-16/decode_fmllr exp/tri3_6k-16/graph data/test exp/nnet4d_tri3_6k-16/decode
+steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+	--nj $nj --transform-dir exp/tri3_6k-16/decode exp/tri3_6k-16/graph data/test exp/nnet4d2_tri3_6k-16/decode
 
 echo ‘finished decoding dnn_6k-16’ >> log
 
@@ -1321,61 +1460,58 @@ echo "===== DNN 8K TRAINING AND DECODING ====="
 echo
 
 steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
-	--minibatch-size 128 --parallel-opts "--num-threads 16" --num-jobs-nnet 4 \
-	--num-epochs 8 --num-epochs-extra 5 --add-layers-period 1 \
-	--num-hidden-layers 2 --mix-up 4000 --initial-learning-rate 0.02 \
-	--final-learning-rate 0.004 --cmd "$decode_cmd" --pnorm-input-dim 1000 \
-	--pnorm-output-dim 200 data/train data/lang exp/tri3_8k-2_ali exp/nnet4d_tri3_8k-2
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+ 	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+ 	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_8k-2_ali exp/nnet4d2_tri3_8k-2
 
 echo ‘finished training dnn_8k-2’ >> log
 
 steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
-	--nj 20 --transform-dir exp/tri3_8k-2/decode_fmllr exp/tri3_8k-2/graph data/test exp/nnet4d_tri3_8k-2/decode 
+	--nj $nj --transform-dir exp/tri3_8k-2/decode exp/tri3_8k-2/graph data/test exp/nnet4d2_tri3_8k-2/decode 
 
 echo ‘finished decoding dnn_8k-2’ >> log
 
 steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
-	--minibatch-size 128 --parallel-opts "--num-threads 16" \
-	--num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 \
-	--add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 \
-	--initial-learning-rate 0.02 --final-learning-rate 0.004 \
-	--cmd "$decode_cmd" --pnorm-input-dim 1000 \
-	--pnorm-output-dim 200 data/train data/lang exp/tri3_8k-4_ali exp/nnet4d_tri3_8k-4
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_8k-4_ali exp/nnet4d2_tri3_8k-4
 
 echo ‘finished training dnn_8k-4’ >> log
 
 steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
-	--nj 20 --transform-dir exp/tri3_8k-4/decode_fmllr exp/tri3_8k-4/graph data/test exp/nnet4d_tri3_8k-4/decode 
+	--nj $nj --transform-dir exp/tri3_8k-4/decode exp/tri3_8k-4/graph data/test exp/nnet4d2_tri3_8k-4/decode 
 
 echo ‘finished decoding dnn_8k-4’ >> log
 
 steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
-	--minibatch-size 128 --parallel-opts "--num-threads 16" \
-	--num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 \
-	--add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 \
-	--initial-learning-rate 0.02 --final-learning-rate 0.004 \
-	--cmd "$decode_cmd" --pnorm-input-dim 1000 \
-	--pnorm-output-dim 200 data/train data/lang exp/tri3_8k-8_ali exp/nnet4d_tri3_8k-8
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_8k-8_ali exp/nnet4d2_tri3_8k-8
 
 echo ‘finished training dnn_8k-8’ >> log
 
 steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
-	--nj 20 --transform-dir exp/tri3_8k-8/decode_fmllr exp/tri3_8k-8/graph data/test exp/nnet4d_tri3_8k-8/decode
+	--nj $nj --transform-dir exp/tri3_8k-8/decode exp/tri3_8k-8/graph data/test exp/nnet4d2_tri3_8k-8/decode
 
 echo ‘finished decoding dnn_8k-8’ >> log
 
 steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
-	--minibatch-size 128 --parallel-opts "--num-threads 16" \
-	--num-jobs-nnet 4 --num-epochs 8 --num-epochs-extra 5 \
-	--add-layers-period 1 --num-hidden-layers 2 --mix-up 4000 \
-	--initial-learning-rate 0.02 --final-learning-rate 0.004 \
-	--cmd "$decode_cmd" --pnorm-input-dim 1000 \
-	--pnorm-output-dim 200 data/train data/lang exp/tri3_8k-16_ali exp/nnet4d_tri3_8k-16
+	--minibatch-size $minibatch_size --parallel-opts "--num-threads 16" \
+	--num-jobs-nnet 4 --num-epochs $num_epochs --num-epochs-extra $num_epochs_extra \
+	--add-layers-period 1 --num-hidden-layers $num_hidden_layers --mix-up 4000 \
+	--initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+	--cmd "$decode_cmd" --pnorm-input-dim $pnorm_input_dim --pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_8k-16_ali exp/nnet4d2_tri3_8k-16
 
 echo ‘finished training dnn_8k-16’ >> log
 
 steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
---nj 20 --transform-dir exp/tri3_8k-16/decode_fmllr exp/tri3_8k-16/graph data/test exp/nnet4d_tri3_8k-16/decode
+--nj $nj --transform-dir exp/tri3_8k-16/decode exp/tri3_8k-16/graph data/test exp/nnet4d2_tri3_8k-16/decode
 
 echo ‘finished decoding dnn_8k-16’ >> log
 
@@ -1384,8 +1520,9 @@ echo "===== GETTING DNN RESULTS ====="
 echo
 
 echo "====== DNN ======" >> RESULTS
-for x in exp/nnet4d_*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+for x in exp/nnet4d2_*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+
 
 echo
 echo "============== FINISHED RUNNING =============="
-echo
+echo 

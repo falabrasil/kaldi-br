@@ -43,8 +43,8 @@ symbolic links to the actual wav-transcription base dir.
 
 * __fb\_02\_define\_localdict.sh__
 This script specially fulfills the files inside `local/dict` dir. A dependency
-is the `g2p` software, which must be installed and have its location available
-on the PATH env variable.
+is the `g2p` software, which files must be in the same directory of the fb\_02\_define\_localdict.sh script. 
+The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.
 
 A nice tutorial by [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) 
 might also be worthy taking a look at.

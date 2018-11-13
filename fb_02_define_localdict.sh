@@ -55,8 +55,11 @@ function create_wordlist() {
 function create_lexicon() {
 	echo -n "creating lexicon.txt file... "
 
-	[[ -z "$(which lapsg2p)" ]] && echo "error: g2p must be installed" && exit 1
-	lapsg2p -w wordlist.tmp -d dict.tmp >/dev/null 2>&1
+#	[[ -z "$(which lapsg2p)" ]] && echo "error: g2p must be installed" && exit 1
+#	lapsg2p -w wordlist.tmp -d dict.tmp >/dev/null 2>&1
+	java -jar falalib.jar -f wordlist.tmp teste.tmp -g >/dev/null 2>&1
+	paste wordlist.tmp teste.tmp > dict.tmp
+
 
 	echo "!SIL sil"   > ${1}/lexicon.txt
 	echo "<UNK> spn" >> ${1}/lexicon.txt
@@ -98,6 +101,7 @@ function create_optional_silence() {
 	echo "sil"  > ${1}/optional_silence.txt
 	echo
 }
+
 
 ### MAIN ###
 basedir=${1}/data/local/dict
