@@ -52,8 +52,8 @@ If you are using the Demo corpora or another similar small corpora, you will nee
 
 
 
-A nice tutorial by [Eleanor Chodroff][3](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html)
-might also be worthy taking a look at.   
+A nice tutorial by [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) 
+might also be worthy taking a look at.
 
 
 [1]:https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git
@@ -62,4 +62,4 @@ might also be worthy taking a look at.
 
 __Grupo FalaBrasil (2018)__   
 __Author: Cassio Batista - cassio.batista.13@gmail.com__
-        __Ana Larissa Dias - larissa.engcomp@gmail.com__
+       __Ana Larissa Dias - larissa.engcomp@gmail.com__
