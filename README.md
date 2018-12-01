@@ -36,7 +36,7 @@ content yet. IOW, they're only initialized as empty files. A stupid choice of
 the developer.   
 ```
 fb_00_create_envtree.sh path/to/kaldi/egs/YOUR_PROJECT_NAME
-``
+``   
 
 * __fb\_01\_split\_train\_test.sh__:
 This script fulfills the `data/train` and `data/test` directories. The data is
@@ -45,15 +45,15 @@ data-dependent. The folders `train/spkTR_n` and `test/spkTE_n` contain
 symbolic links to the actual wav-transcription base dir.   
 ```
 fb_01_split_train_test.sh path/to/audio/dataset/dir path/to/kaldi/egs/YOUR_PROJECT_NAME
-``
+``   
 
 * __fb\_02\_define\_localdict.sh__:
 This script specially fulfills the files inside `local/dict` dir. A dependency
 is the `g2p` software, which files must be in the same directory of the `fb_02_define_localdict.sh` script. 
-The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.   
+The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.     
 ```
 fb_02_define_localdict.sh path/to/kaldi/egs/YOUR_PROJECT_NAME
-``
+``   
 
 * __util\run.sh__:
 This file is the script for training the acoustic models.
