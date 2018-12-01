@@ -4,7 +4,7 @@ According to Kaldi's [tutorial for dummies](http://kaldi-asr.org/doc/kaldi_for_d
 the directory tree for new projects must follow the structure below:
 
 ```
-           path/to/kaldi/egs/my_base_dir/
+           path/to/kaldi/egs/YOUR_PROJECT_NAME/
                                  ├─ path.sh
                                  ├─ cmd.sh
                                  ├─ run.sh
@@ -33,18 +33,27 @@ This script creates the directory structure shown above, except the `spkXX_n`
 inside the `data/train` and `data/test` folders. Notice that the data-dependent
 files (inside the `data` dir), although created, they __DO NOT__ have any
 content yet. IOW, they're only initialized as empty files. A stupid choice of
-the developer.
+the developer.   
+```
+fb_00_create_envtree.sh path/to/kaldi/egs/YOUR_PROJECT_NAME
+``
 
 * __fb\_01\_split\_train\_test.sh__:
 This script fulfills the `data/train` and `data/test` directories. The data is
 divided as training set and test set, and the files within the dirs are
 data-dependent. The folders `train/spkTR_n` and `test/spkTE_n` contain
-symbolic links to the actual wav-transcription base dir.
+symbolic links to the actual wav-transcription base dir.   
+```
+fb_01_split_train_test.sh path/to/audio/dataset/dir path/to/kaldi/egs/YOUR_PROJECT_NAME
+``
 
 * __fb\_02\_define\_localdict.sh__:
 This script specially fulfills the files inside `local/dict` dir. A dependency
 is the `g2p` software, which files must be in the same directory of the `fb_02_define_localdict.sh` script. 
-The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.
+The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.   
+```
+fb_02_define_localdict.sh path/to/kaldi/egs/YOUR_PROJECT_NAME
+``
 
 * __util\run.sh__:
 This file is the script for training the acoustic models.
@@ -53,7 +62,7 @@ This file is the script for training the acoustic models.
 This file contains the results of the acoustic models obtained using the Demo Audio Corpora. The Demo corpora is available at [https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
 
 
-If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the [DNN script work properly][2].   
+If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `path/to/kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the [DNN script work properly][2].   
 
 
 
