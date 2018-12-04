@@ -66,7 +66,7 @@ This file contains the results of the acoustic models obtained using the Demo Au
 If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `path/to/kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the [DNN script work properly][2].   
 
 
-A language model is available at [https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3].   
+A language model is available at [https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3]. If you want to use it, place the `lm.arpa` in the `path/to/kaldi/egs/YOUR_PROJECT_NAME/data/local/tmp` directory and comment the `MAKING lm.arpa` steps of the run.sh file.   
 
 
 A nice tutorial by [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) 
