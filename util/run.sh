@@ -2,6 +2,13 @@
 #
 # Cassio Batista   - cassio.batista.13@gmail.com
 # Ana Larissa Dias - larissa.engcomp@gmail.com
+# Ter Jan 22 15:34:14 -03 2019
+# http://kaldi-asr.org/doc/kaldi_for_dummies.html
+
+#!/bin/bash
+#
+# Cassio Batista   - cassio.batista.13@gmail.com
+# Ana Larissa Dias - larissa.engcomp@gmail.com
 # Ter Nov  6 14:11:05 -03 2018
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
@@ -58,6 +65,8 @@ mfccdir=mfcc
 
 utils/validate_data_dir.sh data/train     # script for checking prepared data - here: for data/train directory
 utils/fix_data_dir.sh data/train          # tool for data proper sorting if needed - here: for data/train directory
+utils/validate_data_dir.sh data/test     # script for checking prepared data - here: for data/test directory
+utils/fix_data_dir.sh data/test          # tool for data proper sorting if needed - here: for data/test directory
 steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/train exp/make_mfcc/train $mfccdir
 steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/test exp/make_mfcc/test $mfccdir
 
