@@ -78,7 +78,7 @@ If you are using the Demo corpora or another similar small corpora, you will nee
 This file contains the results of the acoustic models obtained using the Demo Audio Corpora. The Demo corpora is available at [https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
 
 # Language Model
-A language model is available at [https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3]. If you want to use it, place the `lm.arpa` in the `path/to/kaldi/egs/YOUR_PROJECT_NAME/data/local/tmp` directory and comment the `Removing previously created data (from last run.sh execution)` and `MAKING lm.arpa` steps of the `run.sh` file, except the `local = date/local line`, as this will be used in the next step of the script.   
+A language model is available at [https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3]. If you want to use it, place the `lm.arpa` in the `path/to/kaldi/egs/YOUR_PROJECT_NAME/data/local/tmp` directory and comment the `Removing previously created data (from last run.sh execution)` and `MAKING lm.arpa` steps of the `run.sh` file, except the `local = date/local` line, as this will be used in the next step of the script.   
 
 
 A nice tutorial by [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) 
