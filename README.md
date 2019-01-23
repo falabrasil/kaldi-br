@@ -68,6 +68,10 @@ is the `g2p` software, which files must be in the same directory of the `fb_02_d
   
 * __util\run.sh__:
 This is a shell script for training the acoustic models, but it's recommended that you run the commands one by one by copying and pasting into the shell. The Figure below shows the pipeline to training a hybrid HMM-DNN acoustic model using Kaldi (for more details see this [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).     
+<p align="center">
+  <img width="600" height="200" src="img/kaldiflowchart.png">
+</p>
+
 ![alt text](img/kaldiflowchart.png)    
 
 # Demo Corpora
