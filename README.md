@@ -3,7 +3,7 @@
 # Requirements:
 * __Git__: this is needed to download Kaldi and this recipe.
 * __Kaldi__: is the toolkit for speech recognition that we use.
-* __g2p__: is a Grapheme-To-Phoneme Converter.
+* __g2p__: is a Grapheme-To-Phoneme Converter. The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.     
 
 
 # Prepare directories:   
@@ -60,7 +60,6 @@ symbolic links to the actual wav-transcription base dir.
 * __fb\_02\_define\_localdict.sh__:
 This script specially fulfills the files inside `local/dict` dir. A dependency
 is the `g2p` software, which files must be in the same directory of the `fb_02_define_localdict.sh` script.   
-The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.     
 ```
 ./fb_02_define_localdict.sh path/to/kaldi/egs/YOUR_PROJECT_NAME
 ```   
