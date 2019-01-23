@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Create environment tree for training acoustic models with CMU Sphinx
+# Create environment tree for training acoustic models with Kaldi
 #
 # Copyleft Grupo FalaBrasil (2018)
 #
