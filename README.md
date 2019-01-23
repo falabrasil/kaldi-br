@@ -69,7 +69,7 @@ is the `g2p` software, which files must be in the same directory of the `fb_02_d
 * __util\run.sh__:
 This is a shell script for training the acoustic models, but it's recommended that you run the commands one by one by copying and pasting into the shell. The Figure below shows the pipeline to training a hybrid HMM-DNN acoustic model using Kaldi (for more details read this [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).     
 
-       ![alt text](img/kaldiflowchart.png)    
+![alt text](img/kaldiflowchart.png)    
 
 # Demo Corpora
 If you are using the Demo corpora or another similar small corpora, you will need to change the value of the `num_utts_subset` parameter in the file `path/to/kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in order to the [DNN script work properly][2].   
