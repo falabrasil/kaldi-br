@@ -1,4 +1,9 @@
-# Kaldi - tutorial para treino de modelo acústico
+# Kaldi - tutorial para treino de modelo acústico   
+    
+# Requirements:
+* __Git__: this is needed to download Kaldi and this recipe.
+* __Kaldi__: is the toolkit for speech recognition that we use.
+* __g2p__: is a Grapheme-To-Phoneme Converter.
 
 According to Kaldi's [tutorial for dummies](http://kaldi-asr.org/doc/kaldi_for_dummies.html),
 the directory tree for new projects must follow the structure below:
@@ -27,10 +32,6 @@ train/          test/         local/
   ├─ utt2spk     ├─ utt2spk            
   └─ corpus.txt  └─ corpus.txt         
 ```
-# Requirements:
-* __Git__: this is needed to download Kaldi and this recipe.
-* __Kaldi__: is the toolkit for speech recognition that we use.
-* __g2p__: is a Grapheme-To-Phoneme Converter.
 
 # Prepare directories:    
 
