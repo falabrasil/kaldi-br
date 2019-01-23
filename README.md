@@ -6,7 +6,7 @@
 * __g2p__: is a Grapheme-To-Phoneme Converter. This software is available at https://gitlab.com/fb-nlp/nlp.git.     
 
 
-# Prepare directories:   
+# Preparing directories:   
 
 According to Kaldi's [tutorial for dummies](http://kaldi-asr.org/doc/kaldi_for_dummies.html),
 the directory tree for new projects must follow the structure below:
