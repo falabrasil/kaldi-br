@@ -3,7 +3,7 @@
 # Requirements:
 * __Git__: this is needed to download Kaldi and this recipe.
 * __Kaldi__: is the toolkit for speech recognition that we use.
-* __g2p__: is a Grapheme-To-Phoneme Converter. The`g2p` software is available at https://gitlab.com/fb-nlp/nlp.git.     
+* __g2p__: is a Grapheme-To-Phoneme Converter. This software is available at https://gitlab.com/fb-nlp/nlp.git.     
 
 
 # Prepare directories:   
