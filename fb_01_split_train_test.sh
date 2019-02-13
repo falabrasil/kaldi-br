@@ -159,7 +159,7 @@ function create_corpus() {
 	rm -f ${1}/data/${2}/corpus.txt
 	while read line
 	do
-		cat ${line}.txt | grep -vE '^$'  >> ${1}/data/${2}/corpus.txt
+		cat ${line}.txt | grep -avE '^$'  >> ${1}/data/${2}/corpus.txt
 	done < ${2}.${3}.list
 }
 
