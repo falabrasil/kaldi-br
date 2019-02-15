@@ -38,9 +38,9 @@ function create_wordlist() {
 	for corpus in $(find ${1}/data/ -name corpus.txt)
 	do
 		echo "scanning ${corpus}..."
-		for word in $(cat $corpus)
+		for word in $(cat $corpus | tr '[A-Z]' '[a-z]' | tr "\'" " " | sed 's/[,.;<>:?!1234"567890()@%]/ /g')
 		do
-			echo $word >> wlist.tmp
+			echo $word >> wlist.tmp 
 		done 
 	done
 	cat wlist.tmp | sort | uniq > wordlist.tmp
