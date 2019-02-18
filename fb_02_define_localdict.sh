@@ -46,11 +46,11 @@ function create_wordlist() {
 	cat wlist.tmp | sort | uniq > wordlist.tmp
 
 	# NOTE: avoiding infinite loop on the next G2P step when generating lexicon
-	# G2P only accepts UTF-8 encoded files. ISO-8859-1 then becomes a problem
-	cp -v /tmp/wordlist.tmp .
+	# G2P only accepts UTF-8 encoded files. ISO-8859-1 then becomes a problem -- CB
 	charset=$(file -i wordlist.tmp | awk '{print $3}' | cut -d '=' -f 2)
-	if [[ "$charset" != "utf-8" ]] ; then
-		echo -n "WARNING: converting file from ${encoding} to UTF-8"
+	if [[ "$charset" != "utf-8" ]]
+	then
+		echo "WARNING: converting file from ${charset} to UTF-8 ..."
 		iconv -f $charset -t utf-8 wordlist.tmp > out.tmp
 		mv out.tmp wordlist.tmp
 	fi
@@ -70,7 +70,7 @@ function create_lexicon() {
 
 	echo -e "!SIL\tsil"   > ${1}/lexicon.txt
 	echo -e "<UNK>\tspn" >> ${1}/lexicon.txt
-	cat dict.tmp     >> ${1}/lexicon.txt
+	cat dict.tmp         >> ${1}/lexicon.txt
 	echo
 }
 
@@ -109,7 +109,6 @@ function create_optional_silence() {
 	echo
 }
 
-
 ### MAIN ###
 basedir=${1}/data/local/dict
 mkdir -p $basedir
@@ -120,5 +119,5 @@ create_silence_phones $basedir
 create_optional_silence $basedir
 
 echo "Done!"
-rm *.tmp
+rm -f *.tmp *.slice
 ### EOF ###
