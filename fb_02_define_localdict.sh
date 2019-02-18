@@ -47,7 +47,8 @@ function create_wordlist() {
 
 	# NOTE: avoiding infinite loop on the next G2P step when generating lexicon
 	# G2P only accepts UTF-8 encoded files. ISO-8859-1 then becomes a problem -- CB
-	charset=$(file -i wordlist.tmp | awk '{print $3}' | cut -d '=' -f 2)
+	#charset=$(file -i wordlist.tmp | awk '{print $3}' | cut -d '=' -f 2)
+	charset=$(file -b --mime-encoding wordlist.tmp)
 	if [[ "$charset" != "utf-8" ]]
 	then
 		echo "WARNING: converting file from ${charset} to UTF-8 ..."
