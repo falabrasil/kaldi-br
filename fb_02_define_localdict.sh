@@ -47,6 +47,7 @@ function create_wordlist() {
 
 	# NOTE: avoiding infinite loop on the next G2P step when generating lexicon
 	# G2P only accepts UTF-8 encoded files. ISO-8859-1 then becomes a problem
+	cp -v /tmp/wordlist.tmp .
 	charset=$(file -i wordlist.tmp | awk '{print $3}' | cut -d '=' -f 2)
 	if [[ "$charset" != "utf-8" ]] ; then
 		echo -n "WARNING: converting file from ${encoding} to UTF-8"
@@ -67,8 +68,8 @@ function create_lexicon() {
 	java -jar falalib.jar -f wordlist.tmp teste.tmp -g >/dev/null 2>&1
 	paste wordlist.tmp teste.tmp > dict.tmp # FIXME G2P must return grapheme -- CB
 
-	echo "!SIL\tsil"   > ${1}/lexicon.txt
-	echo "<UNK>\tspn" >> ${1}/lexicon.txt
+	echo -e "!SIL\tsil"   > ${1}/lexicon.txt
+	echo -e "<UNK>\tspn" >> ${1}/lexicon.txt
 	cat dict.tmp     >> ${1}/lexicon.txt
 	echo
 }
