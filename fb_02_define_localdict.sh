@@ -44,6 +44,15 @@ function create_wordlist() {
 		done 
 	done
 	cat wlist.tmp | sort | uniq > wordlist.tmp
+
+	# NOTE: avoiding infinite loop on the next G2P step when generating lexicon
+	# G2P only accepts UTF-8 encoded files. ISO-8859-1 then becomes a problem
+	charset=$(file -i wordlist.tmp | awk '{print $3}' | cut -d '=' -f 2)
+	if [[ "$charset" != "utf-8" ]] ; then
+		echo -n "WARNING: converting file from ${encoding} to UTF-8"
+		iconv -f $charset -t utf-8 wordlist.tmp > out.tmp
+		mv out.tmp wordlist.tmp
+	fi
 }
 
 # a.) lexicon.txt
@@ -55,20 +64,11 @@ function create_wordlist() {
 function create_lexicon() {
 	echo -n "creating lexicon.txt file... "
 
-	# NOTE: avoiding infinite loop on G2P when generating lexicon
-	# G2P only accepts files with UTF-8 encoding. ISO-8859-1 then becomes a problem
-	charset=$(file -i wordlist.tmp | awk '{print $3}' | cut -d '=' -f 2)
-	if [[ "$charset" != "utf-8" ]] ; then
-		echo -n "WARNING: converting file from ${encoding} to UTF-8"
-		iconv -f $charset -t utf-8 wordlist.tmp > out.tmp
-		mv out.tmp wordlist.tmp
-	fi
-
 	java -jar falalib.jar -f wordlist.tmp teste.tmp -g >/dev/null 2>&1
 	paste wordlist.tmp teste.tmp > dict.tmp # FIXME G2P must return grapheme -- CB
 
-	echo "!SIL sil"   > ${1}/lexicon.txt
-	echo "<UNK> spn" >> ${1}/lexicon.txt
+	echo "!SIL\tsil"   > ${1}/lexicon.txt
+	echo "<UNK>\tspn" >> ${1}/lexicon.txt
 	cat dict.tmp     >> ${1}/lexicon.txt
 	echo
 }
