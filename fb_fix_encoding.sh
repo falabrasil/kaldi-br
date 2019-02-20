@@ -4,7 +4,7 @@
 #
 # Copyleft Grupo FalaBrasil (2018)
 #
-# Authors: Mar 2018
+# Authors: Feb 2019
 # Cassio Batista   - cassio.batista.13@gmail.com
 # Ana Larissa Dias - larissa.engcomp@gmail.com
 # Federal University of Pará (UFPA)
@@ -15,10 +15,7 @@
 
 if test $# -ne 1
 then
-	echo "A script to create the environment tree for training acoustic models"
-	echo "according to Kaldi's pattern."
-	echo "Ref.: http://kaldi-asr.org/doc/kaldi_for_dummies.html"
-	echo "Ref.: https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html"
+	echo "A script to fix encoding of text files to UTF-8"
 	echo
 	echo "Usage: $0 <audio_dataset_dir>"
 	echo -e "\t<audio_dataset_dir> is the folder that contains all your audio base (wav + transcript.)."
