@@ -105,6 +105,7 @@ might also be worthy taking a look at.
 [2]:https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ
 [3]:https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git
 
-__Grupo FalaBrasil (2018)__   
-__Author: Cassio Batista - cassio.batista.13@gmail.com__   
-        __Ana Larissa Dias - larissa.engcomp@gmail.com__
+__Grupo FalaBrasil (2018)__    
+__Universidade Federal do Pará__     
+Cassio Batista - cassio.batista.13@gmail.com      
+Larissa Dias - larissa.engcomp@gmail.com
