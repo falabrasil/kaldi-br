@@ -2,6 +2,13 @@
 #
 # Cassio Batista   - cassio.batista.13@gmail.com
 # Ana Larissa Dias - larissa.engcomp@gmail.com
+# Qui Fev 21 14:12:40 -03 2019
+# http://kaldi-asr.org/doc/kaldi_for_dummies.html
+
+#!/bin/bash
+#
+# Cassio Batista   - cassio.batista.13@gmail.com
+# Ana Larissa Dias - larissa.engcomp@gmail.com
 # Ter Jan 22 15:34:14 -03 2019
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
@@ -38,7 +45,7 @@ pnorm_output_dim=200
 
 
 # Removing previously created data (from last run.sh execution)
-rm -rf exp mfcc data/train/spk2utt data/train/cmvn.scp data/train/feats.scp data/train/split12 data/test/spk2utt data/test/cmvn.scp data/test/feats.scp data/test/split12 data/local/lang data/lang data/local/tmp data/local/dict/lexiconp.txt
+#rm -rf exp mfcc data/train/spk2utt data/train/cmvn.scp data/train/feats.scp data/train/split12 data/test/spk2utt data/test/cmvn.scp data/test/feats.scp data/test/split12 data/local/lang data/lang data/local/tmp data/local/dict/lexiconp.txt
 
 echo
 echo "===== PREPARING ACOUSTIC DATA ====="
@@ -90,31 +97,30 @@ utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
 
 echo
 echo "===== LANGUAGE MODEL CREATION ====="
-echo "===== MAKING lm.arpa ====="
-echo
+#echo "===== MAKING lm.arpa ====="
+#echo
 
-loc=`which ngram-count`;
-if [ -z $loc ]; then
-	if uname -a | grep 64 >/dev/null; then
-		sdir=$KALDI_ROOT/tools/srilm/bin/i686-m64
-	else
-		sdir=$KALDI_ROOT/tools/srilm/bin/i686
-	fi
-	if [ -f $sdir/ngram-count ]; then
-		echo "Using SRILM language modelling tool from $sdir"
-		export PATH=$PATH:$sdir
-	else
-		echo "SRILM toolkit is probably not installed.
-				Instructions: tools/install_srilm.sh"
-		exit 1
-   fi
-fi
+#loc=`which ngram-count`;
+#if [ -z $loc ]; then
+#	if uname -a | grep 64 >/dev/null; then
+#		sdir=$KALDI_ROOT/tools/srilm/bin/i686-m64
+#	else		sdir=$KALDI_ROOT/tools/srilm/bin/i686
+#	fi
+#	if [ -f $sdir/ngram-count ]; then
+#		echo "Using SRILM language modelling tool from $sdir"
+#		export PATH=$PATH:$sdir
+#	else
+#		echo "SRILM toolkit is probably not installed.
+#				Instructions: tools/install_srilm.sh"
+#		exit 1
+#  fi
+#fi
 
-cat data/train/corpus.txt data/test/corpus.txt > data/local/corpus.txt
+#cat data/train/corpus.txt data/test/corpus.txt > data/local/corpus.txt
 
 local=data/local
-mkdir $local/tmp
-ngram-count -order $lm_order -write-vocab $local/tmp/vocab-full.txt -wbdiscount -text $local/corpus.txt -lm $local/tmp/lm.arpa
+#mkdir $local/tmp
+#ngram-count -order $lm_order -write-vocab $local/tmp/vocab-full.txt -wbdiscount -text $local/corpus.txt -lm $local/tmp/lm.arpa
 
 echo
 echo "===== MAKING G.fst ====="
