@@ -1,5 +1,5 @@
 #!/bin/bash
-#This script trains the DNN model with iVectors to online decoding.
+#This script is a modified version of the ../rm/s5/local/online/run_nnet2.sh that trains the DNN model with iVectors to online decoding.
 . ./cmd.sh
 
 # use stage 0 to extract mfcc features and ivector for train and test.
