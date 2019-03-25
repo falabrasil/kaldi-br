@@ -55,6 +55,10 @@ mkdir local
 #cp ../rm/s5/local/score.sh ./local # larissa's suggestion - CB
 cp ../wsj/s5/local/score.sh ./local # larissa's suggestion - CB
 
+mkdir local/online
+cat - ${fb_dir}/util/run_nnet2_common.sh > ./local/run_nnet2_common.sh
+chmod +x ./local/online/run_nnet2_common.sh
+
 mkdir conf
 echo \
 "first_beam=10.0
@@ -63,6 +67,9 @@ lattice_beam=6.0" > conf/decode.config
 
 echo \
 "--use-energy=false" > conf/mfcc.conf
+
+echo \
+"# configuration file for apply-cmvn-online for online decoding" > conf/online_cmvn.conf
 
 mkdir -p data/train
 touch data/train/{spk2gender,wav.scp,text,utt2spk,corpus.txt}
@@ -98,7 +105,7 @@ echo \
 export KALDI_ROOT=$KALDI_ROOT # TODO: check correctness -- CB
 
 # Setting paths to useful tools 
-export PATH=\$PWD/utils/:\$KALDI_ROOT/src/bin:\$KALDI_ROOT/tools/openfst/bin:\$KALDI_ROOT/src/fstbin/:\$KALDI_ROOT/src/gmmbin/:\$KALDI_ROOT/src/featbin/:\$KALDI_ROOT/src/lmbin/:\$KALDI_ROOT/src/sgmm2bin/:\$KALDI_ROOT/src/fgmmbin/:\$KALDI_ROOT/src/latbin/:\$KALDI_ROOT/src/nnet2bin/:\$PWD:\$PATH
+export PATH=\$PWD/utils/:\$KALDI_ROOT/src/bin:\$KALDI_ROOT/tools/openfst/bin:\$KALDI_ROOT/src/fstbin/:\$KALDI_ROOT/src/gmmbin/:\$KALDI_ROOT/src/featbin/:\$KALDI_ROOT/src/lmbin/:\$KALDI_ROOT/src/sgmm2bin/:\$KALDI_ROOT/src/fgmmbin/:\$KALDI_ROOT/src/latbin/:\$KALDI_ROOT/src/nnet2bin/:$KALDI_ROOT/src/ivectorbin:$KALDI_ROOT/src/online2bin:\$PWD:\$PATH
 
 # Defining audio data directory (TODO modify it for your installation directory!)
 export DATA_ROOT=\"/home/{user}/kaldi-trunk/egs/digits/digits_audio\"
@@ -119,6 +126,15 @@ echo \
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 " | cat - ${fb_dir}/util/run.sh > run.sh
 chmod +x run.sh
+
+echo \
+"#!/bin/bash
+#
+# Cassio Batista   - cassio.batista.13@gmail.com
+# Ana Larissa Dias - larissa.engcomp@gmail.com
+# $(date)
+" | cat - ${fb_dir}/util/run_pnormfast_ivector.sh > run_dnn_ivector.sh
+chmod +x run_dnn_ivector.sh 
 
 #cp -r ../wsj/s5/utils .
 #cp -r ../wsj/s5/steps .
