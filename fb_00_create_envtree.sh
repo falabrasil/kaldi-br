@@ -56,7 +56,7 @@ mkdir local
 cp ../wsj/s5/local/score.sh ./local # larissa's suggestion - CB
 
 mkdir local/online
-cat - ${fb_dir}/util/run_nnet2_common.sh > ./local/run_nnet2_common.sh
+cat ${fb_dir}/util/run_nnet2_common.sh > ./local/run_nnet2_common.sh
 chmod +x ./local/online/run_nnet2_common.sh
 
 mkdir conf
