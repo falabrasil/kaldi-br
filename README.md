@@ -102,6 +102,25 @@ might also be worthy taking a look at.
 [2]:https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ
 [3]:https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git
 
+## Citation
+
+If you use this code or want to mention the paper referred above, please cite us
+as one of the following: 
+
+> Batista, C., Dias, A.L., Sampaio Neto, N. (2018) Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools. Proc. IberSPEECH 2018, 77-81, DOI: 10.21437/IberSPEECH.2018-17.
+
+```
+@inproceedings{Batista2018,
+  author={Cassio Batista and Ana Larissa Dias and Nelson {Sampaio Neto}},
+  title={{Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools}},
+  year=2018,
+  booktitle={Proc. IberSPEECH 2018},
+  pages={77--81},
+  doi={10.21437/IberSPEECH.2018-17},
+  url={http://dx.doi.org/10.21437/IberSPEECH.2018-17}
+}
+```    
+
 __Grupo FalaBrasil (2018)__    
 __Universidade Federal do Pará__     
 Cassio Batista - cassio.batista.13@gmail.com      
