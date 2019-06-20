@@ -1,4 +1,11 @@
-# Kaldi - tutorial para treino de modelo acústico   
+# Kaldi - tutorial for training acoustic models
+
+[Paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html): **Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools**    
+A comparison between Kaldi and CMU Sphinx for Brazilian Portuguese was
+performed. Resources for both toolkits were developed and made publicly 
+available to the community.
+According to CMUSphinx's [tutorial AM](https://cmusphinx.github.io/wiki/tutorialam/),
+the directory tree for new projects must follow the structure below:
     
 # Requirements:
 * __Git__: is needed to download Kaldi and this recipe.
@@ -104,24 +111,26 @@ might also be worthy taking a look at.
 
 ## Citation
 
-If you use this code or want to mention the paper referred above, please cite us
-as one of the following: 
+If you use these codes or want to mention the paper referred above, please cite 
+us as one of the following: 
 
-> Batista, C., Dias, A.L., Sampaio Neto, N. (2018) Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools. Proc. IberSPEECH 2018, 77-81, DOI: 10.21437/IberSPEECH.2018-17.
+> Batista, C., Dias, A.L., Sampaio Neto, N. (2018) Baseline Acoustic Models for
+> Brazilian Portuguese Using Kaldi Tools. Proc. IberSPEECH 2018, 77-81, DOI:
+> 10.21437/IberSPEECH.2018-17.
 
 ```
 @inproceedings{Batista2018,
-  author={Cassio Batista and Ana Larissa Dias and Nelson {Sampaio Neto}},
-  title={{Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools}},
-  year=2018,
-  booktitle={Proc. IberSPEECH 2018},
-  pages={77--81},
-  doi={10.21437/IberSPEECH.2018-17},
-  url={http://dx.doi.org/10.21437/IberSPEECH.2018-17}
+  author    = {Cassio Batista and Ana Larissa Dias and Nelson {Sampaio Neto}},
+  title     = {{Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools}},
+  year      = {2018},
+  booktitle = {Proc. IberSPEECH 2018},
+  pages     = {77--81},
+  doi       = {10.21437/IberSPEECH.2018-17},
+  url       = {http://dx.doi.org/10.21437/IberSPEECH.2018-17}
 }
 ```    
 
-__Grupo FalaBrasil (2018)__    
+__Grupo FalaBrasil (2019)__    
 __Universidade Federal do Pará__     
 Cassio Batista - cassio.batista.13@gmail.com      
 Larissa Dias - larissa.engcomp@gmail.com
