@@ -1,3 +1,17 @@
+#!/bin/bash
+#
+# A script that check if .wav files are somehow duplicate, which can occur when
+# you have two audios with the very same name but think it is ok just because
+# they are inside different folders. For Kaldi, they are not ok.
+#
+# Copyleft Grupo FalaBrasil (2018)
+#
+# Author: March 2018
+# Cassio Batista - cassio.batista.13@gmail.com
+# Federal University of Pará (UFPA)
+#
+# Reference:
+# http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
 if test $# -ne 1
 then

@@ -1,3 +1,19 @@
+#!/bin/bash
+#
+# A script that check whether the number of .wav files in the dataset matches
+# the number of .mfc files generated after feature extraction. If not, the
+# script tells which audio files are causing Kaldi to fail to compute MFCCs, but
+# it does not say why: it is up to you figure out :)
+#
+# Copyleft Grupo FalaBrasil (2018)
+#
+# Author: March 2018
+# Cassio Batista - cassio.batista.13@gmail.com
+# Federal University of Pará (UFPA)
+#
+# Reference:
+# http://kaldi-asr.org/doc/kaldi_for_dummies.html
+
 
 if test $# -ne 1
 then
