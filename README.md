@@ -21,9 +21,9 @@ graph LR;
 
 ```mermaid
 graph LR;
-    A[<tt>fb_00_*.sh</tt>]-->B[<tt></tt>];
-    B[<tt>fb_01_*.sh</tt>]-->C[<tt></tt>];
-    C[<tt>fb_02_*.sh</tt>]-->D[<tt>utils/run.sh</tt>];
+    A[fb_00_*.sh]-->B;
+    B[fb_01_*.sh]-->C;
+    C[fb_02_*.sh]-->D[utils/run.sh];
     style A fill:#f9f
     style B fill:#f9f
     style C fill:#f9f
