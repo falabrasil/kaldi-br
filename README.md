@@ -81,7 +81,7 @@ using Kaldi (for more details read this
 [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
 
 
-![alt text](img/kaldiflowchart.png)    
+![alt text](doc/kaldiflowchart.png)    
 
 # Demo Corpora
 If you are using the Demo corpora or another similar small corpora, you will
