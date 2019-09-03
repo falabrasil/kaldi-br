@@ -134,5 +134,5 @@ us as one of the following:
 
 __Grupo FalaBrasil (2019)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
-Cassio Batista - https://cassota.gitlab.io/
+Cassio Batista - https://cassota.gitlab.io/    
 Larissa Dias - larissa.engcomp@gmail.com
