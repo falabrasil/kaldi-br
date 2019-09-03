@@ -12,20 +12,24 @@
 # Reference:
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
-if test $# -ne 1
+
+if test $# -ne 2
 then
 	echo "A script that creates the language files inside the data/local/dict/ dir"
 	echo "(lexicon, nonsilence_phones, silence_phones and optional_silence)"
 	echo
-	echo "Usage: $0 <kaldi_project_dir>"
+	echo "Usage: $0 <kaldi_project_dir> <G2P_dir>"
 	echo -e "\t<kaldi_project_dir> is the folder where you previously hosted your project on kaldi/egs."
 	echo -e "\t                    e.g.: /home/cassio/kaldi/egs/MEUPROJETO"
+	echo -e "\t<G2P_dir> is the folder where the G2P software is located."
+	echo -e "\t                    e.g.: /home/cassio/nlp-generator"
 	exit 1
-elif [ ! -d $1 ] 
+elif [ ! -d $1 ] || [ ! -d $2 ]
 then
-	echo "Error: '$1' must be a dir"
+	echo "Error: both '$1' and '$2' must be dirs"
 	exit 1
 fi
+
 
 # 0) create wordlist
 # eight
@@ -64,8 +68,8 @@ function create_wordlist() {
 # four f ao r
 function create_lexicon() {
 	echo -n "creating lexicon.txt file... "
-
-	java -jar falalib.jar -f wordlist.tmp teste.tmp -g >/dev/null 2>&1
+	
+	java -jar "${2}" -gio wordlist.tmp teste.tmp >/dev/null 2>&1
 	paste wordlist.tmp teste.tmp > dict.tmp # FIXME G2P must return grapheme -- CB
 
 	echo -e "!SIL\tsil"   > ${1}/lexicon.txt
@@ -111,9 +115,10 @@ function create_optional_silence() {
 
 ### MAIN ###
 basedir=${1}/data/local/dict
+g2p_dir=${2}/fb_nlplib.jar
 mkdir -p $basedir
 create_wordlist $1
-create_lexicon $basedir
+create_lexicon $basedir $g2p_dir
 create_nonsilence_phones $basedir
 create_silence_phones $basedir
 create_optional_silence $basedir

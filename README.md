@@ -10,7 +10,7 @@ the directory tree for new projects must follow the structure below:
 # Requirements:
 * __Git__: is needed to download Kaldi and this recipe.
 * __Kaldi__: is the toolkit for speech recognition that we use.
-* __g2p__: is a Grapheme-To-Phoneme Converter. This software is available at https://gitlab.com/fb-nlp/nlp.git.     
+* __g2p__: is a Grapheme-To-Phoneme Converter. This software is available at https://gitlab.com/fb-nlp/nlp-generator.git
 
 
 # Preparing directories:   
@@ -134,5 +134,5 @@ us as one of the following:
 
 __Grupo FalaBrasil (2019)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
-Cassio Batista - cassio.batista.13@gmail.com      
+Cassio Batista - https://cassota.gitlab.io/
 Larissa Dias - larissa.engcomp@gmail.com
