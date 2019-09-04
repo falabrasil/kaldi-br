@@ -85,7 +85,7 @@ function create_lexicon() {
 	echo -n "creating lexicon.txt file... "
 	
 	java -jar "${2}" -gio wordlist.tmp teste.tmp >/dev/null 2>&1
-	paste wordlist.tmp teste.tmp > dict.tmp # FIXME G2P must return grapheme -- CB
+	mv teste.tmp dict.tmp # FIXME G2P must return grapheme -- CB
 
 	echo -e "!SIL\tsil"   > ${1}/lexicon.txt
 	echo -e "<UNK>\tspn" >> ${1}/lexicon.txt
