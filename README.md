@@ -79,7 +79,7 @@ with no params will also prompt a usage help.
 ```bash
 $ ./fb_00_create_envtree.sh   path/to/kaldi/egs/YOUR_PROJECT_NAME
 $ ./fb_01_split_train_test.sh path/to/audio/dataset/dir    path/to/kaldi/egs/YOUR_PROJECT_NAME
-$ ./fb_02_define_localdict.sh  path/to/kaldi/egs/YOUR_PROJECT_NAME # TODO: updated me
+$ ./fb_02_define_localdict.sh path/to/kaldi/egs/YOUR_PROJECT_NAME path/to/g2p/dir
 ```   
    
 ## Training Acoustic Models
