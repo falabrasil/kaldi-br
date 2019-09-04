@@ -1,5 +1,12 @@
 #!/bin/bash
 #
+# Cassio Batista   - cassio.batista.13@gmail.com
+# Ana Larissa Dias - larissa.engcomp@gmail.com
+# qua set  4 14:30:26 -03 2019
+# http://kaldi-asr.org/doc/kaldi_for_dummies.html
+
+#!/bin/bash
+#
 # Ana Larissa Dias - larissa.engcomp@gmail.com
 # Cassio Batista   - cassio.batista.13@gmail.com
 # Ter Nov  6 14:11:05 -03 2018
@@ -30,8 +37,8 @@ final_learning_rate=0.004
 pnorm_input_dim=1000 #DNN parameters for small data
 pnorm_output_dim=200 #DNN parameters for small data
 
-run_decode=true
-use_gpu=true
+run_decode=false
+use_gpu=false
 
 if $use_gpu; then
   if ! cuda-compiled; then
@@ -128,8 +135,10 @@ echo "===== LANGUAGE MODEL CREATION ====="
 #cat data/train/corpus.txt data/test/corpus.txt > data/local/corpus.txt
 
 local=data/local
-#mkdir $local/tmp
+rm -r $local/tmp
+mkdir $local/tmp
 #ngram-count -order $lm_order -write-vocab $local/tmp/vocab-full.txt -wbdiscount -text $local/corpus.txt -lm $local/tmp/lm.arpa
+wget https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources/raw/master/lm/lm.arpa -P $local/tmp
 
 echo
 echo "===== MAKING G.fst ====="
