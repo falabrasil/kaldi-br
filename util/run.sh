@@ -1,32 +1,9 @@
 #!/bin/bash
 #
-# Cassio Batista   - cassio.batista.13@gmail.com
 # Ana Larissa Dias - larissa.engcomp@gmail.com
-# Seg Set 02 16:36:40 -03 2019
-# http://kaldi-asr.org/doc/kaldi_for_dummies.html
-
-#!/bin/bash
-#
 # Cassio Batista   - cassio.batista.13@gmail.com
-# Ana Larissa Dias - larissa.engcomp@gmail.com
-# Qui Fev 21 14:12:40 -03 2019
-# http://kaldi-asr.org/doc/kaldi_for_dummies.html
-
-#!/bin/bash
-#
-# Cassio Batista   - cassio.batista.13@gmail.com
-# Ana Larissa Dias - larissa.engcomp@gmail.com
-# Ter Jan 22 15:34:14 -03 2019
-# http://kaldi-asr.org/doc/kaldi_for_dummies.html
-
-#!/bin/bash
-#
-# Cassio Batista   - cassio.batista.13@gmail.com
-# Ana Larissa Dias - larissa.engcomp@gmail.com
 # Ter Nov  6 14:11:05 -03 2018
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
-
-
 
 . ./path.sh || exit 1
 . ./cmd.sh || exit 1
