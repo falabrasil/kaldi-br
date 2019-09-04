@@ -135,10 +135,13 @@ echo "===== LANGUAGE MODEL CREATION ====="
 #cat data/train/corpus.txt data/test/corpus.txt > data/local/corpus.txt
 
 local=data/local
-rm -r $local/tmp
-mkdir $local/tmp
+tmp=$local/tmp
+if [ ! -d "$tmp" ]; then
+	mkdir $local/tmp
+	wget https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources/raw/master/lm/lm.arpa -P $local/tmp
+fi
+
 #ngram-count -order $lm_order -write-vocab $local/tmp/vocab-full.txt -wbdiscount -text $local/corpus.txt -lm $local/tmp/lm.arpa
-wget https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources/raw/master/lm/lm.arpa -P $local/tmp
 
 echo
 echo "===== MAKING G.fst ====="
