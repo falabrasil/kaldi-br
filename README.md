@@ -15,19 +15,17 @@ The tutorial is composed mainly by two big steps:
 
 ```mermaid
 graph LR;
-    A[Preparing<br>directories<br>]-->B[Training<br>acoustic models<br>];
-    style A fill:#f9f
+    DataGraph --> TrainGraph
+    subgraph "AM Train"
+    TrainGraph("util/run.sh")
+    end
+    
+    subgraph "Preparing directories"
+    A[fb_00*.sh] --> B[fb_01*.sh]
+    B --> DataGraph[fb_02*.sh]
+    end
 ```
 
-```mermaid
-graph LR;
-    A[fb_00_*.sh]-->B;
-    B[fb_01_*.sh]-->C;
-    C[fb_02_*.sh]-->D[utils/run.sh];
-    style A fill:#f9f
-    style B fill:#f9f
-    style C fill:#f9f
-```
 
 ## Preparing directories
 According to Kaldi's [tutorial for dummies](http://kaldi-asr.org/doc/kaldi_for_dummies.html),
