@@ -83,11 +83,16 @@ $ ./fb_02_define_localdict.sh path/to/kaldi/egs/YOUR_PROJECT_NAME    path/to/g2p
 ```   
    
 ## Training Acoustic Models
-  
-* **util/run.sh**:
-This is a shell script for training the acoustic models, but it's recommended
-that you run the commands one by one by copying and pasting into the shell. The
-Figure below shows the pipeline to training a hybrid HMM-DNN acoustic model
+
+After running the above scripts, your project directory will be ready and you can start training acoustic models with Kaldi. 
+The `run.sh` is a shell script recipe for training a hybrid HMM_DNN acoustic model and it will be located at `path/to/kaldi/egs/YOUR_PROJECT_NAME/`.
+Below you can see the proper way to execute the training script.
+```bash
+$ cd path/to/kaldi/egs/YOUR_PROJECT_NAME
+$ ./run.sh        
+```        
+
+The Figure below shows the pipeline to training a HMM-DNN acoustic model
 using Kaldi (for more details read our paper.
 
 ![alt text](doc/kaldiflowchart.png)    
