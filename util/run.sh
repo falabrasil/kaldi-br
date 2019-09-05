@@ -131,8 +131,14 @@ echo "===== LANGUAGE MODEL CREATION ====="
 #		exit 1
 #  fi
 #fi
-
+# Example of how to train your own language model. Note: It is not recommended to train your language model using the same dataset that will be used for the  acoustic model training.
 #cat data/train/corpus.txt data/test/corpus.txt > data/local/corpus.txt
+#local=data/local
+#ngram-count -order $lm_order -write-vocab $local/tmp/vocab-full.txt -wbdiscount -text $local/corpus.txt -lm $local/tmp/lm.arpa
+
+echo
+echo "===== DOWNLOADING lm.arpa ====="
+echo
 
 local=data/local
 tmp=$local/tmp
@@ -141,10 +147,9 @@ if [ ! -d "$tmp" ]; then
 	wget https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources/raw/master/lm/lm.arpa -P $local/tmp
 fi
 
-#ngram-count -order $lm_order -write-vocab $local/tmp/vocab-full.txt -wbdiscount -text $local/corpus.txt -lm $local/tmp/lm.arpa
 
 echo
-echo "===== MAKING G.fst ====="
+echo "===== CONVERTING lm.arpa to  G.fst ====="
 echo
 
 lang=data/lang

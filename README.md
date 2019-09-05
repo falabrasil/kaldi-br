@@ -70,8 +70,8 @@ the files within the dirs are data-dependent. The folders `train/spkTR_n` and
 `test/spkTE_n` contain symbolic links to the actual wav-transcription base dir.   
 
 * __fb\_02\_define\_localdict.sh__:
-This script specially fulfills the files inside `local/dict` dir. A dependency
-is the `g2p` software, which files must be in the same directory of the `fb_02_define_localdict.sh` script.   
+This script specially fulfills the files inside `local/dict` dir. A dependency of this script
+is the `g2p` software.   
 
 Below you can see the proper way to execute the scripts. Executing the scripts
 with no params will also prompt a usage help.
@@ -107,9 +107,7 @@ corpora. The demo corpora is available at
 
 # Language Model
 A language model is available at
-[https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3]. If you want
-to use it at decoding time, place the `lm.arpa` file in the
-`path/to/kaldi/egs/YOUR_PROJECT_NAME/data/local/tmp` directory.   
+[https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3]. It is downloaded and used by default by the `run.sh` script. If you want to train your own language model look at the commented section `MAKING lm.arpa` in `run.sh` script for a example of how to do it.   
 
 A nice tutorial by [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) 
 might also be worthy taking a look at.
