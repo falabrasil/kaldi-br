@@ -232,6 +232,15 @@ echo
 steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3 exp/tri3_ali
 
 
+echo
+echo "===== PREPARING GRAPH DIRECTORY ====="
+echo
+
+utils/mkgraph.sh --mono data/lang exp/mono exp/mono/graph || exit 1
+utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph || exit 1
+utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
+utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
+
 
  
 echo
@@ -247,13 +256,11 @@ steps/nnet2/train_pnorm_fast.sh --stage -10 --num-threads 16 \
 	--pnorm-output-dim $pnorm_output_dim data/train data/lang exp/tri3_ali exp/dnn
 
 
-
 if $run_decode;then 
 	echo
 	echo "===== MONO DECODING ====="
 	echo
 
-	utils/mkgraph.sh --mono data/lang exp/mono exp/mono/graph || exit 1
 	steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/mono/graph data/test exp/mono/decode
 
 	echo
@@ -269,7 +276,6 @@ if $run_decode;then
 	echo "===== TRIPHONE 1 DECODING====="
 	echo
 
-	utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph || exit 1
 	steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri1/graph data/test exp/tri1/decode
 
 	echo
@@ -285,8 +291,7 @@ if $run_decode;then
 	echo
 	echo "===== TRIPHONE 2 DECODING ====="
 	echo
-
-	utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1 
+ 
 	steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri2/graph data/test exp/tri2/decode 
  
 	echo
@@ -301,7 +306,6 @@ if $run_decode;then
 	echo "===== TRIPHONE 3 DECODING ====="
 	echo
 
-	utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
 	steps/decode_fmllr.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri3/graph data/test exp/tri3/decode
 
 	echo
