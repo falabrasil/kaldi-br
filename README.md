@@ -93,7 +93,7 @@ $ ./run.sh
 ```        
 
 The Figure below shows the pipeline to training a HMM-DNN acoustic model
-using Kaldi (for more details read our paper.
+using Kaldi (for more details read our [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
 
 ![alt text](doc/kaldiflowchart.png)    
 
