@@ -2,15 +2,18 @@
 #This script is a modified version of the ../rm/s5/local/online/run_nnet2.sh that trains the DNN model with iVectors to online decoding.
 . ./cmd.sh
 
+
+nj=2      # number of parallel jobs 
+
 # use stage 0 to extract mfcc features and ivector for train and test.
 stage=0
 # use stage 1 only if you already have extracted ivector for train and test
 #stage=1
 train_stage=-10
-use_gpu=true
+use_gpu=false
 
 # trained GMM model
-gmm=tri1_4k-8
+gmm=tri3
 
 # DNN model training directory
 dir=exp/nnet2_online/nnet
@@ -57,7 +60,8 @@ local/online/run_nnet2_common.sh --stage  $stage --gmm $gmm || exit 1;
 
 
 if [ $stage -le 4 ]; then
-  steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
+  steps/nnet2/train_pnorm_fast.sh \
+    --stage $train_stage \
     --feat-type raw \
     --online-ivector-dir exp/nnet2_online/ivectors \
     --num-threads "$num_threads" \
@@ -68,7 +72,8 @@ if [ $stage -le 4 ]; then
     --add-layers-period 1 \
     --num-hidden-layers $num_hidden_layers \
     --mix-up 4000 \
-    --initial-learning-rate $initial_learning_rate --final-learning-rate $final_learning_rate \
+    --initial-learning-rate $initial_learning_rate \
+    --final-learning-rate $final_learning_rate \
     --cmd "$decode_cmd" \
     --pnorm-input-dim $pnorm_input_dim \
     --pnorm-output-dim $pnorm_output_dim \
@@ -76,15 +81,17 @@ if [ $stage -le 4 ]; then
 fi
 
 if [ $stage -le 5 ]; then
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 2 \
-    data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
+  steps/online/nnet2/extract_ivectors_online.sh \
+      --cmd "$train_cmd" \
+      --nj $nj \
+      data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
 fi
 
 
 if [ $stage -le 6 ]; then
   # Note: the iVectors seem to hurt at small amount of data.
   # However, experiments by Haihua Xu on WSJ, show it helping nicely. 
-  steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj 2 \
+  steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj \
     --online-ivector-dir exp/nnet2_online/ivectors_test \
     exp/$gmm/graph data/test $dir/decode || exit 1;
 
