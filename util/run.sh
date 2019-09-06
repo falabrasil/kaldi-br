@@ -14,7 +14,7 @@ run_decode=false
 use_gpu=false
 use_ivector=false
 
-if [[ $use_gpu ]] ; then
+if $use_gpu ; then
   if ! cuda-compiled; then
     cat << EOF && exit 1
 This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
@@ -53,7 +53,7 @@ rm -rf \
     --tot_gauss $tot_gauss \
     --lm_order $lm_order 
     
-if [[ $use_ivector ]] ; then
+if $use_ivector ; then
     ./run_dnn_ivector.sh
 else
     ./run_dnn.sh
