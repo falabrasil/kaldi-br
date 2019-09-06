@@ -35,8 +35,8 @@ echo "CASSOTA $use_gpu"
 . ./path.sh || exit 1
 . ./cmd.sh || exit 1
 
-# Safety mechanism (possible running this script with modified arguments)
-. utils/parse_options.sh || exit 1
+## Safety mechanism (possible running this script with modified arguments)
+#. utils/parse_options.sh || exit 1
 
 # DNN parameters 
 minibatch_size=512
