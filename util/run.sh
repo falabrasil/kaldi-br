@@ -45,14 +45,13 @@ rm -rf \
     data/test/split2 \
     data/local/lang \
     data/lang \
-    data/local/tmp \
     data/local/dict/lexiconp.txt
 
 ./run_gmm.sh \
     --nj $nj \
     --num_leaves $num_leaves \
     --tot_gauss $tot_gauss \
-    --lm_order $lm_order \
+    --lm_order $lm_order 
     
 if [[ $use_ivector ]] ; then
     ./run_dnn_ivector.sh

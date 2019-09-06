@@ -1,3 +1,47 @@
+if test $# -eq 0 ; then
+    echo "eae malandro"
+    exit 1
+fi
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --nj)
+            nj="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        --num_leaves)
+            num_leaves="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        --tot_gauss)
+            tot_gauss="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        --lm_order)
+            lm_order="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        *)  # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            exit 0
+        ;;
+    esac
+done
+
+if [[ -z $nj || -z $num_leaves  || -z $tot_gauss || -z $lm_order ]] ; then
+    echo "problem with variable"
+    exit 1
+fi
+
+echo "CASSOTA $nj"
+
 echo
 echo "===== PREPARING ACOUSTIC DATA ====="
 echo
