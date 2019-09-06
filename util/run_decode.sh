@@ -1,3 +1,37 @@
+if test $# -eq 0 ; then
+    echo "eae malandro"
+    exit 1
+fi
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --nj)
+            nj="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        --run_decode)
+            run_decode="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        *)  # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            exit 0
+        ;;
+    esac
+done
+
+if [[ -z $nj || -z $run_decode ]] ; then
+    echo "problem with variable"
+    exit 1
+fi
+
+. ./cmd.sh || exit 1
+
 echo
 echo "===== PREPARING GRAPH DIRECTORY ====="
 echo
@@ -8,7 +42,7 @@ utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
 utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
 
 
-if [[ $run_decode ]] ; then 
+if $run_decode ; then 
     echo
     echo "===== MONO DECODING ====="
     echo
