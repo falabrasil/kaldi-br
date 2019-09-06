@@ -28,7 +28,7 @@ EOF
 else
   # Use 4 nnet jobs just like run_4d_gpu.sh so the results should be
   # almost the same, but this may be a little bit slow.
-  num_threads=12
+  num_threads=$nj
   parallel_opts="--num-threads $num_threads"
 fi
 
@@ -42,6 +42,9 @@ if $rm_prev_data ; then
         data/local/lang \
         data/local/dict/lexiconp.txt
 fi
+
+utils/fix_data_dir.sh data/train
+utils/fix_data_dir.sh data/test
 
 ./run_gmm.sh \
     --nj $nj \
