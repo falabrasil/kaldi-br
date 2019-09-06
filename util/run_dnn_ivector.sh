@@ -1,4 +1,36 @@
 #!/bin/bash
+if test $# -eq 0 ; then
+    echo "eae malandro"
+    exit 1
+fi
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --nj)
+            nj="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        --use_gpu)
+            use_gpu="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        *)  # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            exit 0
+        ;;
+    esac
+done
+
+if [[ -z $nj || -z $use_gpu ]] ; then
+    echo "problem with variable"
+    exit 1
+fi
+
 #This script is a modified version of the ../rm/s5/local/online/run_nnet2.sh that trains the DNN model with iVectors to online decoding.
 . ./cmd.sh
 
