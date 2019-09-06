@@ -30,8 +30,6 @@ if [[ -z $nj || -z $use_gpu ]] ; then
     exit 1
 fi
 
-echo "CASSOTA $use_gpu"
-
 . ./path.sh || exit 1
 . ./cmd.sh || exit 1
 
@@ -76,7 +74,7 @@ steps/nnet2/train_pnorm_fast.sh \
     --stage -10 \
     --num-threads $num_threads \
     --minibatch-size $minibatch_size \
-    --parallel-opts $parallel_opts \
+    --parallel-opts "$parallel_opts" \
     --num-jobs-nnet 4 \
     --num-epochs $num_epochs \
     --num-epochs-extra $num_epochs_extra \
