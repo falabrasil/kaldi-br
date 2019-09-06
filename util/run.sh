@@ -50,6 +50,7 @@ fi
     --lm_order $lm_order 
     
 if ! $use_ivector ; then
+    echo "'iam gonna run dnn with no ivectors"
     ./run_dnn.sh \
         --nj $nj \
         --use_gpu $use_gpu

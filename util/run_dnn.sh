@@ -30,6 +30,8 @@ if [[ -z $nj || -z $use_gpu ]] ; then
     exit 1
 fi
 
+echo "CASSOTA $use_gpu"
+
 . ./path.sh || exit 1
 . ./cmd.sh || exit 1
 
