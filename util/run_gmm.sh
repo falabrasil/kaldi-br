@@ -40,8 +40,6 @@ if [[ -z $nj || -z $num_leaves  || -z $tot_gauss || -z $lm_order ]] ; then
     exit 1
 fi
 
-echo "CASSOTA $nj"
-
 echo
 echo "===== PREPARING ACOUSTIC DATA ====="
 echo

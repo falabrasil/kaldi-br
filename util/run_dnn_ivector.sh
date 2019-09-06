@@ -3,14 +3,11 @@
 . ./cmd.sh
 
 
-nj=2      # number of parallel jobs 
-
 # use stage 0 to extract mfcc features and ivector for train and test.
 stage=0
 # use stage 1 only if you already have extracted ivector for train and test
 #stage=1
 train_stage=-10
-use_gpu=false
 
 # trained GMM model
 gmm=tri3
@@ -49,7 +46,7 @@ EOF
 else
   # Use 4 nnet jobs just like run_4d_gpu.sh so the results should be
   # almost the same, but this may be a little bit slow.
-  num_threads=12
+  num_threads=$nj
   parallel_opts="--num-threads $num_threads"
 fi
 

@@ -10,7 +10,8 @@ lm_order=3 # language model order (n-gram quantity)
 num_leaves=400
 tot_gauss=1600
 
-run_decode=false
+rm_prev_data=true
+run_decode=true
 use_gpu=false
 use_ivector=false
 
@@ -32,20 +33,15 @@ else
 fi
 
 # Removing previously created data (from last run.sh execution). 
-rm -rf \
-    exp \
-    mfcc \
-    data/train/spk2utt \
-    data/train/cmvn.scp \
-    data/train/feats.scp \
-    data/train/split2 \
-    data/test/spk2utt \
-    data/test/cmvn.scp \
-    data/test/feats.scp \
-    data/test/split2 \
-    data/local/lang \
-    data/lang \
-    data/local/dict/lexiconp.txt
+if $rm_prev_data ; then
+    rm -rf \
+        exp \
+        mfcc \
+        data/{train,test}/{spk2utt,cmvn.scp,feats.scp,split2} \
+        data/lang \
+        data/local/lang \
+        data/local/dict/lexiconp.txt
+fi
 
 ./run_gmm.sh \
     --nj $nj \
@@ -53,10 +49,14 @@ rm -rf \
     --tot_gauss $tot_gauss \
     --lm_order $lm_order 
     
-if $use_ivector ; then
-    ./run_dnn_ivector.sh
+if ! $use_ivector ; then
+    ./run_dnn.sh \
+        --nj $nj \
+        --use_gpu $use_gpu
 else
-    ./run_dnn.sh
+    ./run_dnn_ivector.sh \
+        --nj $nj \
+        --use_gpu $use_gpu
 fi
 
 ./run_decode.sh \
