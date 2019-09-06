@@ -58,6 +58,13 @@ then
 	exit 1
 fi
 
+HEADER="#!/bin/bash
+#
+# Cassio Batista   - cassio.batista.13@gmail.com
+# Ana Larissa Dias - larissa.engcomp@gmail.com
+# $(date)
+"
+
 fb_dir=$(pwd)
 DATA_DIR="$1"
 KALDI_ROOT="$(readlink -f $(dirname "$(dirname "$1")"))"
@@ -70,21 +77,15 @@ mkdir local
 #cp ../rm/s5/local/score.sh ./local # larissa's suggestion - CB
 cp ../wsj/s5/local/score.sh ./local # larissa's suggestion - CB
 
-mkdir local/online
-cat ${fb_dir}/util/run_nnet2_common.sh > ./local/run_nnet2_common.sh
-chmod +x ./local/online/run_nnet2_common.sh
-
 mkdir conf
 echo \
 "first_beam=10.0
 beam=13.0
 lattice_beam=6.0" > conf/decode.config
 
-echo \
-"--use-energy=false" > conf/mfcc.conf
+echo "--use-energy=false" > conf/mfcc.conf
 
-echo \
-"# configuration file for apply-cmvn-online for online decoding" > conf/online_cmvn.conf
+echo "# configuration file for apply-cmvn-online for online decoding" > conf/online_cmvn.conf
 
 mkdir -p data/train
 touch data/train/{spk2gender,wav.scp,text,utt2spk,corpus.txt}
@@ -95,25 +96,14 @@ touch data/test/{spk2gender,wav.scp,text,utt2spk,corpus.txt}
 mkdir -p data/local/dict
 touch data/local/dict/{lexicon.txt,nonsilence_phones.txt,silence_phones.txt,optional_silence.txt}
 
-echo \
-"#!/bin/bash
-#
-# Cassio Batista   - cassio.batista.13@gmail.com
-# Ana Larissa Dias - larissa.engcomp@gmail.com
-# $(date)
-# http://kaldi-asr.org/doc/kaldi_for_dummies.html
+echo "# http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
 # Setting local system jobs (local CPU - no external clusters)
 export train_cmd=run.pl
 export decode_cmd=run.pl" > cmd.sh
 chmod +x cmd.sh
 
-echo \
-"#!/bin/bash
-#
-# Cassio Batista   - cassio.batista.13@gmail.com
-# Ana Larissa Dias - larissa.engcomp@gmail.com
-# $(date)
+echo "$HEADER
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
 # Defining Kaldi root directory
@@ -132,24 +122,21 @@ export DATA_ROOT=\"/home/{user}/kaldi-trunk/egs/digits/digits_audio\"
 export LC_ALL=C" > path.sh
 chmod +x path.sh
 
-echo \
-"#!/bin/bash
-#
-# Cassio Batista   - cassio.batista.13@gmail.com
-# Ana Larissa Dias - larissa.engcomp@gmail.com
-# $(date)
-# http://kaldi-asr.org/doc/kaldi_for_dummies.html
-" | cat - ${fb_dir}/util/run.sh > run.sh
-chmod +x run.sh
+echo "$HEADER" | cat - ${fb_dir}/util/run.sh             > run.sh
+echo "$HEADER" | cat - ${fb_dir}/util/run_gmm.sh         > run_gmm.sh
+echo "$HEADER" | cat - ${fb_dir}/util/run_dnn.sh         > run_dnn.sh
+echo "$HEADER" | cat - ${fb_dir}/util/run_dnn_ivector.sh > run_dnn_ivector.sh
+echo "$HEADER" | cat - ${fb_dir}/util/run_decode.sh      > run_decode.sh
 
-echo \
-"#!/bin/bash
-#
-# Cassio Batista   - cassio.batista.13@gmail.com
-# Ana Larissa Dias - larissa.engcomp@gmail.com
-# $(date)
-" | cat - ${fb_dir}/util/run_pnormfast_ivector.sh > run_dnn_ivector.sh
-chmod +x run_dnn_ivector.sh 
+chmod +x run.sh
+chmod +x run_gmm.sh
+chmod +x run_dnn.sh
+chmod +x run_dnn_ivector.sh
+chmod +x run_decode.sh
+
+mkdir local/online
+cat ${fb_dir}/util/run_nnet2_common.sh > ./local/run_nnet2_common.sh
+chmod +x ./local/online/run_nnet2_common.sh
 
 #cp -r ../wsj/s5/utils .
 #cp -r ../wsj/s5/steps .
