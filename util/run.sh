@@ -7,8 +7,8 @@
 nj=$(($(grep -c ^processor /proc/cpuinfo)/2))       # number of parallel jobs 
 lm_order=3 # language model order (n-gram quantity)
 
-num_leaves=400
-tot_gauss=1600
+num_leaves=500
+tot_gauss=2000
 
 rm_prev_data=true
 run_decode=true
