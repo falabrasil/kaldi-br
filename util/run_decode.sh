@@ -67,6 +67,8 @@ run_tri2_decode=true
 run_tri3_decode=true
 run_dnn_decode=true
 
+rm -f RESULTS
+
 if $run_decode ; then 
     if $run_mono_decode ; then
         echo
@@ -149,7 +151,7 @@ if $run_decode ; then
                 --online-ivector-dir exp/nnet2_online/ivectors_test \
                 exp/tri3/graph data/test exp/nnet2_online/nnet/decode
             
-            echo "====== DNN ======" >> RESULTS
+            echo "====== DNN WITH IVECTORS ======" >> RESULTS
             for x in exp/nnet2_online/nnet/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
         fi # close $use_ivect
     fi # close $run_dnn
