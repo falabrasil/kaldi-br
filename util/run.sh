@@ -4,11 +4,14 @@
 # Safety mechanism (possible running this script with modified arguments)
 . utils/parse_options.sh || exit 1
 
+TAG=$0
+
 nj=$(($(grep -c ^processor /proc/cpuinfo)/2))       # number of parallel jobs 
 lm_order=3 # language model order (n-gram quantity)
 
-num_leaves=500
-tot_gauss=2000
+# see https://cmusphinx.github.io/wiki/tutorialam/#configuring-model-type-and-model-parameters
+num_leaves=500 # senones (or tied-states)
+tot_gauss=2000 # senones * densities (gaussians per mixture)
 
 rm_prev_data=true
 run_decode=true
@@ -34,18 +37,19 @@ fi
 
 # Removing previously created data (from last run.sh execution). 
 if $rm_prev_data ; then
-    rm -rf \
-        exp \
-        mfcc \
+    echo "[$TAG] removing data from previous run"
+    rm -rf exp mfcc \
         data/{train,test}/{spk2utt,cmvn.scp,feats.scp,split2} \
         data/lang \
         data/local/lang \
         data/local/dict/lexiconp.txt
 fi
 
+echo "[$TAG] running fix_data_dir"
 utils/fix_data_dir.sh data/train
 utils/fix_data_dir.sh data/test
 
+echo "[$TAG] running gmm"
 ./run_gmm.sh \
     --nj $nj \
     --num_leaves $num_leaves \
@@ -53,16 +57,18 @@ utils/fix_data_dir.sh data/test
     --lm_order $lm_order 
     
 if ! $use_ivector ; then
-    echo "'iam gonna run dnn with no ivectors"
+    echo "[$TAG] running dnn with *no* ivectors"
     ./run_dnn.sh \
         --nj $nj \
         --use_gpu $use_gpu
 else
+    echo "[$TAG] running dnn with ivectors"
     ./run_dnn_ivector.sh \
         --nj $nj \
         --use_gpu $use_gpu
 fi
 
+echo "[$TAG] running decode"
 ./run_decode.sh \
     --nj $nj \
     --run_decode $run_decode
