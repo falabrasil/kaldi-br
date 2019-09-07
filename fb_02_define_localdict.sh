@@ -64,15 +64,15 @@ function create_wordlist() {
 	done
 	cat wlist.tmp | sort | uniq > wordlist.tmp
 
-	# NOTE: avoiding infinite loop on the next G2P step when generating lexicon
-	# G2P only accepts UTF-8 encoded files. ISO-8859-1 then becomes a problem -- CB
-	charset=$(file -b --mime-encoding wordlist.tmp)
-	if [[ "$charset" != "utf-8" ]]
-	then
-		echo "WARNING: converting file from ${charset} to UTF-8 ..."
-		iconv -f $charset -t utf-8 wordlist.tmp > out.tmp
-		mv out.tmp wordlist.tmp
-	fi
+	## NOTE: avoiding infinite loop on the next G2P step when generating lexicon
+	## G2P only accepts UTF-8 encoded files. ISO-8859-1 then becomes a problem -- CB
+	#charset=$(file -b --mime-encoding wordlist.tmp)
+	#if [[ "$charset" != "utf-8" ]]
+	#then
+	#	echo "WARNING: converting file from ${charset} to UTF-8 ..."
+	#	iconv -f $charset -t utf-8 wordlist.tmp > out.tmp
+	#	mv out.tmp wordlist.tmp
+	#fi
 }
 
 # a.) lexicon.txt
