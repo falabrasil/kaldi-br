@@ -85,7 +85,7 @@ fi
 
 # stages 1 through 3 run in run_nnet2_common.sh.
 
-local/online/run_nnet2_common.sh --stage  $stage --gmm $gmm || exit 1;
+local/online/run_nnet2_common.sh --stage $stage --gmm $gmm --use_gpu $use_gpu || exit 1;
 
 
 if [ $stage -le 4 ]; then

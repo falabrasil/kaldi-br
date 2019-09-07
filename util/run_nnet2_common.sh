@@ -10,6 +10,7 @@ ivector_dim=50
 #mfcc_config=conf/mfcc_hires.conf
 mfcc_config=conf/mfcc.conf
 gmm=
+use_gpu=
 use_ivector=true # If false, it skips training ivector extractor and
                  # ivector extraction stages.
 . ./cmd.sh
