@@ -17,6 +17,11 @@ do
             shift # past argument
             shift # past value
         ;;
+	 --use_ivector)
+            use_ivector="$2"
+            shift # past argument
+            shift # past value
+        ;;
         *)  # unknown option
             POSITIONAL+=("$1") # save it in an array for later
             shift # past argument
@@ -94,12 +99,26 @@ if $run_decode ; then
     for x in exp/tri3/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
     echo >> RESULTS
     
+    
     echo
     echo "============== DNN DECODING =============="
-    echo
-    steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
-    --nj $nj --transform-dir exp/tri3/decode exp/tri3/graph data/test exp/dnn/decode 
-    
-    echo "====== DNN ======" >> RESULTS
-    for x in exp/dnn/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+    echo    
+    if ! $use_ivector ; then
+	steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" \
+    		--nj $nj --transform-dir exp/tri3/decode exp/tri3/graph data/test exp/dnn/decode
+   
+   	echo "====== DNN ======" >> RESULTS
+    	for x in exp/dnn/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+   
+    else
+	# Note: the iVectors seem to hurt at small amount of data.
+  	# However, experiments by Haihua Xu on WSJ, show it helping nicely.
+  	steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj \
+    		--online-ivector-dir exp/nnet2_online/ivectors_test \
+    		exp/tri3/graph data/test exp/nnet2_online/nnet/decode
+        
+	echo "====== DNN ======" >> RESULTS
+    	for x in exp/nnet2_online/nnet/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+    fi
+
 fi

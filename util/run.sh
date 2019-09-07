@@ -71,4 +71,5 @@ fi
 echo "[$TAG] running decode"
 ./run_decode.sh \
     --nj $nj \
-    --run_decode $run_decode
+    --run_decode $run_decode \
+    --use_ivector $use_ivector

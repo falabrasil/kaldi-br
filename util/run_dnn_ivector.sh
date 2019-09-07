@@ -116,14 +116,4 @@ if [ $stage -le 5 ]; then
       data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
 fi
 
-
-if [ $stage -le 6 ]; then
-  # Note: the iVectors seem to hurt at small amount of data.
-  # However, experiments by Haihua Xu on WSJ, show it helping nicely. 
-  steps/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj \
-    --online-ivector-dir exp/nnet2_online/ivectors_test \
-    exp/$gmm/graph data/test $dir/decode || exit 1;
-
-  wait
-fi
 exit 0;
