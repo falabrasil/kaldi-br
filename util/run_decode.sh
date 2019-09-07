@@ -36,9 +36,24 @@ echo
 echo "===== PREPARING GRAPH DIRECTORY ====="
 echo
 
+echo
+echo "===== CREATING MONO GRAPH ====="
+echo
 utils/mkgraph.sh --mono data/lang exp/mono exp/mono/graph || exit 1
+
+echo
+echo "===== CREATING TRI 1 GRAPH (Δ) ====="
+echo
 utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph || exit 1
+
+echo
+echo "===== CREATING TRI 2 GRAPH (Δ+ΔΔ) ====="
+echo
 utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
+
+echo
+echo "===== CREATING TRI 3 GRAPH (LDA-MLLT) ====="
+echo
 utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
 
 
