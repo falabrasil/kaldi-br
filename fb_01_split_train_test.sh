@@ -35,8 +35,9 @@ then
 	echo
 	echo "Usage: $0 <audio_dataset_dir> <kaldi_project_dir>"
 	echo -e "\t<audio_dataset_dir> is the folder that contains all your audio base (wav + transcript.)."
+	echo -e "\t                    e.g.: ${HOME}/fb-asr/fb-am-tutorial/demo-corpora"
 	echo -e "\t<kaldi_project_dir> is the folder where you previously hosted your project on kaldi/egs."
-	echo -e "\t                    e.g.: /home/cassio/kaldi/egs/MEUPROJETO"
+	echo -e "\t                    e.g.: ${HOME}/kaldi/egs/MEUPROJETO"
 	exit 1
 elif [ ! -d $1 ] || [ ! -d $2 ]
 then

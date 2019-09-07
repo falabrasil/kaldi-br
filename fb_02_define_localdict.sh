@@ -35,9 +35,9 @@ then
 	echo
 	echo "Usage: $0 <kaldi_project_dir> <G2P_dir>"
 	echo -e "\t<kaldi_project_dir> is the folder where you previously hosted your project on kaldi/egs."
-	echo -e "\t                    e.g.: /home/cassio/kaldi/egs/MEUPROJETO"
+	echo -e "\t                    e.g.: ${HOME}/kaldi/egs/MEUPROJETO"
 	echo -e "\t<G2P_dir> is the folder where the G2P software is located."
-	echo -e "\t                    e.g.: /home/cassio/nlp-generator"
+	echo -e "\t                    e.g.: ${HOME}/fb-nlp/nlp-generator"
 	exit 1
 elif [ ! -d $1 ] || [ ! -d $2 ]
 then

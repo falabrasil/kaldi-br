@@ -37,7 +37,7 @@ then
 	echo
 	echo "Usage: $0 <proj_dir>"
 	echo -e "\t<proj_dir> must be the path for your project folder *within* kaldi/egs parent dirs."
-	echo -e "\te.g.: /home/cassio/kaldi/egs/MEUPROJETO"
+	echo -e "\te.g.: ${HOME}/kaldi/egs/MEUPROJETO"
 	exit 1
 elif [ -d $1 ]
 then
