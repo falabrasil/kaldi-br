@@ -135,7 +135,7 @@ chmod +x run_dnn_ivector.sh
 chmod +x run_decode.sh
 
 mkdir local/online
-cat ${fb_dir}/util/run_nnet2_common.sh > ./local/run_nnet2_common.sh
+cat ${fb_dir}/util/run_nnet2_common.sh > ./local/online/run_nnet2_common.sh
 chmod +x ./local/online/run_nnet2_common.sh
 
 #cp -r ../wsj/s5/utils .
