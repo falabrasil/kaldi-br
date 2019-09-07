@@ -83,6 +83,10 @@ else
 fi
 
 
+echo
+echo "============== DNN WITH IVECTORS TRAINING =============="
+echo
+
 # stages 1 through 3 run in run_nnet2_common.sh.
 
 local/online/run_nnet2_common.sh --stage $stage --gmm $gmm --use_gpu $use_gpu || exit 1;
@@ -115,5 +119,9 @@ if [ $stage -le 5 ]; then
       --nj $nj \
       data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
 fi
+
+echo
+echo "============== FINISHED RUNNING DNN WITH IVECTORS =============="
+echo
 
 exit 0;
