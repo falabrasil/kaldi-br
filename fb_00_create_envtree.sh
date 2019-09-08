@@ -60,12 +60,12 @@ fi
 
 HEADER="#!/bin/bash
 #
-# Cassio Batista   - cassio.batista.13@gmail.com
+# Cassio Batista   - https://cassota.gitlab.io/
 # Ana Larissa Dias - larissa.engcomp@gmail.com
 # $(date)
 "
 
-fb_dir=$(pwd)
+FB_DIR=$(pwd)
 DATA_DIR="$1"
 KALDI_ROOT="$(readlink -f $(dirname "$(dirname "$1")"))"
 
@@ -73,8 +73,6 @@ mkdir -p $DATA_DIR
 cd $DATA_DIR
 
 mkdir local
-#cp ../voxforge/s5/local/score.sh ./local
-#cp ../rm/s5/local/score.sh ./local # larissa's suggestion - CB
 cp ../wsj/s5/local/score.sh ./local # larissa's suggestion - CB
 
 mkdir conf
@@ -122,24 +120,15 @@ export DATA_ROOT=\"/home/{user}/kaldi-trunk/egs/digits/digits_audio\"
 export LC_ALL=C" > path.sh
 chmod +x path.sh
 
-echo "$HEADER" | cat - ${fb_dir}/util/run.sh             > run.sh
-echo "$HEADER" | cat - ${fb_dir}/util/run_gmm.sh         > run_gmm.sh
-echo "$HEADER" | cat - ${fb_dir}/util/run_dnn.sh         > run_dnn.sh
-echo "$HEADER" | cat - ${fb_dir}/util/run_dnn_ivector.sh > run_dnn_ivector.sh
-echo "$HEADER" | cat - ${fb_dir}/util/run_decode.sh      > run_decode.sh
-
-chmod +x run.sh
-chmod +x run_gmm.sh
-chmod +x run_dnn.sh
-chmod +x run_dnn_ivector.sh
-chmod +x run_decode.sh
+cp ${FB_DIR}/util/run.sh .
+cp ${FB_DIR}/util/run_gmm.sh .
+cp ${FB_DIR}/util/run_dnn.sh .
+cp ${FB_DIR}/util/run_dnn_ivector.sh .
+cp ${FB_DIR}/util/run_decode.sh .
 
 mkdir local/online
-cat ${fb_dir}/util/run_nnet2_common.sh > ./local/online/run_nnet2_common.sh
-chmod +x ./local/online/run_nnet2_common.sh
+cp ${FB_DIR}/util/run_nnet2_common.sh ./local/online/run_nnet2_common.sh
 
-#cp -r ../wsj/s5/utils .
-#cp -r ../wsj/s5/steps .
 ln -s ../wsj/s5/utils . 
 ln -s ../wsj/s5/steps . 
 ln -s ../../src . 
@@ -150,5 +139,4 @@ ln -s ../../src .
 echo "check out your project dir at '$(readlink -f $DATA_DIR)'"
 
 echo "'$0' finished"
-
 ### EOF ###
