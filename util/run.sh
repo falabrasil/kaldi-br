@@ -68,6 +68,10 @@ else
         --use_gpu $use_gpu
 fi
 
+echo "[$TAG] running fix_data_dir"
+utils/fix_data_dir.sh data/train
+utils/fix_data_dir.sh data/test
+
 echo "[$TAG] running decode"
 ./run_decode.sh \
     --nj $nj \
