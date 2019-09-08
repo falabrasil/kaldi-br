@@ -1,3 +1,8 @@
+#!/bin/bash
+#
+# Cassio Batista   - https://cassota.gitlab.io/
+# Ana Larissa Dias - larissa.engcomp@gmail.com
+
 TAG="$0 $(date +'%d/%m/%y %H:%M')"
 
 . ./path.sh || exit 1

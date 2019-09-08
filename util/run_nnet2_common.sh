@@ -1,7 +1,7 @@
 #!/bin/bash
-# This script extracts mfcc features, trains ubm model and ivector extractor, after that extracts ivector for train and test.
+# This script extracts mfcc features, trains ubm model and ivector extractor,
+# after that extracts ivector for train and test.
 . ./cmd.sh
-
 
 stage=1
 nnet_affix=_online
@@ -22,7 +22,7 @@ if $use_gpu; then
     cat <<EOF && exit 1
 This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
 If you want to use GPUs (and have them), go to src/, and configure and make on a machine
-where "nvcc" is installed.  Otherwise, call this script with --use-gpu false
+where "nvcc" is installed. Otherwise, call this script with --use-gpu false
 EOF
   fi
   parallel_opts="--gpu 1"
