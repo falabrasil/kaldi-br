@@ -1,4 +1,5 @@
-#!/bin/bash
+TAG="$0 $(date +'%d/%m/%y %H:%M')"
+
 if test $# -eq 0 ; then
     echo "eae malandro"
     exit 1
@@ -82,46 +83,41 @@ else
   parallel_opts="--num-threads $num_threads"
 fi
 
-
 echo
-echo "============== DNN WITH IVECTORS TRAINING =============="
+echo "============== [$TAG] DNN WITH iVECTORS TRAINING =============="
 echo
 
 # stages 1 through 3 run in run_nnet2_common.sh.
-
 local/online/run_nnet2_common.sh --stage $stage --gmm $gmm --use_gpu $use_gpu || exit 1;
 
-
 if [ $stage -le 4 ]; then
-  steps/nnet2/train_pnorm_fast.sh \
-    --stage $train_stage \
-    --feat-type raw \
-    --online-ivector-dir exp/nnet2_online/ivectors \
-    --num-threads "$num_threads" \
-    --minibatch-size "$minibatch_size" \
-    --parallel-opts "$parallel_opts" \
-    --num-jobs-nnet 4 \
-    --num-epochs $num_epochs \
-    --add-layers-period 1 \
-    --num-hidden-layers $num_hidden_layers \
-    --mix-up 4000 \
-    --initial-learning-rate $initial_learning_rate \
-    --final-learning-rate $final_learning_rate \
-    --cmd "$decode_cmd" \
-    --pnorm-input-dim $pnorm_input_dim \
-    --pnorm-output-dim $pnorm_output_dim \
-    data/train data/lang exp/"$gmm"_ali $dir  || exit 1;
+    steps/nnet2/train_pnorm_fast.sh \
+        --stage $train_stage \
+        --feat-type raw \
+        --online-ivector-dir exp/nnet2_online/ivectors \
+        --num-threads "$num_threads" \
+        --minibatch-size "$minibatch_size" \
+        --parallel-opts "$parallel_opts" \
+        --num-jobs-nnet 4 \
+        --num-epochs $num_epochs \
+        --add-layers-period 1 \
+        --num-hidden-layers $num_hidden_layers \
+        --mix-up 4000 \
+        --initial-learning-rate $initial_learning_rate \
+        --final-learning-rate $final_learning_rate \
+        --cmd "$decode_cmd" \
+        --pnorm-input-dim $pnorm_input_dim \
+        --pnorm-output-dim $pnorm_output_dim \
+        data/train data/lang exp/"$gmm"_ali $dir  || exit 1;
 fi
 
 if [ $stage -le 5 ]; then
-  steps/online/nnet2/extract_ivectors_online.sh \
-      --cmd "$train_cmd" \
-      --nj $nj \
-      data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
+    steps/online/nnet2/extract_ivectors_online.sh \
+        --cmd "$train_cmd" \
+        --nj $nj \
+        data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
 fi
 
 echo
-echo "============== FINISHED RUNNING DNN WITH IVECTORS =============="
+echo "============== [$TAG] FINISHED RUNNING DNN WITH iVECTORS =============="
 echo
-
-exit 0;

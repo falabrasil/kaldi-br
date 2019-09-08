@@ -1,3 +1,5 @@
+TAG="$0 $(date +'%d/%m/%y %H:%M')"
+
 if test $# -eq 0 ; then
     echo "eae malandro"
     exit 1
@@ -37,29 +39,42 @@ fi
 
 . ./cmd.sh || exit 1
 
-echo
-echo "===== PREPARING GRAPH DIRECTORY ====="
-echo
+run_mkgraph_mono=false
+run_mkgraph_tri1=false
+run_mkgraph_tri2=false
+run_mkgraph_tri3=true
 
 echo
-echo "===== CREATING MONO GRAPH ====="
+echo "===== [$TAG] PREPARING GRAPH DIRECTORY ====="
 echo
-utils/mkgraph.sh --mono data/lang exp/mono exp/mono/graph || exit 1
 
-echo
-echo "===== CREATING TRI 1 GRAPH (Δ) ====="
-echo
-utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph || exit 1
+if $run_mkgraph_mono ; then
+    echo
+    echo "[$TAG] CREATING MONO GRAPH ====="
+    echo
+    utils/mkgraph.sh --mono data/lang exp/mono exp/mono/graph || exit 1
+fi
 
-echo
-echo "===== CREATING TRI 2 GRAPH (Δ+ΔΔ) ====="
-echo
-utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
+if $run_mkgraph_tri1 ; then
+    echo
+    echo "[$TAG] CREATING TRI 1 GRAPH (Δ) ====="
+    echo
+    utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph || exit 1
+fi
 
-echo
-echo "===== CREATING TRI 3 GRAPH (LDA-MLLT) ====="
-echo
-utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
+if $run_mkgraph_tri2 ; then
+    echo
+    echo "[$TAG] CREATING TRI 2 GRAPH (Δ+ΔΔ) ====="
+    echo
+    utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
+fi
+
+if $run_mkgraph_tri3 ; then
+    echo
+    echo "[$TAG] CREATING TRI 3 GRAPH (LDA-MLLT) ====="
+    echo
+    utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
+fi
 
 run_mono_decode=false
 run_tri1_decode=false
@@ -70,9 +85,12 @@ run_dnn_decode=true
 rm -f RESULTS
 
 if $run_decode ; then 
+    echo
+    echo "===== [$TAG] STARTING DECODE ====="
+    echo
     if $run_mono_decode ; then
         echo
-        echo "===== MONO DECODING ====="
+        echo "[$TAG] MONO DECODING ====="
         echo
         steps/decode.sh \
             --config conf/decode.config \
@@ -87,7 +105,7 @@ if $run_decode ; then
     
     if $run_tri1_decode ; then
         echo
-        echo "===== TRIPHONE 1 DECODING ====="
+        echo "[$TAG] TRIPHONE 1 DECODING ====="
         echo
         steps/decode.sh \
             --config conf/decode.config \
@@ -102,7 +120,7 @@ if $run_decode ; then
     
     if $run_tri2_decode ; then
         echo
-        echo "===== TRIPHONE 2 DECODING ====="
+        echo "[$TAG] TRIPHONE 2 DECODING ====="
         echo
         steps/decode.sh \
             --config conf/decode.config \
@@ -117,7 +135,7 @@ if $run_decode ; then
     
     if $run_tri3_decode ; then
         echo
-        echo "===== TRIPHONE 3 DECODING ====="
+        echo "[$TAG] TRIPHONE 3 DECODING ====="
         echo
         steps/decode_fmllr.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri3/graph data/test exp/tri3/decode
         
@@ -127,10 +145,10 @@ if $run_decode ; then
     fi
     
     if $run_dnn_decode ; then
-        echo
-        echo "============== DNN DECODING =============="
-        echo    
         if ! $use_ivector ; then
+            echo
+            echo "[$TAG] DNN DECODING ====="
+            echo    
             steps/nnet2/decode.sh \
                 --config conf/decode.config \
                 --cmd "$decode_cmd" \
@@ -142,6 +160,9 @@ if $run_decode ; then
             for x in exp/dnn/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
        
         else
+            echo
+            echo "[$TAG] DNN WITH iVECTORS DECODING ======"
+            echo    
             # Note: the iVectors seem to hurt at small amount of data.
             # However, experiments by Haihua Xu on WSJ, show it helping nicely.
             steps/nnet2/decode.sh \

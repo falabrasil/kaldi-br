@@ -1,3 +1,5 @@
+TAG="$0 $(date +'%d/%m/%y %H:%M')"
+
 if test $# -eq 0 ; then
     echo "eae malandro"
     exit 1
@@ -67,7 +69,7 @@ else
 fi
 
 echo
-echo "============== DNN TRAINING =============="
+echo "============== [$TAG] DNN TRAINING =============="
 echo
 
 steps/nnet2/train_pnorm_fast.sh \
@@ -89,5 +91,5 @@ steps/nnet2/train_pnorm_fast.sh \
     data/train data/lang exp/tri3_ali exp/dnn
 
 echo
-echo "============== FINISHED RUNNING DNN =============="
+echo "============== [$TAG] FINISHED RUNNING DNN =============="
 echo 

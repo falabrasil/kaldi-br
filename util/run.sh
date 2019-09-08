@@ -1,10 +1,10 @@
+TAG="$0 $(date +'%d/%m/%y %H:%M')"
+
 . ./path.sh || exit 1
 . ./cmd.sh || exit 1
 
 # Safety mechanism (possible running this script with modified arguments)
 . utils/parse_options.sh || exit 1
-
-TAG=$0
 
 nj=$(($(grep -c ^processor /proc/cpuinfo)/2))       # number of parallel jobs 
 lm_order=3 # language model order (n-gram quantity)
@@ -45,7 +45,7 @@ if $rm_prev_data ; then
         data/local/dict/lexiconp.txt
 fi
 
-echo "[$TAG] running fix_data_dir"
+echo "[$TAG] running 1st fix_data_dir"
 utils/fix_data_dir.sh data/train
 utils/fix_data_dir.sh data/test
 
@@ -68,7 +68,7 @@ else
         --use_gpu $use_gpu
 fi
 
-echo "[$TAG] running fix_data_dir"
+echo "[$TAG] running 2nd fix_data_dir"
 utils/fix_data_dir.sh data/train
 utils/fix_data_dir.sh data/test
 
