@@ -61,9 +61,9 @@ echo "===== CREATING TRI 3 GRAPH (LDA-MLLT) ====="
 echo
 utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
 
-run_mono_decode=true
-run_tri1_decode=true
-run_tri2_decode=true
+run_mono_decode=false
+run_tri1_decode=false
+run_tri2_decode=false
 run_tri3_decode=true
 run_dnn_decode=true
 
