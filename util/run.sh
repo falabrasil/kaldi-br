@@ -25,6 +25,16 @@ run_decode=true
 use_gpu=false
 use_ivector=false
 
+# our language model is 165M in size so it is good to have a copy offline
+# somewhere in your machine to speed things up and also save network bandwidth.
+# moreover you leave it blank to donwload it from FalaBrasil's GitLab server
+##lm_offline_path=
+lm_offline_path=${HOME}/fb-gitlab/fb-asr/fb-asr-resources/kaldi-resources/lm/lm.arpa
+if [[ ! -z $lm_offline_path ]] ; then
+    mkdir -p data/local/tmp
+    cp -rv $lm_offline_path data/local/tmp
+fi
+
 if $use_gpu ; then
   if ! cuda-compiled; then
     cat << EOF && exit 1
