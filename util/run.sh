@@ -4,6 +4,8 @@
 # Ana Larissa Dias - larissa.engcomp@gmail.com
 
 TAG="$0 $(date +'%d/%m/%y %H:%M')"
+COLOR_B="\e[92m"
+COLOR_E="\e[0m"
 
 . ./path.sh || exit 1
 . ./cmd.sh || exit 1
@@ -42,7 +44,9 @@ fi
 
 # Removing previously created data (from last run.sh execution). 
 if $rm_prev_data ; then
+    echo -en $COLOR_B
     echo "[$TAG] removing data from previous run"
+    echo -en $COLOR_E
     rm -rf exp mfcc \
         data/{train,test}/{spk2utt,cmvn.scp,feats.scp,split2} \
         data/lang \
@@ -50,11 +54,15 @@ if $rm_prev_data ; then
         data/local/dict/lexiconp.txt
 fi
 
+echo -en $COLOR_B
 echo "[$TAG] running 1st fix_data_dir"
+echo -en $COLOR_E
 utils/fix_data_dir.sh data/train
 utils/fix_data_dir.sh data/test
 
+echo -en $COLOR_B
 echo "[$TAG] running gmm"
+echo -en $COLOR_E
 ./run_gmm.sh \
     --nj $nj \
     --num_leaves $num_leaves \
@@ -62,22 +70,30 @@ echo "[$TAG] running gmm"
     --lm_order $lm_order 
     
 if ! $use_ivector ; then
+    echo -en $COLOR_B
     echo "[$TAG] running dnn with *no* ivectors"
+    echo -en $COLOR_E
     ./run_dnn.sh \
         --nj $nj \
         --use_gpu $use_gpu
 else
+    echo -en $COLOR_B
     echo "[$TAG] running dnn with ivectors"
+echo -en $COLOR_E
     ./run_dnn_ivector.sh \
         --nj $nj \
         --use_gpu $use_gpu
 fi
 
+echo -en $COLOR_B
 echo "[$TAG] running 2nd fix_data_dir"
+echo -en $COLOR_E
 utils/fix_data_dir.sh data/train
 utils/fix_data_dir.sh data/test
 
+echo -en $COLOR_B
 echo "[$TAG] running decode"
+echo -en $COLOR_E
 ./run_decode.sh \
     --nj $nj \
     --run_decode $run_decode \
