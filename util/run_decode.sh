@@ -9,12 +9,12 @@ COLOR_E="\e[0m"
 
 function usage() {
     echo "usage: (bash) $0 OPTIONS"
-    echo "eg.: $0 --XX x --XX x --XX x"
+    echo "eg.: $0 --nj 2 --run_decode true --use_ivector false"
+    echo ""
     echo "OPTIONS"
-    echo "  -- "
-    echo "  -- "
-    echo "  -- "
-    echo "  -- "
+    echo "  --nj             number of parallel jobs  "
+    echo "  --run_decode     specifies whether the decode step should be computed  "
+    echo "  --use_ivector    if false, it run the standard DNN decode. If true run the DNN with ivector decode  "
 }
 
 if test $# -eq 0 ; then

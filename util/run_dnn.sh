@@ -7,11 +7,11 @@ TAG="DNN"
 
 function usage() {
     echo "usage: (bash) $0 OPTIONS"
-    echo "eg.: $0 --XX x --XX x --XX x"
+    echo "eg.: $0 --nj 2 --use_gpu false"
+    echo ""
     echo "OPTIONS"
-    echo "  -- "
-    echo "  -- "
-    echo "  -- "
+    echo "  --nj         number of parallel jobs  "
+    echo "  --use_gpu    specifies whether run on GPU or on CPU  "
 }
 
 if test $# -eq 0 ; then

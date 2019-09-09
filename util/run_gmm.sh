@@ -9,12 +9,13 @@ COLOR_E="\e[0m"
 
 function usage() {
     echo "usage: (bash) $0 OPTIONS"
-    echo "eg.: $0 --XX x --XX x --XX x"
+    echo "eg.: $0 --nj 2 --num_leaves 500 --tot_gauss 1000 --lm_order 2"
+    echo ""
     echo "OPTIONS"
-    echo "  --nj         "
-    echo "  --num_leaves "
-    echo "  --tot_gauss  "
-    echo "  --lm_order   "
+    echo "  --nj            number of parallel jobs "
+    echo "  --num_leaves    number of states in the decision tree "
+    echo "  --tot_gauss     total number of gaussians"
+    echo "  --lm_order      language model order (n-gram quantity)"
 }
 
 if test $# -eq 0 ; then
