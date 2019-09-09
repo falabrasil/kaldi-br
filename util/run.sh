@@ -31,8 +31,16 @@ use_ivector=false
 ##lm_offline_path=
 lm_offline_path=${HOME}/fb-gitlab/fb-asr/fb-asr-resources/kaldi-resources/lm/lm.arpa
 if [[ ! -z $lm_offline_path ]] ; then
-    mkdir -p data/local/tmp
-    cp -rv $lm_offline_path data/local/tmp
+    if [[ ! -f $lm_offline_path ]] ; then
+        echo "[$TAG] LM file '$lm_offline_path' 
+does not exist. you can either fix the variable '\$lm_offline_path' 
+to a valid path on your own machine or leave it empty in order to 
+download the LM directly from FalaBrasil's repo on GitLab server."
+        exit 1
+    else
+        mkdir -p data/local/tmp
+        cp -rv $lm_offline_path data/local/tmp
+    fi
 fi
 
 if $use_gpu ; then
@@ -52,12 +60,6 @@ else
   parallel_opts="--num-threads $num_threads"
 fi
 
-num_speakers=$(ls -d data/train/*/ | wc -l)
-if [ $num_speakers -le $nj ] ; then
-    echo "[$TAG] the number of jobs ($nj) must be smaller than the number of speakers in the train set ($num_speakers)"
-    exit 1
-fi
-
 # Removing previously created data (from last run.sh execution). 
 if $rm_prev_data ; then
     echo -en $COLOR_B
@@ -68,6 +70,12 @@ if $rm_prev_data ; then
         data/lang \
         data/local/lang \
         data/local/dict/lexiconp.txt
+fi
+
+num_speakers=$(ls -d data/train/*/ | wc -l)
+if [ $num_speakers -le $nj ] ; then
+    echo "[$TAG] the number of jobs ($nj) must be smaller than the number of speakers in the train set ($num_speakers)"
+    exit 1
 fi
 
 echo -en $COLOR_B
