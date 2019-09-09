@@ -146,9 +146,9 @@ function create_text() {
 	rm -f ${1}/data/${2}/text
 	while read line
 	do
-		spkrID=$(echo $line | sed 's/\// /g' | awk '{print $(NF-1)}')
+		spkrID=$(echo $line | dos2unix | sed 's/\// /g' | awk '{print $(NF-1)}')
 		uttID="${spkrID}_$(basename $line | sed 's/.wav//g')"
-		echo "$uttID $(cat ${line}.txt)" >> ${1}/data/${2}/text
+		echo "$uttID $(cat ${line}.txt | dos2unix)" >> ${1}/data/${2}/text
 	done < ${2}.${3}.list
 }
 
