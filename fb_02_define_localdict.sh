@@ -57,7 +57,7 @@ function create_wordlist() {
 	for corpus in $(find ${1}/data/ -name corpus.txt)
 	do
 		echo "scanning ${corpus}..."
-		for word in $(cat $corpus | tr '[A-Z]' '[a-z]' | tr "\'" " " | sed 's/[,.;<>:?!1234"567890()@%]/ /g')
+		for word in $(cat $corpus | dos2unix | tr '[A-Z]' '[a-z]' | tr "\'" " " | sed 's/[,.;<>:?!1234"567890()@%]/ /g')
 		do
 			echo $word >> wlist.tmp 
 		done 
@@ -84,8 +84,8 @@ function create_wordlist() {
 function create_lexicon() {
 	echo -n "creating lexicon.txt file... "
 	
-	java -jar "${2}" -gio wordlist.tmp teste.tmp >/dev/null 2>&1
-	mv teste.tmp dict.tmp # FIXME G2P must return grapheme -- CB
+	java -jar "${2}" -gio wordlist.tmp teste.tmp #>/dev/null 2>&1
+	mv teste.tmp dict.tmp
 
 	echo -e "!SIL\tsil"   > ${1}/lexicon.txt
 	echo -e "<UNK>\tspn" >> ${1}/lexicon.txt
