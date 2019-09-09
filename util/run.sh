@@ -20,10 +20,10 @@ lm_order=3 # language model order (n-gram quantity)
 num_leaves=500 # senones (or tied-states)
 tot_gauss=2000 # senones * densities (gaussians per mixture)
 
-rm_prev_data=true
-run_decode=true
-use_gpu=false
-use_ivector=false
+rm_prev_data=true # Removing previously created data (from last run.sh execution)
+run_decode=true # Specifies whether the decode step should be compute
+use_gpu=false # Specifies whether run on GPU or on CPU
+use_ivector=false #
 
 # our language model is 165M in size so it is good to have a copy offline
 # somewhere in your machine to speed things up and also save network bandwidth.
