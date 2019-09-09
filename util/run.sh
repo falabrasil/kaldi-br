@@ -42,6 +42,12 @@ else
   parallel_opts="--num-threads $num_threads"
 fi
 
+num_speakers=$(ls -d data/train/*/ | wc -l)
+if [ $num_speakers -le $nj ] ; then
+    echo "[$TAG] the number of jobs ($nj) must be smaller than the number of speakers in the train set ($num_speakers)"
+    exit 1
+fi
+
 # Removing previously created data (from last run.sh execution). 
 if $rm_prev_data ; then
     echo -en $COLOR_B
