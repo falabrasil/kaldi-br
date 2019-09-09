@@ -3,12 +3,22 @@
 # Cassio Batista   - https://cassota.gitlab.io/
 # Ana Larissa Dias - larissa.engcomp@gmail.com
 
-TAG="$0 $(date +'%d/%m/%y %H:%M')"
+TAG="GMM"
 COLOR_B="\e[93m"
 COLOR_E="\e[0m"
 
+function usage() {
+    echo "usage: (bash) $0 OPTIONS"
+    echo "eg.: $0 --XX x --XX x --XX x"
+    echo "OPTIONS"
+    echo "  --nj         "
+    echo "  --num_leaves "
+    echo "  --tot_gauss  "
+    echo "  --lm_order   "
+}
+
 if test $# -eq 0 ; then
-    echo "eae malandro"
+    usage
     exit 1
 fi
 
@@ -37,7 +47,8 @@ do
             shift # past value
         ;;
         *)  # unknown option
-            POSITIONAL+=("$1") # save it in an array for later
+            echo "[$TAG] unknown flag $1"
+            usage
             shift # past argument
             exit 0
         ;;
@@ -45,7 +56,8 @@ do
 done
 
 if [[ -z $nj || -z $num_leaves  || -z $tot_gauss || -z $lm_order ]] ; then
-    echo "problem with variable"
+    echo "[$TAG] a problem with the arg flags has been detected"
+    usage
     exit 1
 fi
 

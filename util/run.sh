@@ -3,7 +3,7 @@
 # Cassio Batista   - https://cassota.gitlab.io/
 # Ana Larissa Dias - larissa.engcomp@gmail.com
 
-TAG="$0 $(date +'%d/%m/%y %H:%M')"
+TAG="RUN"
 COLOR_B="\e[92m"
 COLOR_E="\e[0m"
 
