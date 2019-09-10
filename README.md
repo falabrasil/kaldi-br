@@ -106,11 +106,6 @@ need to change the value of the `num_utts_subset` parameter in the file
 `path/to/kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in
 order to the [DNN script work properly][2].    
 
-* __util/RESULTS__:
-This file contains the results of the acoustic models obtained using the demo
-corpora. The demo corpora is available at
-[https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git][1].   
-
 # Language Model
 A language model is available at
 [https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3]. It is downloaded and used by default by the `run.sh` script. If you want to train your own language model look at the commented section `MAKING lm.arpa` in `run.sh` script for a example of how to do it.   
@@ -118,7 +113,6 @@ A language model is available at
 A nice tutorial by [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) 
 might also be worthy taking a look at.
 
-[1]:https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora.git
 [2]:https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ
 [3]:https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git
 
