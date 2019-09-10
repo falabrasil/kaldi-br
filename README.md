@@ -8,7 +8,8 @@ available to the community.
 # Requirements
 * **Git**: is needed to download Kaldi and this recipe.
 * **Kaldi**: is the toolkit for speech recognition that we use.
-* **G2P**: is a grapheme-to-phoneme converter for Brazilian Portuguese. This software is available at https://gitlab.com/fb-nlp/nlp-generator.git
+* **G2P**: is a grapheme-to-phoneme converter for Brazilian Portuguese. This software is available at https://gitlab.com/fb-nlp/nlp-generator.git     
+* **dos2unix**: is a text file format converter. This software is available at http://dos2unix.sourceforge.net/     
 
 # Tutorial
 The tutorial is composed mainly by two big steps:
