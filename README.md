@@ -9,7 +9,7 @@ available to the community.
 * **Git**: is needed to download Kaldi and this recipe.
 * **Kaldi**: is the toolkit for speech recognition that we use.
 * **G2P**: is a grapheme-to-phoneme converter for Brazilian Portuguese. This software is available at https://gitlab.com/fb-nlp/nlp-generator.git     
-* **dos2unix**: is a text file format converter. This software is available at http://dos2unix.sourceforge.net/     
+* **Dos2Unix**: is a text file format converter. This software is available at http://dos2unix.sourceforge.net/     
 
 # Tutorial
 The tutorial is composed mainly by two big steps:
@@ -55,7 +55,7 @@ train/          test/         local/
   ├─ text        ├─ text               
   ├─ utt2spk     ├─ utt2spk            
   └─ corpus.txt  └─ corpus.txt         
-```     
+``` 
 
 * __fb\_00\_create\_envtree.sh__ :
 This script creates the directory structure shown above, except the `spkXX_n`
@@ -88,10 +88,40 @@ $ ./fb_02_define_localdict.sh path/to/kaldi/egs/YOUR_PROJECT_NAME    path/to/g2p
 After running the above scripts, your project directory will be ready and you can start training acoustic models with Kaldi. 
 The `run.sh` is a shell script recipe for training a hybrid HMM_DNN acoustic model and it will be located at `path/to/kaldi/egs/YOUR_PROJECT_NAME/`.
 Below you can see the proper way to execute the training script.
+
 ```bash
 $ cd path/to/kaldi/egs/YOUR_PROJECT_NAME
 $ ./run.sh        
 ```        
+
+The flowcharts below are the current pipeline and also gonna be redrawn 
+using `dia`.
+
+GMM: 
+
+```mermaid
+graph LR;
+    A[train<br>mono]                       --> B;
+    B[align<br>mono]                       --> C;
+    C[train tri<br>&Delta;+&Delta;&Delta;] --> D;
+    D[align tri<br>&Delta;+&Delta;&Delta;] --> E;
+    E[train<br>LDA MLLT]                   --> F;
+    F[align<br>fMLLR]                      --> G;
+    G[train<br>SAT]                        --> H[align<br>fMLLR];
+```
+
+DNN: 
+
+```mermaid
+graph LR;
+    A[extract<br>MFCC]-->B;
+    B[compute<br>CVMN]-->C;
+    C[train<br>diag<br>UBM]-->D;
+    D[train<br>iVector<br>extractor]-->E;
+    E[extract<br>iVectors<br>online]-->F;
+    F[train<br>pnorm<br>simple 2]-->G[extract<br>iVectors<br>online];
+```
+
 
 The Figure below shows the pipeline to training a HMM-DNN acoustic model
 using Kaldi (for more details read our [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
