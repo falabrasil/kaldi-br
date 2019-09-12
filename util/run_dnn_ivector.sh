@@ -52,7 +52,7 @@ stage=0
 train_stage=-10
 
 # trained GMM model
-gmm=tri3
+gmm=tri3b
 
 # DNN model training directory
 dir=exp/nnet2_online/nnet

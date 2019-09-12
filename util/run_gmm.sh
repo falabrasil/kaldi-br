@@ -201,6 +201,17 @@ echo "[$TAG] TRIPHONE 3 (LDA-MLLT with fMLLR) ALIGNMENT ====="
 echo -e $COLOR_E
 steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3 exp/tri3_ali
 
+cho -e $COLOR_B
+echo "[$TAG] TRIPHONE 3b (LDA+MLLT+SAT) TRAINING ====="
+echo -e $COLOR_E
+steps/train_sat.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri3_ali exp/tri3b || exit 1
+
+echo -e $COLOR_B
+echo "[$TAG] TRIPHONE 3 (LDA-MLLT+SAT with fMLLR) ALIGNMENT ====="
+echo -e $COLOR_E
+steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3b exp/tri3b_ali
+
+
 echo -e $COLOR_B
 echo "============== [$TAG] FINISHED RUNNING GMM =============="
 echo -e $COLOR_E
