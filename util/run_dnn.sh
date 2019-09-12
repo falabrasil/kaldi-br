@@ -58,8 +58,8 @@ num_hidden_layers=2
 initial_learning_rate=0.02 
 final_learning_rate=0.004
 
-#pnorm_input_dim=300 
-#pnorm_output_dim=3000
+#pnorm_input_dim=3000 
+#pnorm_output_dim=300
 pnorm_input_dim=1000 #DNN parameters for small data
 pnorm_output_dim=200 #DNN parameters for small data
 
