@@ -179,37 +179,42 @@ steps/train_deltas.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/
 echo -e $COLOR_B
 echo "[$TAG] TRIPHONE 1 ALIGNMENT ====="
 echo -e $COLOR_E
-steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri1 exp/tri1_ali
+steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri1 exp/tri1_ali
 
-echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) TRAINING ====="
-echo -e $COLOR_E
-steps/train_deltas.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri1_ali exp/tri2|| exit 1  
+# According to RM recipe the tri2a experiments are not needed downstream, so commenting them out.
+#echo -e $COLOR_B
+#echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) TRAINING ====="
+#echo -e $COLOR_E
+#steps/train_deltas.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri1_ali exp/tri2|| exit 1  
 
-echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) ALIGMENT ====="
-echo -e $COLOR_E
-steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri2 exp/tri2_ali
+#echo -e $COLOR_B
+#echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) ALIGMENT ====="
+#echo -e $COLOR_E
+#steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri2 exp/tri2_ali
 
 echo -e $COLOR_B
 echo "[$TAG] TRIPHONE 3 (LDA+MLLT) TRAINING ====="
 echo -e $COLOR_E
-steps/train_lda_mllt.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri2_ali exp/tri3 || exit 1
+#steps/train_lda_mllt.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri2_ali exp/tri3 || exit 1
+steps/train_lda_mllt.sh --cmd "$train_cmd" --splice-opts "--left-context=3 --right-context=3" $num_leaves $tot_gauss data/train data/lang exp/tri1_ali exp/tri2b
 
 echo -e $COLOR_B
 echo "[$TAG] TRIPHONE 3 (LDA-MLLT with fMLLR) ALIGNMENT ====="
 echo -e $COLOR_E
-steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3 exp/tri3_ali
+#steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3 exp/tri3_ali
+steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri2b exp/tri2b_ali
 
 echo -e $COLOR_B
 echo "[$TAG] TRIPHONE 3b (LDA+MLLT+SAT) TRAINING ====="
 echo -e $COLOR_E
-steps/train_sat.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri3_ali exp/tri3b || exit 1
+#steps/train_sat.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri3_ali exp/tri3b || exit 1
+steps/train_sat.sh  --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri2b_ali exp/tri3b
 
 echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 3 (LDA-MLLT+SAT with fMLLR) ALIGNMENT ====="
+echo "[$TAG] TRIPHONE 3b (LDA-MLLT+SAT with fMLLR) ALIGNMENT ====="
 echo -e $COLOR_E
-steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3b exp/tri3b_ali
+#steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3b exp/tri3b_ali
+steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri3b exp/tri3b_ali
 
 echo -e $COLOR_B
 echo "============== [$TAG] FINISHED RUNNING GMM =============="

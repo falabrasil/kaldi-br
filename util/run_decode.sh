@@ -81,18 +81,19 @@ if $run_mkgraph_tri1 ; then
     utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph || exit 1
 fi
 
-if $run_mkgraph_tri2 ; then
-    echo -e $COLOR_B
-    echo "[$TAG] CREATING TRI 2 GRAPH (Δ+ΔΔ) ====="
-    echo -e $COLOR_E
-    utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
-fi
+#if $run_mkgraph_tri2 ; then
+#    echo -e $COLOR_B
+#    echo "[$TAG] CREATING TRI 2 GRAPH (Δ+ΔΔ) ====="
+#    echo -e $COLOR_E
+#    utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
+#fi
 
 if $run_mkgraph_tri3 ; then
     echo -e $COLOR_B
     echo "[$TAG] CREATING TRI 3 GRAPH (LDA-MLLT) ====="
     echo -e $COLOR_E
-    utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
+    #utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
+    utils/mkgraph.sh data/lang exp/tri2b exp/tri2b/graph || exit 1
 fi
 
 if $run_mkgraph_tri3b ; then
@@ -130,7 +131,7 @@ if $run_decode ; then
         for x in exp/mono*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
         echo >> RESULTS
     fi
-    
+
     if $run_tri1_decode ; then
         echo -e $COLOR_B
         echo "[$TAG] TRIPHONE 1 DECODING ====="
@@ -145,30 +146,32 @@ if $run_decode ; then
         for x in exp/tri1/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
         echo >> RESULTS
     fi
-    
-    if $run_tri2_decode ; then
-        echo -e $COLOR_B
-        echo "[$TAG] TRIPHONE 2 DECODING ====="
-        echo -e $COLOR_E
-        steps/decode.sh \
-            --config conf/decode.config \
-            --nj $nj \
-            --cmd "$decode_cmd" \
-            exp/tri2/graph data/test exp/tri2/decode 
-        
-        echo "====== TRI2 (DELTA+DELTA-DELTA) ======" >> RESULTS
-        for x in exp/tri2/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
-        echo >> RESULTS
-    fi
+
+   # if $run_tri2_decode ; then
+   #     echo -e $COLOR_B
+   #     echo "[$TAG] TRIPHONE 2 DECODING ====="
+   #     echo -e $COLOR_E
+   #     steps/decode.sh \
+   #         --config conf/decode.config \
+   #         --nj $nj \
+   #         --cmd "$decode_cmd" \
+   #         exp/tri2/graph data/test exp/tri2/decode 
+   #     
+   #     echo "====== TRI2 (DELTA+DELTA-DELTA) ======" >> RESULTS
+   #     for x in exp/tri2/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+   #     echo >> RESULTS
+   # fi
     
     if $run_tri3_decode ; then
         echo -e $COLOR_B
         echo "[$TAG] TRIPHONE 3 DECODING ====="
         echo -e $COLOR_E
-        steps/decode_fmllr.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri3/graph data/test exp/tri3/decode
-        
-        echo "====== TRI3(LDA-MLLT) ======" >> RESULTS
-        for x in exp/tri3/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+       # steps/decode_fmllr.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri3/graph data/test exp/tri3/decode
+        steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri2b/graph data/test exp/tri2b/decode
+       
+        echo "====== TRI3b (LDA-MLLT) ======" >> RESULTS
+        #for x in exp/tri3/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+        for x in exp/tri2b/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
         echo >> RESULTS
     fi
 
