@@ -101,13 +101,13 @@ GMM:
 
 ```mermaid
 graph LR;
-    A[train<br>mono]                       --> B;
-    B[align<br>mono]                       --> C;
-    C[train tri<br>&Delta;+&Delta;&Delta;] --> D;
-    D[align tri<br>&Delta;+&Delta;&Delta;] --> E;
-    E[train<br>LDA MLLT]                   --> F;
-    F[align<br>fMLLR]                      --> G;
-    G[train<br>SAT]                        --> H[align<br>fMLLR];
+    A[train<br>mono]                  --> B;
+    B[align<br>mono]                  --> C;
+    C[train tri<br>delta+delta-delta] --> D;
+    D[align tri<br>delta+delta-delta] --> E;
+    E[train<br>LDA MLLT]              --> F;
+    F[align<br>fMLLR]                 --> G;
+    G[train<br>SAT]                   --> H[align<br>fMLLR];
 ```
 
 DNN: 
