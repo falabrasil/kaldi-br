@@ -7,10 +7,9 @@ TAG="DNN"
 
 function usage() {
     echo "usage: (bash) $0 OPTIONS"
-    echo "eg.: $0 --nj 2 --use_gpu false"
+    echo "eg.: $0  --use_gpu false"
     echo ""
     echo "OPTIONS"
-    echo "  --nj         number of parallel jobs  "
     echo "  --use_gpu    specifies whether run on GPU or on CPU  "
 }
 
@@ -23,11 +22,6 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        --nj)
-            nj="$2"
-            shift # past argument
-            shift # past value
-        ;;
         --use_gpu)
             use_gpu="$2"
             shift # past argument
@@ -42,7 +36,7 @@ do
     esac
 done
 
-if [[ -z $nj || -z $use_gpu ]] ; then
+if [[  -z $use_gpu ]] ; then
     echo "[$TAG] a problem with the arg flags has been detected"
     usage
     exit 1
@@ -54,6 +48,8 @@ fi
 ## Safety mechanism (possible running this script with modified arguments)
 #. utils/parse_options.sh || exit 1
 
+nj=6 # number of jobs default
+ 
 # DNN parameters 
 minibatch_size=512
 num_epochs=8 

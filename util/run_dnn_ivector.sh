@@ -7,10 +7,9 @@ TAG="DNN-iVec"
 
 function usage() {
     echo "usage: (bash) $0 OPTIONS"
-    echo "eg.: $0 --nj 2 --use_gpu false"
+    echo "eg.: $0 --use_gpu false"
     echo ""
     echo "OPTIONS"
-    echo "  --nj         number of parallel jobs  "
     echo "  --use_gpu    specifies whether run on GPU or on CPU  "
 }
 
@@ -23,11 +22,6 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        --nj)
-            nj="$2"
-            shift # past argument
-            shift # past value
-        ;;
         --use_gpu)
             use_gpu="$2"
             shift # past argument
@@ -41,7 +35,7 @@ do
     esac
 done
 
-if [[ -z $nj || -z $use_gpu ]] ; then
+if [[ -z $use_gpu ]] ; then
     echo "[$TAG] a problem with the arg flags has been detected"
     exit 1
 fi
@@ -49,6 +43,7 @@ fi
 #This script is a modified version of the ../rm/s5/local/online/run_nnet2.sh that trains the DNN model with iVectors to online decoding.
 . ./cmd.sh
 
+nj=6 # number of jobs default
 
 # use stage 0 to extract mfcc features and ivector for train and test.
 stage=0

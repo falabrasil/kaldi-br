@@ -98,14 +98,12 @@ if ! $use_ivector ; then
     echo "[$TAG] running dnn with *no* ivectors"
     echo -en $COLOR_E
     ./run_dnn.sh \
-        --nj $nj \
         --use_gpu $use_gpu
 else
     echo -en $COLOR_B
     echo "[$TAG] running dnn with ivectors"
 echo -en $COLOR_E
     ./run_dnn_ivector.sh \
-        --nj $nj \
         --use_gpu $use_gpu
 fi
 
