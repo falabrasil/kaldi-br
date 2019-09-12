@@ -63,7 +63,7 @@ if [[ -z $nj || -z $num_leaves  || -z $tot_gauss || -z $lm_order ]] ; then
 fi
 
 echo -e $COLOR_B
-echo "===== [$TAG] PREPARING ACOUSTIC DATA ====="
+echo "===== [$TAG] PREPARING ACOUSTIC DATA ===== [$(date)]"
 echo -e $COLOR_E
 
 # Needs to be prepared by hand for each train and test data (or using self written scripts):
@@ -82,7 +82,7 @@ utils/utt2spk_to_spk2utt.pl data/test/utt2spk  > data/test/spk2utt
 mfccdir=mfcc
 
 echo -e $COLOR_B
-echo "[$TAG] VALIDATING AND FIXING DIRS ====="
+echo "[$TAG] VALIDATING AND FIXING DIRS ===== [$(date)]"
 echo -e $COLOR_E
 
 utils/validate_data_dir.sh  data/train # script for checking prepared data 
@@ -91,7 +91,7 @@ utils/validate_data_dir.sh  data/test  # script for checking prepared data
 utils/fix_data_dir.sh       data/test  # tool for data proper sorting if needed 
 
 echo -e $COLOR_B
-echo "[$TAG] FEATURES EXTRACTION ====="
+echo "[$TAG] FEATURES EXTRACTION ===== [$(date)]"
 echo -e $COLOR_E
 
 steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/train exp/make_mfcc/train $mfccdir
@@ -102,7 +102,7 @@ steps/compute_cmvn_stats.sh data/train exp/make_mfcc/train $mfccdir
 steps/compute_cmvn_stats.sh data/test  exp/make_mfcc/test  $mfccdir
 
 echo -e $COLOR_B
-echo "===== [$TAG] PREPARING LANGUAGE DATA ====="
+echo "===== [$TAG] PREPARING LANGUAGE DATA ===== [$(date)]"
 echo -e $COLOR_E
 
 # Needs to be prepared by hand (or using self written scripts):
@@ -116,7 +116,7 @@ echo -e $COLOR_E
 utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
 
 echo -e $COLOR_B
-echo "[$TAG] LANGUAGE MODEL CREATION ====="
+echo "[$TAG] LANGUAGE MODEL CREATION ===== [$(date)]"
 #echo "===== MAKING lm.arpa ====="
 echo -e $COLOR_E
 
@@ -143,7 +143,7 @@ echo -e $COLOR_E
 local=data/local
 if [ ! -d "$local/tmp" ]; then
     echo -e $COLOR_B
-    echo "[$TAG] DOWNLOADING lm.arpa ====="
+    echo "[$TAG] DOWNLOADING lm.arpa ===== [$(TAG)]"
     echo -e $COLOR_E
     mkdir $local/tmp
     wget https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources/raw/master/lm/lm.arpa -P $local/tmp
@@ -152,70 +152,70 @@ else
 fi
 
 echo -e $COLOR_B
-echo "[$TAG] CONVERTING lm.arpa to  G.fst ====="
+echo "[$TAG] CONVERTING lm.arpa to  G.fst ===== [$(date)]"
 echo -e $COLOR_E
 lang=data/lang
 arpa2fst --disambig-symbol=#0 --read-symbol-table=$lang/words.txt $local/tmp/lm.arpa $lang/G.fst
 
 echo -e $COLOR_B
-echo "============== [$TAG] STARTING RUNNING GMM =============="
+echo "============== [$TAG] STARTING RUNNING GMM ============== [$(date)]"
 echo -e $COLOR_E
 
 echo -e $COLOR_B
-echo "[$TAG] MONO TRAINING ====="
+echo "[$TAG] MONO TRAINING ===== [$(date)]"
 echo -e $COLOR_E
 steps/train_mono.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/mono  || exit 1
 
 echo -e $COLOR_B
-echo "[$TAG] MONO ALIGMENT ====="
+echo "[$TAG] MONO ALIGMENT ===== [$(date)]"
 echo -e $COLOR_E
 steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/mono exp/mono_ali || exit 1
 
 echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 1 TRAINING ====="
+echo "[$TAG] TRIPHONE 1 TRAINING ===== [$(date)]"
 echo -e $COLOR_E
 steps/train_deltas.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/mono_ali exp/tri1 || exit 1
 
 echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 1 ALIGNMENT ====="
+echo "[$TAG] TRIPHONE 1 ALIGNMENT ===== [$(date)]"
 echo -e $COLOR_E
 steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri1 exp/tri1_ali
 
 # According to RM recipe the tri2a experiments are not needed downstream, so commenting them out.
 #echo -e $COLOR_B
-#echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) TRAINING ====="
+#echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) TRAINING ===== [$(date)]"
 #echo -e $COLOR_E
 #steps/train_deltas.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri1_ali exp/tri2|| exit 1  
 
 #echo -e $COLOR_B
-#echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) ALIGMENT ====="
+#echo "[$TAG] TRIPHONE 2 (Δ+ΔΔ) ALIGMENT ===== [$(date)]"
 #echo -e $COLOR_E
 #steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri2 exp/tri2_ali
 
 echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 3 (LDA+MLLT) TRAINING ====="
+echo "[$TAG] TRIPHONE 3 (LDA+MLLT) TRAINING ===== [$(date)]"
 echo -e $COLOR_E
 #steps/train_lda_mllt.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri2_ali exp/tri3 || exit 1
 steps/train_lda_mllt.sh --cmd "$train_cmd" --splice-opts "--left-context=3 --right-context=3" $num_leaves $tot_gauss data/train data/lang exp/tri1_ali exp/tri2b
 
 echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 3 (LDA-MLLT with fMLLR) ALIGNMENT ====="
+echo "[$TAG] TRIPHONE 3 (LDA-MLLT with fMLLR) ALIGNMENT ===== [$(date)]"
 echo -e $COLOR_E
 #steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3 exp/tri3_ali
 steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri2b exp/tri2b_ali
 
 echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 3b (LDA+MLLT+SAT) TRAINING ====="
+echo "[$TAG] TRIPHONE 3b (LDA+MLLT+SAT) TRAINING ===== [$(date)]"
 echo -e $COLOR_E
 #steps/train_sat.sh --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri3_ali exp/tri3b || exit 1
 steps/train_sat.sh  --cmd "$train_cmd" $num_leaves $tot_gauss data/train data/lang exp/tri2b_ali exp/tri3b
 
 echo -e $COLOR_B
-echo "[$TAG] TRIPHONE 3b (LDA-MLLT+SAT with fMLLR) ALIGNMENT ====="
+echo "[$TAG] TRIPHONE 3b (LDA-MLLT+SAT with fMLLR) ALIGNMENT ===== [$(date)]"
 echo -e $COLOR_E
 #steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/tri3b exp/tri3b_ali
 steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri3b exp/tri3b_ali
 
 echo -e $COLOR_B
-echo "============== [$TAG] FINISHED RUNNING GMM =============="
+echo "============== [$TAG] FINISHED RUNNING GMM ============== [$(date)]"
 echo -e $COLOR_E

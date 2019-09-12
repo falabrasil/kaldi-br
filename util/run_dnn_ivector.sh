@@ -93,7 +93,7 @@ else
 fi
 
 echo
-echo "============== [$TAG] DNN WITH iVECTORS TRAINING =============="
+echo "============== [$TAG] DNN WITH iVECTORS TRAINING ============== [$(date)]"
 echo
 
 # stages 1 through 3 run in run_nnet2_common.sh.
@@ -128,5 +128,5 @@ if [ $stage -le 5 ]; then
 fi
 
 echo
-echo "============== [$TAG] FINISHED RUNNING DNN WITH iVECTORS =============="
+echo "============== [$TAG] FINISHED RUNNING DNN WITH iVECTORS ============== [$(date)]"
 echo
