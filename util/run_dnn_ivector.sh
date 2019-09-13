@@ -7,10 +7,9 @@ TAG="DNN-iVec"
 
 function usage() {
     echo "usage: (bash) $0 OPTIONS"
-    echo "eg.: $0 --nj 2 --use_gpu false"
+    echo "eg.: $0 --use_gpu false"
     echo ""
     echo "OPTIONS"
-    echo "  --nj         number of parallel jobs  "
     echo "  --use_gpu    specifies whether run on GPU or on CPU  "
 }
 
@@ -23,11 +22,6 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        --nj)
-            nj="$2"
-            shift # past argument
-            shift # past value
-        ;;
         --use_gpu)
             use_gpu="$2"
             shift # past argument
@@ -41,16 +35,15 @@ do
     esac
 done
 
-if [[ -z $nj || -z $use_gpu ]] ; then
+if [[ -z $use_gpu ]] ; then
     echo "[$TAG] a problem with the arg flags has been detected"
     exit 1
 fi
 
 #This script is a modified version of the ../rm/s5/local/online/run_nnet2.sh that trains the DNN model with iVectors to online decoding.
-
+nj=6 # number of jobs default
 stage=1
 train_stage=-10
-use_gpu=false
 dir=exp/nnet2_online/nnet_a
 
 
@@ -95,7 +88,7 @@ echo "============== [$TAG] DNN WITH iVECTORS TRAINING ============== [$(date)]"
 echo
 
 # stages 1 through 3 run in run_nnet2_common.sh.
-local/online/run_nnet2_common.sh --stage  $stage || exit 1;
+local/online/run_nnet2_common.sh --stage $stage --use_gpu $use_gpu --nj $nj || exit 1;
 
 
 if [ $stage -le 4 ]; then
@@ -130,13 +123,6 @@ if [ $stage -le 7 ]; then
   # to the script below.
   steps/online/nnet2/prepare_online_decoding.sh data/lang exp/nnet2_online/extractor \
     "$dir" ${dir}_online || exit 1;
-fi
-
-if [ $stage -le 8 ]; then
-  # do the actual online decoding with iVectors.
-  steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj \
-    exp/tri3b/graph data/test ${dir}_online/decode &
-  wait
 fi
 
 echo

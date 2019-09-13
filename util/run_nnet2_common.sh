@@ -3,7 +3,8 @@
 # ivector extractor and extracts ivector for train and test.
 . ./cmd.sh
 
-nj=2
+nj=
+use_gpu=
 stage=1
 nnet_affix=_online
 ivector_dim=100

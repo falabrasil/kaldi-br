@@ -213,9 +213,13 @@ if $run_decode ; then
                 --nj $nj \
                 --online-ivector-dir exp/nnet2_online/ivectors_test \
                 exp/tri3b/graph data/test exp/nnet2_online/nnet_a/decode
+             # do the actual online decoding with iVectors.
+            steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj \
+    exp/tri3b/graph data/test exp/nnet2_online/nnet_a_online/decode
             
             echo "====== DNN WITH IVECTORS ======" >> RESULTS
             for x in exp/nnet2_online/nnet_a/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+            for x in exp/nnet2_online/nnet_a_online/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
         fi # close $use_ivect
     fi # close $run_dnn
 fi # close $run_decode

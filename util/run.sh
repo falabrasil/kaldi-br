@@ -23,13 +23,13 @@ tot_gauss=2000 # senones * densities (gaussians per mixture)
 rm_prev_data=true # Removing previously created data (from last run.sh execution)
 run_decode=true # Specifies whether the decode step should be compute
 use_gpu=false # Specifies whether run on GPU or on CPU
-use_ivector=false #
+use_ivector=true #
 
 # our language model is 165M in size so it is good to have a copy offline
 # somewhere in your machine to speed things up and also save network bandwidth.
 # moreover you leave it blank to donwload it from FalaBrasil's GitLab server
-##lm_offline_path=
-lm_offline_path=${HOME}/fb-gitlab/fb-asr/fb-asr-resources/kaldi-resources/lm/lm.arpa
+lm_offline_path=
+#lm_offline_path=${HOME}/fb-gitlab/fb-asr/fb-asr-resources/kaldi-resources/lm/lm.arpa
 if [[ ! -z $lm_offline_path ]] ; then
     if [[ ! -f $lm_offline_path ]] ; then
         echo "[$TAG] LM file '$lm_offline_path' 
