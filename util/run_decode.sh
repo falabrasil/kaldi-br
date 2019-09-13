@@ -64,33 +64,33 @@ run_mkgraph_tri3=true
 run_mkgraph_tri3b=true
 
 echo -e $COLOR_B
-echo "===== [$TAG] PREPARING GRAPH DIRECTORY ====="
+echo "===== [$TAG] PREPARING GRAPH DIRECTORY ===== [$(date)]"
 echo -e $COLOR_E
 
 if $run_mkgraph_mono ; then
     echo -e $COLOR_B
-    echo "[$TAG] CREATING MONO GRAPH ====="
+    echo "[$TAG] CREATING MONO GRAPH ===== [$(date)]"
     echo -e $COLOR_E
     utils/mkgraph.sh --mono data/lang exp/mono exp/mono/graph || exit 1
 fi
 
 if $run_mkgraph_tri1 ; then
     echo -e $COLOR_B
-    echo "[$TAG] CREATING TRI 1 GRAPH (Δ) ====="
+    echo "[$TAG] CREATING TRI 1 GRAPH (Δ) ===== [$(date)]"
     echo -e $COLOR_E
     utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph || exit 1
 fi
 
 #if $run_mkgraph_tri2 ; then
 #    echo -e $COLOR_B
-#    echo "[$TAG] CREATING TRI 2 GRAPH (Δ+ΔΔ) ====="
+#    echo "[$TAG] CREATING TRI 2 GRAPH (Δ+ΔΔ) ===== [$(date)]"
 #    echo -e $COLOR_E
 #    utils/mkgraph.sh data/lang exp/tri2 exp/tri2/graph || exit 1
 #fi
 
 if $run_mkgraph_tri3 ; then
     echo -e $COLOR_B
-    echo "[$TAG] CREATING TRI 3 GRAPH (LDA-MLLT) ====="
+    echo "[$TAG] CREATING TRI 3 GRAPH (LDA-MLLT) ===== [$(date)]"
     echo -e $COLOR_E
     #utils/mkgraph.sh data/lang exp/tri3 exp/tri3/graph || exit 1
     utils/mkgraph.sh data/lang exp/tri2b exp/tri2b/graph || exit 1
@@ -98,7 +98,7 @@ fi
 
 if $run_mkgraph_tri3b ; then
     echo -e $COLOR_B
-    echo "[$TAG] CREATING TRI 3b GRAPH (LDA-MLLT-SAT) ====="
+    echo "[$TAG] CREATING TRI 3b GRAPH (LDA-MLLT-SAT) ===== [$(date)]"
     echo -e $COLOR_E
     utils/mkgraph.sh data/lang exp/tri3b exp/tri3b/graph || exit 1
 fi
@@ -115,11 +115,11 @@ rm -f RESULTS
 
 if $run_decode ; then 
     echo -e $COLOR_B
-    echo "===== [$TAG] STARTING DECODE ====="
+    echo "===== [$TAG] STARTING DECODE ===== [$(date)]"
     echo -e $COLOR_E
     if $run_mono_decode ; then
         echo -e $COLOR_B
-        echo "[$TAG] MONO DECODING ====="
+        echo "[$TAG] MONO DECODING ===== [$(date)]"
         echo -e $COLOR_E
         steps/decode.sh \
             --config conf/decode.config \
@@ -134,7 +134,7 @@ if $run_decode ; then
 
     if $run_tri1_decode ; then
         echo -e $COLOR_B
-        echo "[$TAG] TRIPHONE 1 DECODING ====="
+        echo "[$TAG] TRIPHONE 1 DECODING ===== [$(date)]"
         echo -e $COLOR_E
         steps/decode.sh \
             --config conf/decode.config \
@@ -164,7 +164,7 @@ if $run_decode ; then
     
     if $run_tri3_decode ; then
         echo -e $COLOR_B
-        echo "[$TAG] TRIPHONE 3 DECODING ====="
+        echo "[$TAG] TRIPHONE 3 DECODING ===== [$(date)]"
         echo -e $COLOR_E
        # steps/decode_fmllr.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri3/graph data/test exp/tri3/decode
         steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri2b/graph data/test exp/tri2b/decode
@@ -177,7 +177,7 @@ if $run_decode ; then
 
     if $run_tri3b_decode ; then
         echo -e $COLOR_B
-        echo "[$TAG] TRIPHONE 3b DECODING ====="
+        echo "[$TAG] TRIPHONE 3b DECODING ===== [$(date)]"
         echo -e $COLOR_E
         steps/decode_fmllr.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri3b/graph data/test exp/tri3b/decode
 
@@ -189,7 +189,7 @@ if $run_decode ; then
     if $run_dnn_decode ; then
         if ! $use_ivector ; then
             echo -e $COLOR_B
-            echo "[$TAG] DNN DECODING ====="
+            echo "[$TAG] DNN DECODING ===== [$(date)]"
             echo -e $COLOR_E
             steps/nnet2/decode.sh \
                 --config conf/decode.config \
@@ -203,7 +203,7 @@ if $run_decode ; then
        
         else
             echo -e $COLOR_B
-            echo "[$TAG] DNN WITH iVECTORS DECODING ======"
+            echo "[$TAG] DNN WITH iVECTORS DECODING ====== [$(date)]"
             echo -e $COLOR_E
             # Note: the iVectors seem to hurt at small amount of data.
             # However, experiments by Haihua Xu on WSJ, show it helping nicely.

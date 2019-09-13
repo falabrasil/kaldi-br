@@ -63,7 +63,7 @@ fi
 # Removing previously created data (from last run.sh execution). 
 if $rm_prev_data ; then
     echo -en $COLOR_B
-    echo "[$TAG] removing data from previous run"
+    echo "[$TAG] removing data from previous run [$(date)]"
     echo -en $COLOR_E
     rm -rf exp mfcc \
         data/{train,test}/{spk2utt,cmvn.scp,feats.scp,split2} \
@@ -74,18 +74,18 @@ fi
 
 num_speakers=$(ls -d data/train/*/ | wc -l)
 if [ $num_speakers -le $nj ] ; then
-    echo "[$TAG] the number of jobs ($nj) must be smaller than the number of speakers in the train set ($num_speakers)"
+    echo "[$TAG] the number of jobs ($nj) must be smaller than the number of speakers in the train set ($num_speakers) [$(date)]"
     exit 1
 fi
 
 echo -en $COLOR_B
-echo "[$TAG] running 1st fix_data_dir"
+echo "[$TAG] running 1st fix_data_dir [$(date)]"
 echo -en $COLOR_E
 utils/fix_data_dir.sh data/train
 utils/fix_data_dir.sh data/test
 
 echo -en $COLOR_B
-echo "[$TAG] running gmm"
+echo "[$TAG] running gmm [$(date)]"
 echo -en $COLOR_E
 ./run_gmm.sh \
     --nj $nj \
@@ -95,26 +95,26 @@ echo -en $COLOR_E
     
 if ! $use_ivector ; then
     echo -en $COLOR_B
-    echo "[$TAG] running dnn with *no* ivectors"
+    echo "[$TAG] running dnn with *no* ivectors [$(date)]"
     echo -en $COLOR_E
     ./run_dnn.sh \
         --use_gpu $use_gpu
 else
     echo -en $COLOR_B
-    echo "[$TAG] running dnn with ivectors"
+    echo "[$TAG] running dnn with ivectors [$(date)]"
     echo -en $COLOR_E
     ./run_dnn_ivector.sh \
         --use_gpu $use_gpu
 fi
 
 echo -en $COLOR_B
-echo "[$TAG] running 2nd fix_data_dir"
+echo "[$TAG] running 2nd fix_data_dir [$(date)]"
 echo -en $COLOR_E
 utils/fix_data_dir.sh data/train
 utils/fix_data_dir.sh data/test
 
 echo -en $COLOR_B
-echo "[$TAG] running decode"
+echo "[$TAG] running decode [$(date)]"
 echo -en $COLOR_E
 ./run_decode.sh \
     --nj $nj \

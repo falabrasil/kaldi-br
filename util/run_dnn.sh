@@ -81,7 +81,7 @@ else
 fi
 
 echo
-echo "============== [$TAG] DNN TRAINING =============="
+echo "============== [$TAG] DNN TRAINING ============== [$(date)]"
 echo
 
 steps/nnet2/train_pnorm_fast.sh \
@@ -103,5 +103,5 @@ steps/nnet2/train_pnorm_fast.sh \
     data/train data/lang exp/tri3_ali exp/dnn
 
 echo
-echo "============== [$TAG] FINISHED RUNNING DNN =============="
+echo "============== [$TAG] FINISHED RUNNING DNN ============== [$(date)]"
 echo 
