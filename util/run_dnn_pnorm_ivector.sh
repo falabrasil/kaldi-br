@@ -7,10 +7,9 @@ TAG="DNN-iVec"
 
 function usage() {
     echo "usage: (bash) $0 OPTIONS"
-    echo "eg.: $0 --nj 2 --use_gpu false"
+    echo "eg.: $0 --use_gpu false"
     echo ""
     echo "OPTIONS"
-    echo "  --nj         number of parallel jobs  "
     echo "  --use_gpu    specifies whether run on GPU or on CPU  "
 }
 
@@ -23,11 +22,6 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
-        --nj)
-            nj="$2"
-            shift # past argument
-            shift # past value
-        ;;
         --use_gpu)
             use_gpu="$2"
             shift # past argument
@@ -41,18 +35,27 @@ do
     esac
 done
 
-if [[ -z $nj || -z $use_gpu ]] ; then
+if [[ -z $use_gpu ]] ; then
     echo "[$TAG] a problem with the arg flags has been detected"
     exit 1
 fi
 
 #This script is a modified version of the ../rm/s5/local/online/run_nnet2.sh that trains the DNN model with iVectors to online decoding.
+. ./cmd.sh
 
-stage=1
+nj=6 # number of jobs default
+
+# use stage 0 to extract mfcc features and ivector for train and test.
+stage=0
+# use stage 1 only if you already have extracted ivector for train and test
+#stage=1
 train_stage=-10
-use_gpu=false
-dir=exp/nnet2_online/nnet_a
 
+# trained GMM model
+gmm=tri3b
+
+# DNN model training directory
+dir=exp/nnet2_online/nnet
 
 #DNN parameters 
 minibatch_size=512
@@ -61,13 +64,12 @@ num_epochs_extra=5
 num_hidden_layers=2
 initial_learning_rate=0.02 
 final_learning_rate=0.004
-pnorm_input_dim=3000 
-pnorm_output_dim=300
+#pnorm_input_dim=3000 
+#pnorm_output_dim=300
 
 #DNN parameters for small data
-#pnorm_input_dim=1000 
-#pnorm_output_dim=200
-
+pnorm_input_dim=1000 
+pnorm_output_dim=200
 
 . ./cmd.sh
 . ./path.sh
@@ -95,51 +97,36 @@ echo "============== [$TAG] DNN WITH iVECTORS TRAINING =============="
 echo
 
 # stages 1 through 3 run in run_nnet2_common.sh.
-local/online/run_nnet2_common.sh --stage  $stage || exit 1;
-
+local/online/run_nnet2_common.sh --stage $stage --gmm $gmm --use_gpu $use_gpu --nj $nj || exit 1;
 
 if [ $stage -le 4 ]; then
-  steps/nnet2/train_pnorm_simple2.sh --stage $train_stage \
-    --splice-width 7 \
-    --feat-type raw \
-    --online-ivector-dir exp/nnet2_online/ivectors \
-    --cmvn-opts "--norm-means=false --norm-vars=false" \
-    --num-threads "$num_threads" \
-    --minibatch-size "$minibatch_size" \
-    --parallel-opts "$parallel_opts" \
-    --num-jobs-nnet 4 \
-    --num-epochs $num_epochs \
-    --add-layers-period 1 \
-    --num-hidden-layers $num_hidden_layers \
-    --mix-up 4000 \
-    --initial-learning-rate $initial_learning_rate \
-    --final-learning-rate $final_learning_rate \
-    --cmd "$decode_cmd" \
-    --pnorm-input-dim $pnorm_input_dim \
-    --pnorm-output-dim $pnorm_output_dim \
-    data/train data/lang exp/tri3b_ali $dir  || exit 1;
+    steps/nnet2/train_pnorm_fast.sh \
+        --stage $train_stage \
+        --feat-type raw \
+        --online-ivector-dir exp/nnet2_online/ivectors \
+        --num-threads "$num_threads" \
+        --minibatch-size "$minibatch_size" \
+        --parallel-opts "$parallel_opts" \
+        --num-jobs-nnet 4 \
+        --num-epochs $num_epochs \
+        --add-layers-period 1 \
+        --num-hidden-layers $num_hidden_layers \
+        --mix-up 4000 \
+        --initial-learning-rate $initial_learning_rate \
+        --final-learning-rate $final_learning_rate \
+        --cmd "$decode_cmd" \
+        --pnorm-input-dim $pnorm_input_dim \
+        --pnorm-output-dim $pnorm_output_dim \
+        data/train data/lang exp/"$gmm"_ali $dir  || exit 1;
 fi
 
 if [ $stage -le 5 ]; then
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj $nj \
-    data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
-fi
-
-if [ $stage -le 7 ]; then
-  # If this setup used PLP features, we'd have to give the option --feature-type plp
-  # to the script below.
-  steps/online/nnet2/prepare_online_decoding.sh data/lang exp/nnet2_online/extractor \
-    "$dir" ${dir}_online || exit 1;
-fi
-
-if [ $stage -le 8 ]; then
-  # do the actual online decoding with iVectors.
-  steps/online/nnet2/decode.sh --config conf/decode.config --cmd "$decode_cmd" --nj $nj \
-    exp/tri3b/graph data/test ${dir}_online/decode &
-  wait
+    steps/online/nnet2/extract_ivectors_online.sh \
+        --cmd "$train_cmd" \
+        --nj $nj \
+        data/test exp/nnet2_online/extractor exp/nnet2_online/ivectors_test || exit 1;
 fi
 
 echo
 echo "============== [$TAG] FINISHED RUNNING DNN WITH iVECTORS =============="
 echo
-exit 0;

@@ -212,10 +212,10 @@ if $run_decode ; then
                 --cmd "$decode_cmd" \
                 --nj $nj \
                 --online-ivector-dir exp/nnet2_online/ivectors_test \
-                exp/tri3b/graph data/test exp/nnet2_online/nnet/decode
+                exp/tri3b/graph data/test exp/nnet2_online/nnet_a/decode
             
             echo "====== DNN WITH IVECTORS ======" >> RESULTS
-            for x in exp/nnet2_online/nnet/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
+            for x in exp/nnet2_online/nnet_a/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS
         fi # close $use_ivect
     fi # close $run_dnn
 fi # close $run_decode
