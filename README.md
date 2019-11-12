@@ -121,8 +121,12 @@ graph LR;
     D[train<br>iVector<br>extractor]-->E;
     E[extract<br>iVectors<br>online]-->F;
     end
-    F[train<br>pnorm<br>simple 2]-->G[extract<br>iVectors<br>online];
+
+    subgraph "train_pnorm_simple2.sh"
+    F[train<br>pnorm<br>simple 2]-->G[extract<br>iVectors<br>online]
+    end
 ```
+
 
 The Figure below shows the pipeline to training a HMM-DNN acoustic model
 using Kaldi (for more details read our [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
