@@ -114,14 +114,15 @@ DNN:
 
 ```mermaid
 graph LR;
+    subgraph "run_nnet2_common.sh"
     A[extract<br>MFCC]-->B;
     B[compute<br>CVMN]-->C;
     C[train<br>diag<br>UBM]-->D;
     D[train<br>iVector<br>extractor]-->E;
     E[extract<br>iVectors<br>online]-->F;
+    end
     F[train<br>pnorm<br>simple 2]-->G[extract<br>iVectors<br>online];
 ```
-
 
 The Figure below shows the pipeline to training a HMM-DNN acoustic model
 using Kaldi (for more details read our [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
