@@ -84,8 +84,9 @@ function create_wordlist() {
 function create_lexicon() {
 	echo -n "creating lexicon.txt file... "
 	
-	java -jar "${2}" -gio wordlist.tmp teste.tmp #>/dev/null 2>&1
-	mv teste.tmp dict.tmp
+	#java -jar "${2}" -gio wordlist.tmp teste.tmp #>/dev/null 2>&1
+        java -jar "${2}" -g -i wordlist.tmp -o teste.tmp	
+        mv teste.tmp dict.tmp
 
 	echo -e "!SIL\tsil"   > ${1}/lexicon.txt
 	echo -e "<UNK>\tspn" >> ${1}/lexicon.txt

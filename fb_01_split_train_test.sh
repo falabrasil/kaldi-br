@@ -25,8 +25,8 @@ function print_fb_ascii() {
 	echo -e ""
 }
 
-SPLIT_RANDOM=true
-#dir_test="frases16k"
+#SPLIT_RANDOM=true
+dir_test="lapsbm16k"
 
 if test $# -ne 2
 then
