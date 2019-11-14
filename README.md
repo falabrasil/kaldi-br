@@ -124,10 +124,10 @@ graph LR;
             B("compute<br>CVMN")
             C("train<br>diag<br>UBM")
             D("train<br>iVector<br>extractor")
+            E("extract<br>iVectors<br>online")
         end
-        E("extract<br>iVectors<br>online")
+        F("train<br>pnorm<br>simple 2")
         subgraph "Extract ivector"
-            F("train<br>pnorm<br>simple 2")
             G("extract<br>iVectors<br>online")
         end
     end
