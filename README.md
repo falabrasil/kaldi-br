@@ -97,43 +97,44 @@ $ ./run.sh
 The flowcharts below are the current pipeline and also gonna be redrawn 
 using `dia`.
 
-GMM: 
-
-```mermaid
-graph LR;
-    A[train<br>mono]                  --> B;
-    B[align<br>mono]                  --> C;
-    C[train tri<br>delta+delta-delta] --> D;
-    D[align tri<br>delta+delta-delta] --> E;
-    E[train<br>LDA MLLT]              --> F;
-    F[align<br>fMLLR]                 --> G;
-    G[train<br>SAT]                   --> H[align<br>fMLLR];
-```
-
-DNN: 
-
-```mermaid
-graph LR;
-    subgraph "run nnet2 common sh"
-    A[extract<br>MFCC]-->B;
-    B[compute<br>CVMN]-->C;
-    C[train<br>diag<br>UBM]-->D;
-    D[train<br>iVector<br>extractor]-->E;
-    end
-
-    subgraph "pnorm simple 2 sh"
-    E[extract<br>iVectors<br>online]-->F;
-    end
-    subgraph "Extract ivector"
-    F[train<br>pnorm<br>simple 2]-->G[extract<br>iVectors<br>online]
-    end
-```
-
-
 The Figure below shows the pipeline to training a HMM-DNN acoustic model
 using Kaldi (for more details read our [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
 
 ![alt text](doc/kaldiflowchart.png)    
+
+The "Deep Neural Network block" can be trained with and without iVectors,
+depending on how you intend to use the models later. If you want just to compute 
+WER for academic purposes, you might not need it; but otherwise if you want for
+online decoding in a real-time applciation, then you do need the iVectors. Below
+there are flowcharts describing both pipelines:
+
+- DNN with iVectors (for online decoding):
+
+```mermaid
+graph LR;
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    subgraph "run dnn iVector sh"
+        subgraph "run nnet2 common sh"
+            A("extract<br>MFCC")
+            B("compute<br>CVMN")
+            C("train<br>diag<br>UBM")
+            D("train<br>iVector<br>extractor")
+        end
+        E("extract<br>iVectors<br>online")
+        subgraph "Extract ivector"
+            F("train<br>pnorm<br>simple 2")
+            G("extract<br>iVectors<br>online")
+        end
+    end
+```
+
+- DNN without iVectors:
+Coming soon.
 
 # Demo Corpora
 If you are using our 
