@@ -114,15 +114,17 @@ DNN:
 
 ```mermaid
 graph LR;
-    subgraph "run_nnet2_common.sh"
+    subgraph "run nnet2 common sh"
     A[extract<br>MFCC]-->B;
     B[compute<br>CVMN]-->C;
     C[train<br>diag<br>UBM]-->D;
     D[train<br>iVector<br>extractor]-->E;
-    E[extract<br>iVectors<br>online]-->F;
     end
 
-    subgraph "train_pnorm_simple2.sh"
+    subgraph "pnorm simple 2 sh"
+    E[extract<br>iVectors<br>online]-->F;
+    end
+    subgraph "Extract ivector"
     F[train<br>pnorm<br>simple 2]-->G[extract<br>iVectors<br>online]
     end
 ```
