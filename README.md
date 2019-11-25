@@ -127,9 +127,7 @@ graph LR;
             E("extract<br>iVectors<br>online")
         end
         F("train<br>pnorm<br>simple 2")
-        subgraph "Extract ivector"
-            G("extract<br>iVectors<br>online")
-        end
+        G("extract<br>iVectors<br>online")
     end
 ```
 
