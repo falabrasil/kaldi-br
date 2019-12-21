@@ -195,8 +195,8 @@ if $run_decode ; then
                 --config conf/decode.config \
                 --cmd "$decode_cmd" \
                 --nj $nj \
-                --transform-dir exp/tri3/decode \
-                exp/tri3/graph data/test exp/dnn/decode
+                --transform-dir exp/tri3b/decode \
+                exp/tri3b/graph data/test exp/dnn/decode
        
             echo "====== DNN ======" >> RESULTS
             for x in exp/dnn/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done >> RESULTS

@@ -100,7 +100,7 @@ steps/nnet2/train_pnorm_fast.sh \
     --cmd "$decode_cmd" \
     --pnorm-input-dim $pnorm_input_dim \
     --pnorm-output-dim $pnorm_output_dim \
-    data/train data/lang exp/tri3_ali exp/dnn
+    data/train data/lang exp/tri3b_ali exp/dnn
 
 echo
 echo "============== [$TAG] FINISHED RUNNING DNN ============== [$(date)]"
