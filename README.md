@@ -152,6 +152,36 @@ might also be worthy taking a look at.
 [2]:https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ
 [3]:https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git
 
+# Chain model
+
+We'll soon switch to the chain models by training our AMs with `nnet3` recipe
+provided over the `mini_librispeech` corpora. It appears the recipe follows the
+following steps:
+
+0. data fetching
+1. data preparation and LM training
+2. MFCC extraction + CMVN
+3. train mono
+4. train tri delta-delta+delta
+5. train tri LDA+MLLT
+6. train tri LDA+MLLT+SAT
+7. retrain LN + SAT alignment (?)
+8. mkgraph + decode
+9. train DNN
+    - i-vector extraction
+    - data augmentation by speed perturbation
+    - compute MFCC and CMVN
+    - align
+    - data augmentation by volume perturbation
+    - compute MFCC and CMVN
+10. create chain-type topology
+11. create lattices from low-resolution MFCCs
+12. build new tree
+
+References:
+- GMM: https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-1-hmm-models-472a7f4a0488
+- DNN: https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-2-dnn-models-d1b851a56c49
+
 # Citation
 
 If you use these codes or want to mention the paper referred above, please cite 
