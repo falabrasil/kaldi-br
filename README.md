@@ -1,48 +1,50 @@
 # Kaldi - tutorial for training acoustic models
 
-[Paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html): **Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools**    
+[Paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html): 
+**Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools**     
 A comparison between Kaldi and CMU Sphinx for Brazilian Portuguese was
 performed. Resources for both toolkits were developed and made publicly 
-available to the community.
-    
-# Requirements
-* **Git**: is needed to download Kaldi and this recipe.
-* **Kaldi**: is the toolkit for speech recognition that we use.
-* **G2P**: is a grapheme-to-phoneme converter for Brazilian Portuguese. This software is available at https://gitlab.com/fb-nlp/nlp-generator.git     
-* **Dos2Unix**: is a text file format converter. This software is available at http://dos2unix.sourceforge.net/     
+available to the community. 
 
+**NOTE**: this paper uses the outdated nnet2 recipes, while this repo has been
+updated to the chain models' recipe via nnet3 scripts. If you really want nnet2
+scripts, you may find them on git tag.
+
+# TL;DR
+```bash
+$ ./prep_env.sh /path/to/kaldi/egs/myproject
+$ cd /path/to/kaldi/egs/myproject/s5/
+$ ./run.sh
+```
+    
 # Tutorial
-The tutorial is composed mainly by two big steps:
+The tutorial is composed mainly by three big steps:
 
 ```mermaid
 graph LR;
-    DataGraph --> TrainGraph
-    subgraph "AM Train"
-    TrainGraph("util/run.sh")
-    end
-    
-    subgraph "Preparing directories"
-    A[fb_00*.sh] --> B[fb_01*.sh]
-    B --> DataGraph[fb_02*.sh]
-    end
+    A[Data<br>preparation] --> B[GMM<br>training];
+    B                      --> C[DNN<br>training];
 ```
 
+All three are accomplished through stages across the scrcipt `run.sh`. Data
+preparation occurs on stage one, GMM training on stages two until eight, and
+finally DNN training on stage nine.
 
-## Preparing directories
+## Data preparation
 According to Kaldi's [tutorial for dummies](http://kaldi-asr.org/doc/kaldi_for_dummies.html),
 the directory tree for new projects must follow the structure below:
 
 ```text
-           path/to/kaldi/egs/YOUR_PROJECT_NAME/
+           path/to/kaldi/egs/YOUR_PROJECT_NAME/s5
                                  ├─ path.sh
                                  ├─ cmd.sh
                                  ├─ run.sh
                                  │ 
-  .--------------.-------.-------:------.------.-------------.
-  |              |       |       |      |      |             |
- MFCC/         data/   utils/  steps/  exp/  local/        conf/
-  └─ make_mfcc   |                             └─ score.sh   ├─ decode.config
-  .--------------:--------------.                            └─ mfcc.conf
+  .--------------.-------.-------:------.-------.
+  |              |       |       |      |       |
+ mfcc/         data/   utils/  steps/  exp/   conf/
+                 |                              ├─ decode.config
+  .--------------:--------------.               └─ mfcc.conf
   │              │              │
 train/          test/         local/
   ├─ spkTR_1/    ├─ spkTE_1/    └─ dict/
@@ -51,64 +53,43 @@ train/          test/         local/
   ├─ spkTR_n/    ├─ spkTE_n/        ├─ optional_silence.txt
   │              │                  ├─ silence_phones.txt
   ├─ spk2gender  ├─ spk2gender      └─ extra_questions.txt
-  ├─ wav.scp     ├─ wav.scp            
-  ├─ text        ├─ text               
-  ├─ utt2spk     ├─ utt2spk            
-  └─ corpus.txt  └─ corpus.txt         
+  ├─ wav.scp     ├─ wav.scp   
+  ├─ text        ├─ text      
+  ├─ utt2spk     ├─ utt2spk   
+  └─ corpus.txt  └─ corpus.txt
 ``` 
 
-* __fb\_00\_create\_envtree.sh__ :
-This script creates the directory structure shown above, except the `spkXX_n`
-inside the `data/train` and `data/test` folders. Notice that the data-dependent
-files (inside the `data` dir), although created, they __DO NOT__ have any
-content yet. IOW, they're only initialized as empty files. A stupid choice of
-ours.    
+The script `prep_env.sh` gives the kick-off by initializing the directory and
+file structure tree, mostly by making symbolic links to the `mini_librispeech` 
+stuff. But the resources are create by the first stage of `run.sh`.
 
-* __fb\_01\_split\_train\_test.sh__:
-This script fulfills the `data/train` and `data/test` directories. The data is
-divided as training set and test set (90% for training and 10% for testing), and
-the files within the dirs are data-dependent. The folders `train/spkTR_n` and
-`test/spkTE_n` contain symbolic links to the actual wav-transcription base dir.   
+### Audio corpus
+The default data downloaded by the scripts and used during training is the
+LapsBenchmark dataset (check the
+[`lapsbm16k`](https://gitlab.com/fb-audio-corpora/lapsbm16k) repo).
 
-* __fb\_02\_define\_localdict.sh__:
-This script specially fulfills the files inside `local/dict` dir. A dependency of this script
-is the `g2p` software.   
+### Dictionary
+You will need our [`nlp-generator`](https://gitlab.com/fb-nlp/nlp-generator)
+software in order to generate the dictionary. Java is required to be installed. 
+Although this does cause some
+burden during the script exectution, it is easy when switching datasets,
+especially if such dataset doesn't come with a phoetic dictionary.
 
-Below you can see the proper way to execute the scripts. Executing the scripts
-with no params will also prompt a usage help.
+### Language model
+An already-trained 3-gram language model is available at our 
+[`kaldi-resources`](https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources)
+repo. It is also automatically downloaded.
 
-```bash
-$ ./fb_00_create_envtree.sh   path/to/kaldi/egs/YOUR_PROJECT_NAME
-$ ./fb_01_split_train_test.sh path/to/audio/dataset/dir    path/to/kaldi/egs/YOUR_PROJECT_NAME
-$ ./fb_02_define_localdict.sh path/to/kaldi/egs/YOUR_PROJECT_NAME    path/to/g2p/dir
-```   
-   
-## Training Acoustic Models
+## GMM model training
+The schematic below shows the pipeline to training a HMM-DNN acoustic model
+using Kaldi (for more details read our 
+[paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
+These steps are accomplished by running stages 2 to 8 in `run.sh`.
 
-After running the above scripts, your project directory will be ready and you can start training acoustic models with Kaldi. 
-The `run.sh` is a shell script recipe for training a hybrid HMM_DNN acoustic model and it will be located at `path/to/kaldi/egs/YOUR_PROJECT_NAME/`.
-Below you can see the proper way to execute the training script.
+![alt text](doc/kaldiflowchart.png) 
 
-```bash
-$ cd path/to/kaldi/egs/YOUR_PROJECT_NAME
-$ ./run.sh        
-```        
-
-The flowcharts below are the current pipeline and also gonna be redrawn 
-using `dia`.
-
-The Figure below shows the pipeline to training a HMM-DNN acoustic model
-using Kaldi (for more details read our [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
-
-![alt text](doc/kaldiflowchart.png)    
-
-The "Deep Neural Network block" can be trained with and without iVectors,
-depending on how you intend to use the models later. If you want just to compute 
-WER for academic purposes, you might not need it; but otherwise if you want for
-online decoding in a real-time applciation, then you do need the iVectors. Below
-there are flowcharts describing both pipelines:
-
-- DNN with iVectors (for online decoding):
+## DNN model training
+Coming soon.
 
 ```mermaid
 graph LR;
@@ -118,7 +99,7 @@ graph LR;
     D --> E
     E --> F
     F --> G
-    subgraph "run dnn iVector sh"
+    subgraph "this script is outdated sh"
         subgraph "run nnet2 common sh"
             A("extract<br>MFCC")
             B("compute<br>CVMN")
@@ -131,54 +112,9 @@ graph LR;
     end
 ```
 
-- DNN without iVectors:
-Coming soon.
 
-# Demo Corpora
-If you are using our 
-[demo corpora](https://gitlab.com/fb-asr/fb-am-tutorial/demo-corpora) dataset or 
-another similar small audio corpora, you will
-need to change the value of the `num_utts_subset` parameter in the file
-`path/to/kaldi/egs/YOUR_PROJECT_NAME/steps/nnet2/get_egs.sh`, from 300 to 20 in
-order to the [DNN script work properly][2].    
-
-# Language Model
-A language model is available at
-[https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git][3]. It is downloaded and used by default by the `run.sh` script. If you want to train your own language model look at the commented section `MAKING lm.arpa` in `run.sh` script for a example of how to do it.   
-
-A nice tutorial by [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) 
-might also be worthy taking a look at.
-
-[2]:https://groups.google.com/forum/#!msg/kaldi-help/e2EHVCQGE_Y/0uwBkGm9BQAJ
-[3]:https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources.git
-
-# Chain model
-
-We'll soon switch to the chain models by training our AMs with `nnet3` recipe
-provided over the `mini_librispeech` corpora. It appears the recipe follows the
-following steps:
-
-0. data fetching
-1. data preparation and LM training
-2. MFCC extraction + CMVN
-3. train mono
-4. train tri delta-delta+delta
-5. train tri LDA+MLLT
-6. train tri LDA+MLLT+SAT
-7. retrain LN + SAT alignment (?)
-8. mkgraph + decode
-9. train DNN
-    - i-vector extraction
-    - data augmentation by speed perturbation
-    - compute MFCC and CMVN
-    - align
-    - data augmentation by volume perturbation
-    - compute MFCC and CMVN
-10. create chain-type topology
-11. create lattices from low-resolution MFCCs
-12. build new tree
-
-References:
+# References
+- [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) tutorial
 - GMM: https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-1-hmm-models-472a7f4a0488
 - DNN: https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-2-dnn-models-d1b851a56c49
 
@@ -205,7 +141,7 @@ us as one of the following:
 
 [![FalaBrasil](doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
-__Grupo FalaBrasil (2019)__ - https://ufpafalabrasil.gitlab.io/      
+__Grupo FalaBrasil (2020)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
 Cassio Batista - https://cassota.gitlab.io/    
 Larissa Dias - larissa.engcomp@gmail.com

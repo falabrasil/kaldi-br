@@ -5,11 +5,11 @@
 # script tells which audio files are causing Kaldi to fail to compute MFCCs, but
 # it does not say why: it is up to you figure out :)
 #
-# Copyleft Grupo FalaBrasil (2018)
+# Grupo FalaBrasil (2018)
+# Federal University of Pará (UFPA)
 #
 # Author: March 2018
 # Cassio Batista - cassio.batista.13@gmail.com
-# Federal University of Pará (UFPA)
 #
 # Reference:
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html

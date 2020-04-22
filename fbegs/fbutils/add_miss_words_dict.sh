@@ -3,7 +3,7 @@
 # A script that add the transcription of words unseen during acoustic model 
 # train to the lexicon file
 #
-# Copyleft Grupo FalaBrasil (2018)
+# Grupo FalaBrasil (2018)
 # Federal University of Pará (UFPA)
 #
 # Author: September 2019

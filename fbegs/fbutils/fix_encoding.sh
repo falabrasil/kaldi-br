@@ -1,17 +1,17 @@
 #!/bin/bash
 #
-# A script that check if .wav files are somehow duplicate, which can occur when
-# you have two audios with the very same name but think it is ok just because
-# they are inside different folders. For Kaldi, they are not ok.
+# Create environment tree for training acoustic models with Kaldi
 #
-# Copyleft Grupo FalaBrasil (2018)
-#
-# Author: March 2018
-# Cassio Batista - cassio.batista.13@gmail.com
+# Grupo FalaBrasil (2018)
 # Federal University of Pará (UFPA)
 #
-# Reference:
+# Authors: Feb 2019
+# Cassio Batista   - cassio.batista.13@gmail.com
+# Ana Larissa Dias - larissa.engcomp@gmail.com
+#
+# Reference: 
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
+# https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html
 
 function print_fb_ascii() {
 	echo -e "\033[94m  ____                         \033[93m _____     _           \033[0m"
@@ -30,24 +30,28 @@ function print_fb_ascii() {
 if test $# -ne 1
 then
     print_fb_ascii
-	echo "usage: bash ${0} <audio_dataset_dir>"
+	echo "A script to fix encoding of text files to UTF-8"
+	echo
+	echo "Usage: $0 <audio_dataset_dir>"
 	echo -e "\t<audio_dataset_dir> is the folder that contains all your audio base (wav + transcript.)."
+	exit 1
+elif [ ! -d $1 ]
+then
+	echo "dir '${1}' does not exist."
 	exit 1
 fi
 
-find $1 -name "*.wav" > wavlist.orig
-cat wavlist.orig | sed 's/\// /g' | awk '{print $NF}' | sort | uniq > wavlist.uniq
+echo "checking encoding..."
+for txt in $(find $1 -name "*.txt")
+do
+	encoding=$(file -b --mime-encoding $txt)
+	if [[ "$encoding" != "utf-8" ]] ; then
+		echo "[$encoding] creating backup at ${txt}~"
+		cp ${txt} "${txt}~"
+		iconv -f $encoding -t utf-8 $txt > out
+		mv out $txt
+	fi
+done
+echo "done"
 
-o=$(wc -l wavlist.orig | awk '{print $1}')
-u=$(wc -l wavlist.uniq | awk '{print $1}')
-
-if [[ $o == $u ]] ; then
-	echo "your audio corpora do not appear to have common filenames"
-	echo "original wavlist: ${o} files"
-	echo "unique wavlist:   ${u} files"
-else
-	echo "WE HAVE A PROBLEM WITH THESE FILES: "
-	cat wavlist.orig | sed 's/\// /g' | awk '{print $NF}' | sort | uniq -cd 
-fi
-
-rm -f wavlist.*
+### EOF ###
