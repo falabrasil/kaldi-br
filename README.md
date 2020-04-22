@@ -68,12 +68,34 @@ The default data downloaded by the scripts and used during training is the
 LapsBenchmark dataset (check the
 [`lapsbm16k`](https://gitlab.com/fb-audio-corpora/lapsbm16k) repo).
 
+When you switch to your own dataset please keep in mind the pattern followed in
+LapsBM to name files and directories, where 'M' and 'F' in the dirname
+correspond to the gender of the speaker.
+
+```bash
+$ for dir in $(ls | sort -R | head -n 8) ; do tree $dir -C | head -n 6 ; done
+ 
+LapsBM-M031              LapsBM-M018               LapsBM-M010              LapsBM-M024
+├── LapsBM_0601.txt      ├── LapsBM_0341.txt       ├── LapsBM_0181.txt      ├── LapsBM_0461.txt
+├── LapsBM_0601.wav      ├── LapsBM_0341.wav       ├── LapsBM_0181.wav      ├── LapsBM_0461.wav
+├── LapsBM_0602.txt      ├── LapsBM_0342.txt       ├── LapsBM_0182.txt      ├── LapsBM_0462.txt
+├── LapsBM_0602.wav      ├── LapsBM_0342.wav       ├── LapsBM_0182.wav      ├── LapsBM_0462.wav
+├── LapsBM_0603.txt      ├── LapsBM_0343.txt       ├── LapsBM_0183.txt      ├── LapsBM_0463.txt
+
+LapsBM-M033              LapsBM-F014               LapsBM-M030              LapsBM-M027
+├── LapsBM_0641.txt      ├── LapsBM_0261.txt       ├── LapsBM_0581.txt      ├── LapsBM_0521.txt
+├── LapsBM_0641.wav      ├── LapsBM_0261.wav       ├── LapsBM_0581.wav      ├── LapsBM_0521.wav
+├── LapsBM_0642.txt      ├── LapsBM_0262.txt       ├── LapsBM_0582.txt      ├── LapsBM_0522.txt
+├── LapsBM_0642.wav      ├── LapsBM_0262.wav       ├── LapsBM_0582.wav      ├── LapsBM_0522.wav
+├── LapsBM_0643.txt      ├── LapsBM_0263.txt       ├── LapsBM_0583.txt      ├── LapsBM_0523.txt
+```
+
 ### Dictionary
 You will need our [`nlp-generator`](https://gitlab.com/fb-nlp/nlp-generator)
 software in order to generate the dictionary. Java is required to be installed. 
-Although this does cause some
-burden during the script exectution, it is easy when switching datasets,
-especially if such dataset doesn't come with a phoetic dictionary.
+Although this does cause some burden during the script exectution, it is easy
+when switching datasets, especially if such dataset doesn't come with a 
+phoetic dictionary.
 
 ### Language model
 An already-trained 3-gram language model is available at our 
@@ -86,32 +108,18 @@ using Kaldi (for more details read our
 [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
 These steps are accomplished by running stages 2 to 8 in `run.sh`.
 
-![alt text](doc/kaldiflowchart.png) 
+![alt text](doc/gmm.png)
 
 ## DNN model training
-Coming soon.
+Stage 9 in `run.sh` calls a script called `run_tdnn.sh`, which actually follows
+this entire pipeline below.
 
-```mermaid
-graph LR;
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    subgraph "this script is outdated sh"
-        subgraph "run nnet2 common sh"
-            A("extract<br>MFCC")
-            B("compute<br>CVMN")
-            C("train<br>diag<br>UBM")
-            D("train<br>iVector<br>extractor")
-            E("extract<br>iVectors<br>online")
-        end
-        F("train<br>pnorm<br>simple 2")
-        G("extract<br>iVectors<br>online")
-    end
-```
+![](doc/tdnn.png)
 
+
+## Online decoding
+- https://github.com/alumae/kaldi-gstreamer-server
+- https://github.com/alphacep/vosk-api 
 
 # References
 - [Eleanor Chodroff](https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html) tutorial
