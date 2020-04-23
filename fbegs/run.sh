@@ -232,7 +232,7 @@ fi
 if [ $stage -le 9 ]; then
   echo "[$(date +'%F %T')] $0: run TDNN script" | lolcat
   fblocal/chain/run_tdnn.sh --use-gpu false \
-      --jobs-initial 2 --jobs-final 5 --num-epochs 5
+      --jobs-initial 2 --jobs-final 4 --num-epochs 10
 fi
 
 end_time=$(date)
