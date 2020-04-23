@@ -2,7 +2,7 @@
 #
 # A script that creates the language files inside the data/local/dict/ dir
 # (lexicon, nonsilence_phones, silence_phones and optional_silence)
-# This scripts was used to be called 'fb_01' in the old days.
+# This scripts was used to be called 'fb_02' in the old days.
 #
 # Grupo FalaBrasil (2020)
 # Federal University of Pará (UFPA)
@@ -13,12 +13,13 @@
 # Reference:
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
-[ -z $NJ ] && NJ=2
+nj=2
+
+. ./cmd.sh
+. ./path.sh
+. ./utils/parse_options.sh
 
 if test $# -ne 2 ; then
-    echo "A script that creates the language files inside the data/local/dict/ dir"
-    echo "(lexicon, nonsilence_phones, silence_phones and optional_silence)"
-    echo
     echo "Usage: $0 <nlp-dir> <data-dir>" 
     echo "  <nlp-dir> is the folder where the G2P software is located."
     echo "  <data-dir> is the folder to store the files create."
@@ -46,7 +47,7 @@ function create_wordlist() {
             echo $word >> wlist.tmp
         done 
     done
-    cat wlist.tmp | sort | uniq > wordlist.tmp
+    sort wlist.tmp | uniq > wordlist.tmp
 }
 
 # a.) lexicon.txt
@@ -56,8 +57,8 @@ function create_wordlist() {
 # five f ay v
 # four f ao r
 function create_lexicon() {
-    echo "[$(date +'%F %T')] $0: creating lexicon.txt file... "
-    java -jar "${2}" -g -i wordlist.tmp -o dict.tmp -t $NJ
+    echo "[$(date +'%F %T')] $0: creating lexicon.txt using $nj threads... "
+    java -jar "${2}" -g -i wordlist.tmp -o dict.tmp -t $nj
     echo -e "!SIL\tsil"   > ${1}/lexicon.txt
     echo -e "<UNK>\tspn" >> ${1}/lexicon.txt
     cat dict.tmp         >> ${1}/lexicon.txt
@@ -116,6 +117,5 @@ create_silence_phones $data_dir
 create_optional_silence $data_dir
 create_extra_questions $data_dir
 
-echo "Done!"
 rm -f *.tmp
 exit 0

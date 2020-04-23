@@ -12,14 +12,15 @@
 # Reference:
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
 
-[ -z $NJ ] && NJ=2
+nj=2
+split_random=false
+test_dir="lapsbm16k"
 
-SPLIT_RANDOM=true
-DIR_TEST="lapsbm16k"
+. ./cmd.sh
+. ./path.sh
+. ./utils/parse_options.sh
 
 if test $# -ne 2 ; then
-    echo "A script that fills the files inside data/train and data/test folders"
-    echo
     echo "Usage: $0 <corpus-dir> <data-dir>"
     echo "  <corpus-dir> is the folder where you downloaded the dataset"
     echo "  <data-dir> is the folder will hold the files created"
@@ -30,7 +31,7 @@ elif [ ! -d $1 ] ; then
     exit 1
 fi
 
-corpus_dir=$1
+corpus_dir=$(readlink -f $1)
 data_dir=$2
 
 # check dependencies
@@ -41,7 +42,7 @@ for f in gawk dos2unix ; do
     fi
 done
 
-if $SPLIT_RANDOM ; then
+if $split_random ; then
     echo -n "[$(date +'%F %T')] $0: dataset will be random split. "
     echo "this might take a while... "
     find "$corpus_dir" -name '*.wav' | sort -R |\
@@ -52,14 +53,12 @@ if $SPLIT_RANDOM ; then
     head -n $ntrain filelist.tmp > train.list
     tail -n $ntest  filelist.tmp > test.list
     rm filelist.tmp
-elif [ ! -z "$DIR_TEST" ] ; then
-    echo -n "[$(date +'%F %T')] $0: NOTE: using only '$DIR_TEST' for test! "
+elif [ ! -z "$test_dir" ] ; then
+    echo -n "[$(date +'%F %T')] $0: NOTE: using only '$test_dir' for test! "
     echo "this might take a while... "
-    find "$corpus_dir" -name '*.wav' | grep -v "${DIR_TEST}" |\
-            while read line; do readlink -f $line ; done |\
-            sed 's/.wav//g' > train.list
-    find "$corpus_dir/$DIR_TEST" -name '*.wav' |\
-            while read line; do readlink -f $line ; done |\
+    find $corpus_dir -name '*.wav' | grep -v "${test_dir}" |\
+           sed 's/.wav//g' > train.list
+    find $corpus_dir/$test_dir -name '*.wav' |\
             sed 's/.wav//g' > test.list
     ntrain=$(wc -l train.list | awk '{print $1}')
     ntest=$(wc -l test.list | awk '{print $1}')
@@ -136,33 +135,15 @@ function create_data_files() {
     rm -f $tmp
 }
 
-## https://stackoverflow.com/questions/12061410/how-to-replace-a-path-with-another-path-in-sed
-#function link_data() {
-#    proj_rootdir="$1"
-#    data_basedir=$(readlink -f $2 | sed 's_/_\\/_g')
-#    filelist=${3}.slice
-#    part=$(echo $3 | cut -d '.' -f 1)
-#    cat $filelist | sed "s/$data_basedir//g" | xargs dirname | sort | uniq > ${filelist}.tmp
-#    while read line ; do
-#        mkdir -p ${proj_rootdir}/data/${part}/${line}
-#    done < ${filelist}.tmp
-#    rm ${filelist}.tmp
-#    while read line ; do
-#        filepath=$(echo $line | sed "s/$data_basedir//g" | xargs dirname)
-#        ln -s ${line}.wav ${proj_rootdir}/data/${part}/${filepath}
-#        ln -s ${line}.txt ${proj_rootdir}/data/${part}/${filepath}
-#    done < $filelist
-#}
-
 for part in train test ; do
     mkdir -p ${data_dir}/${part}
-    split -de -a 3 -n l/${NJ} --additional-suffix '.slice' ${part}.list "${part}."
+    split -de -a 3 -n l/${nj} --additional-suffix '.slice' ${part}.list "${part}."
 done
 
 for part in train test ; do
     # fork processes
     echo "[$(date +'%F %T')] $0: creating $part files"
-    for i in $(seq -f "%03g" 0 $((NJ-1))); do
+    for i in $(seq -f "%03g" 0 $((nj-1))); do
         [ $((i%10)) -eq 0 ] && echo -ne "\n$0: spawning thread:"
         echo -ne " $i"
         (create_data_files ${part}.${i})&
@@ -180,7 +161,7 @@ for part in train test ; do
     for f in {text,wav.scp,utt2spk,spk2gender,corpus.txt} ; do
         echo "[$(date +'%F %T')] $0: merging file '$f' for ${part} dataset"
         rm -f ${data_dir}/${part}/${f}
-        for i in $(seq -f "%03g" 0 $((NJ-1))); do
+        for i in $(seq -f "%03g" 0 $((nj-1))); do
             suff=${part}.${i}
             cat ${f}.${suff} >> ${data_dir}/${part}/${f}
             rm ${f}.${suff}
@@ -197,26 +178,11 @@ for part in train test ; do
     done
 done
 
-## TODO CB: link_data() should be part of download_data.sh
-#for part in train test ; do
-#    echo "[$(date +'%F %T')] $0: symlinking $part dataset"
-#    for i in $(seq -f "%03g" 0 $((NJ-1))); do
-#        (link_data "$1" "$2" ${part}.${i})&
-#    done
-#done
-#
-#for pid in $(jobs -p) ; do
-#    wait $pid
-#done
-
 for part in train test ; do 
     utils/utt2spk_to_spk2utt.pl \
         ${data_dir}/${part}/utt2spk > ${data_dir}/${part}/spk2utt || exit 1
     utils/validate_data_dir.sh --no-feats ${data_dir}/${part}  || exit 1
 done
 
-echo -e "\e[1mDone!\e[0m"
 rm *.slice *.list
-
-notify-send "'$0' finished" 2> /dev/null || echo "'$0' finished"
-### EOF ###
+exit 0
