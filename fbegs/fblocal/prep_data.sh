@@ -1,13 +1,22 @@
 #!/bin/bash
 #
-# A script that fills the files inside data/train and data/test folders
-# This scripts was used to be called 'fb_01' in the old days.
+# Create resource files inside data/train and data/test folders.
+# This script used to be called 'fb_01' in the old days.
+#
+# The files created are  the following:
+#   - text
+#   - wav.scp
+#   - utt2spk
+#   - spk2gender
+#   - corpus.txt
+#   - extra_questions.txt
+#   - spk2utt
 #
 # Grupo FalaBrasil (2020)
 # Federal University of Pará (UFPA)
 #
-# Author: Apr 2020
-# Cassio Batista - https://cassota.gitlab.io/
+# author: apr 2020
+# cassio batista - https://cassota.gitlab.io/
 #
 # Reference:
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
@@ -169,6 +178,7 @@ for part in train test ; do
     done
 done
 
+# TODO CB: check the impact of putting this section into the above loop
 tmp=$(mktemp)
 for part in train test ; do
     #for f in {text,wav.scp,utt2spk,spk2gender,corpus.txt} ; do

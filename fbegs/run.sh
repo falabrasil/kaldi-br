@@ -25,22 +25,26 @@ mkdir -p $data
 start_time=$(date)
 
 # CB: you may call this script multiple times if you have more than one
-#     dataset. just change the url
+#     dataset by changing the url, however you'll have to edit the SHA1
+#     key
 # CB: however if you have multiple datasets you better comment out this
 #     script and call "link_local_data.sh" instead.
 echo "[$(date +'%F %T')] $0: download data" | lolcat
-fblocal/download_data.sh $data $data_url
+fblocal/download_data.sh $data $data_url || exit 1
+## TODO CB: verify if data (dir? link?) exists first. it'll run much faster
+#fblocal/link_local_data.sh --nj 8 ${HOME}/fb-gitlab/fb-audio-corpora $data || exit 1
 
 if [ $stage -le 0 ]; then
   # CB: args 1 and 2 are swapped from the original
   echo "[$(date +'%F %T')] $0: download lm" | lolcat
-  fblocal/download_lm.sh $data $lm_url data/local/lm
+  fblocal/download_lm.sh $data $lm_url data/local/lm || exit 1
 fi
 
 if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   echo "[$(date +'%F %T')] $0: prep data" | lolcat
   fblocal/prep_data.sh --nj 3 --split-random true $data ./data
+  #fblocal/prep_data.sh --nj 8 --test-dir lapsbm16k $data ./data
 
   # CB: stage 3 doesn't need local/lm dir
   echo "[$(date +'%F %T')] $0: prep dict" | lolcat 

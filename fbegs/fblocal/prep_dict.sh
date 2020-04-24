@@ -7,8 +7,8 @@
 # Grupo FalaBrasil (2020)
 # Federal University of Pará (UFPA)
 #
-# Author: Apr 2020
-# Cassio Batista - https://cassota.gitlab.io/
+# author: apr 2020
+# cassio batista - https://cassota.gitlab.io/
 #
 # Reference:
 # http://kaldi-asr.org/doc/kaldi_for_dummies.html
@@ -110,12 +110,12 @@ function create_extra_questions() {
 
 mkdir -p $data_dir
 rm -f *.tmp
-create_wordlist $data_dir
-create_lexicon $data_dir $g2p_dir
-create_nonsilence_phones $data_dir
-create_silence_phones $data_dir
-create_optional_silence $data_dir
-create_extra_questions $data_dir
+create_wordlist $data_dir || exit 1
+create_lexicon $data_dir $g2p_dir || exit 1
+create_nonsilence_phones $data_dir || exit 1
+create_silence_phones $data_dir || exit 1
+create_optional_silence $data_dir || exit 1
+create_extra_questions $data_dir || exit 1
 
 rm -f *.tmp
 exit 0
