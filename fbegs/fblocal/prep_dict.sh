@@ -30,6 +30,13 @@ elif [ ! -d $1 ] ; then
     exit 1
 fi
 
+if [ -z "$(locale -a | grep ^pt_BR)" ] ; then
+    echo "$0: please enable 'pt_BR' in your linux locale"
+    exit 1
+fi
+
+export LC_ALL=pt_BR.UTF-8
+
 g2p_dir=${1}/fb_nlplib.jar
 data_dir=${2}
 
