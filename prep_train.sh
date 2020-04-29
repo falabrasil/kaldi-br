@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Create environment tree for training acoustic models with Kaldi
+# Create environment tree for training acoustic models with Kaldi.
 # This scripts used to be called 'fb_00' in the old days.
 #
 # Grupo FalaBrasil (2020)
@@ -22,12 +22,7 @@ echo -e "                           \033[32m|____/|_|  \__,_|___/_|_|\033[0m\033
 echo -e ""
 
 if test $# -ne 1 ; then
-    echo "A script to create the environment tree for training acoustic models"
-    echo "according to Kaldi's pattern."
-    echo "Ref.: http://kaldi-asr.org/doc/kaldi_for_dummies.html"
-    echo "Ref.: https://www.eleanorchodroff.com/tutorial/kaldi/kaldi-training.html"
-    echo
-    echo "Usage: $0 <proj_dir>"
+    echo "usage: $0 <proj_dir>"
     echo "  <proj_dir> is the path for your project *within* kaldi/egs dir."
     echo "      e.g.: ./$0 ${HOME}/kaldi/egs/MEUPROJETO"
     exit 1
@@ -42,26 +37,26 @@ elif [ -d "$1" ] ; then
     fi
 # https://stackoverflow.com/questions/8426058/getting-the-parent-of-a-directory-in-bash
 elif [ "$(basename $(readlink -f $(dirname "$1")))" != "egs" ] ; then
-    echo "$0: Error: '$1' must be inside /path/to/kaldi/egs"
+    echo "$0: error: '$1' must be inside /path/to/kaldi/egs"
     exit 1
 fi
 
 PROJECT_DIR="$(readlink -f "$1")"/s5
 KALDI_ROOT="$(readlink -f $(dirname "$(dirname "$1")"))"
-MINILIBRI_DIR=${KALDI_ROOT}/egs/mini_librispeech/s5
+MINILIBRI_DIR=$KALDI_ROOT/egs/mini_librispeech/s5
 
 mkdir -p $PROJECT_DIR/
-cp -r fbegs/* $PROJECT_DIR/
+cp -r train/* $PROJECT_DIR/
 
-ln -sf ${MINILIBRI_DIR}/conf/  ${PROJECT_DIR}/ 
-ln -sf ${MINILIBRI_DIR}/local/ ${PROJECT_DIR}/
-ln -sf ${MINILIBRI_DIR}/steps/ ${PROJECT_DIR}/
-ln -sf ${MINILIBRI_DIR}/utils/ ${PROJECT_DIR}/
+ln -sf $MINILIBRI_DIR/conf/  $PROJECT_DIR/
+ln -sf $MINILIBRI_DIR/local/ $PROJECT_DIR/
+ln -sf $MINILIBRI_DIR/steps/ $PROJECT_DIR/
+ln -sf $MINILIBRI_DIR/utils/ $PROJECT_DIR/
 
-ln -sf ${MINILIBRI_DIR}/path.sh ${PROJECT_DIR}/path.sh
-sed 's/"queue.pl/"run.pl/g' ${MINILIBRI_DIR}/cmd.sh > ${PROJECT_DIR}/cmd.sh
+ln -sf $MINILIBRI_DIR/path.sh $PROJECT_DIR/path.sh
+sed 's/"queue.pl/"run.pl/g' $MINILIBRI_DIR/cmd.sh > $PROJECT_DIR/cmd.sh
 
-echo "$0: all set up! check out your project at '$(readlink -f $PROJECT_DIR)'"
 tree $PROJECT_DIR -I corpus
+echo "$0: all set up! check out your project at '$(readlink -f $PROJECT_DIR)'"
 
 exit 0
