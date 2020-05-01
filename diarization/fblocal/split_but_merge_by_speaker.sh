@@ -37,11 +37,11 @@ in_dir=$2
 out_dir=$3
 
 function cut_audios() {
-    i=0
     while read recspk ; do
         # recspk = rec.recId.spkId = rec.5048.002
         rec_id=$(basename $recspk | cut -d '.' -f 2)
         spk_id=$(basename $recspk | rev | cut -d '.' -f 1 | rev)
+        i=0
         while read line ; do
             [ -f .keep_running ] || break
             begin=$(echo $line | awk '{print $4}')
@@ -56,7 +56,7 @@ function cut_audios() {
             i=$((i+1))
         done < $recspk
         [ -f .keep_running ] || break
-        echo
+        #echo
     done < $1
 }
 
@@ -78,17 +78,23 @@ while read line ; do
 done < $rttm
 echo
 
-echo "$0: splitting audios via sox"
+echo -n "$0: splitting audios via sox "
 find . -name "rec.*" | sort > reclist
 split -de -a 2 -n l/$nj reclist "slice."
 for slice in $(find . -name "slice.*") ; do
+    echo -n "$(basename $slice | cut -d '.' -f 2)"
     (cut_audios $slice) &
     sleep 0.1
 done
+echo
 
+n=$(wc -l < $rttm)
 for pid in $(jobs -p) ; do
+    echo -ne "\rprogress: $(find $out_dir -name "*.wav") / $n"
     wait $pid
+    sleep 10
 done
+echo
 
 rm -f rec.* slice.*
 exit 0

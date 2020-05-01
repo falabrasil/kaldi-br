@@ -21,16 +21,15 @@ for f in wget ; do
 done
 
 data_dir=$(readlink -f $1)
-# CB: callhome dataset is huge we we're limit to ten files of the english part
-files=( 0638 4065 4074 4077 4092 4093 4104 4112 4145 4156 )
+# CB: callhome dataset is huge we we're limit to five files of the english part
+files=( 0638 4065 4074 4077 4092 )
 corpus_url=$2
-num_wavs=10
+num_wavs=5
 
 for f in ${files[@]} ; do
     if [ -f $data_dir/$f.wav ] ; then
-        echo -ne "\r$0: '$f.wav' exists. skipping download"
+        echo "$0: '$f.wav' exists. skipping download"
     else
-        echo
         wget -q --show-progress -np -nH --cut-dirs 5 -r -e robots=off \
             -R "*.html*" $corpus_url/$f.wav -P $data_dir || exit 1
     fi
