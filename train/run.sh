@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# copied from kaldi/egs/mini_librispeech/s5/run.sh (fa95730be)
+# adapted from kaldi/egs/mini_librispeech/s5/run.sh (fa95730be)
 #
 # author: apr 2020
 # cassio batista - https://cassota.gitlab.io/
@@ -231,14 +231,15 @@ if [ $stage -le 8 ]; then
 fi
 
 # Train a chain model
-# FIXME beware the number of epochs reduced by a quarter, original is 20.
-# NOTE  CB: if you have a NVIDIA card, then set use-gpu to 'true', and both
-#       jobs initial and final to 1 (if you have only one GPU). For a 
-#       regular desktop or cluster you may leave as it is
+# FIXME beware the number of epochs reduced by a half, original is 20.
+# NOTE: CB: if you do not have a NVIDIA card, then set use-gpu to 
+#       'false', jobs initial to 2 and jobs final to 4. OTOH, if you
+#       have multiple GPUs, then you might want to increase the 
+#       number of jobs final accordinly
 if [ $stage -le 9 ]; then
   echo "[$(date +'%F %T')] $0: run TDNN script" | lolcat
-  fblocal/chain/run_tdnn.sh --use-gpu false \
-      --jobs-initial 2 --jobs-final 4 --num-epochs 10
+  fblocal/chain/run_tdnn.sh --use-gpu true \
+      --jobs-initial 1 --jobs-final 1 --num-epochs 10
 fi
 
 end_time=$(date)
