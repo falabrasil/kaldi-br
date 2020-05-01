@@ -52,7 +52,7 @@ find $src -name "*.wav" | egrep -v "$exclude_dirs" | sed 's/\.wav//g' > filelist
 cat filelist.tmp | xargs dirname | sort | uniq > dirlist.tmp
 
 split -de -a 3 -n l/${nj} dirlist.tmp "slice."
-echo -n "[$(date +'%F %T')] $0: creating subdirectories:"
+echo -n "$0: creating subdirs:"
 for i in $(seq -f "%03g" 0 $((nj-1))); do
     echo -n " $i"
     ( create_dirs $src $dst slice.${i} ) &
@@ -64,7 +64,7 @@ for pid in $(jobs -p) ; do
 done
 
 split -de -a 3 -n l/${nj} filelist.tmp "slice."
-echo -n "[$(date +'%F %T')] $0: symlinking dataset:"
+echo -n "$0: symlinking dataset:"
 for i in $(seq -f "%03g" 0 $((nj-1))); do
     echo -n " $i"
     ( link_data $src $dst slice.${i} ) &

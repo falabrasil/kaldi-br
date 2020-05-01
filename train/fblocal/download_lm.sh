@@ -24,7 +24,7 @@ link_dir=$3
 
 filename=$(basename $lm_url)
 if [ ! -f ${data_dir}/${filename} ] ; then
-    wget $lm_url -P $data_dir || exit 1
+    wget -q --show-progress $lm_url -P $data_dir || exit 1
     # TODO check filesize
 else
     echo "$0: file '$filename' exists under $data_dir. skipping download"

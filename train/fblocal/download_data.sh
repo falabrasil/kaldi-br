@@ -29,7 +29,7 @@ filename=$(basename $corpus_url)
 if [ -f $data_dir/$filename ] ; then
     echo "$0: repo '$filename' exists under $data_dir. skipping download."
 else
-    wget $corpus_url -P $data_dir || exit 1;
+    wget -q --show-progress $corpus_url -P $data_dir || exit 1;
 fi
 
 if [ $(sha1sum $data_dir/$filename | awk '{print $1}') != "$sha" ] ; then

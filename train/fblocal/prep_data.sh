@@ -52,7 +52,7 @@ for f in gawk dos2unix ; do
 done
 
 if $split_random ; then
-    echo -n "[$(date +'%F %T')] $0: dataset will be random split. "
+    echo -n "$0: dataset will be random split. "
     echo "this might take a while... "
     find "$corpus_dir" -name '*.wav' | sort -R |\
         awk '{print $NF}' | sed 's/.wav//g' > filelist.tmp
@@ -63,7 +63,7 @@ if $split_random ; then
     tail -n $ntest  filelist.tmp > test.list
     rm filelist.tmp
 elif [ ! -z "$test_dir" ] ; then
-    echo -n "[$(date +'%F %T')] $0: NOTE: using only '$test_dir' for test! "
+    echo -n "$0: NOTE: using only '$test_dir' for test! "
     echo "this might take a while... "
     find $corpus_dir -name '*.wav' | grep -v "${test_dir}" |\
            sed 's/.wav//g' > train.list
@@ -151,9 +151,8 @@ done
 
 for part in train test ; do
     # fork processes
-    echo "[$(date +'%F %T')] $0: creating $part files"
+    echo -n "$0: creating $part files: "
     for i in $(seq -f "%03g" 0 $((nj-1))); do
-        [ $((i%10)) -eq 0 ] && echo -ne "\n$0: spawning thread:"
         echo -ne " $i"
         (create_data_files ${part}.${i})&
         sleep 0.5
@@ -168,7 +167,7 @@ for part in train test ; do
 
     # merge
     for f in {text,wav.scp,utt2spk,spk2gender,corpus.txt} ; do
-        echo "[$(date +'%F %T')] $0: merging file '$f' for ${part} dataset"
+        echo "$0: merging file '$f' for ${part} dataset"
         rm -f ${data_dir}/${part}/${f}
         for i in $(seq -f "%03g" 0 $((nj-1))); do
             suff=${part}.${i}

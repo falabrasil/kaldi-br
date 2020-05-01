@@ -49,7 +49,7 @@ data_dir=${2}
 function create_wordlist() {
     # FIXME CB: this is bad!
     for corpus in $(find ${1}/../.. -name corpus.txt) ; do
-        echo "[$(date +'%F %T')] $0: creating wordlist from ${corpus}..."
+        echo "$0: creating wordlist from ${corpus}..."
         for word in $(cat $corpus | dos2unix | tr '[A-Z]' '[a-z]' | tr "\'" " " | sed 's/[,.;<>:?!1234"567890()@%]/ /g') ; do
             echo $word >> wlist.tmp
         done 
@@ -64,7 +64,7 @@ function create_wordlist() {
 # five f ay v
 # four f ao r
 function create_lexicon() {
-    echo "[$(date +'%F %T')] $0: creating lexicon.txt using $nj threads... "
+    echo "$0: creating lexicon.txt using $nj threads... "
     java -jar "${2}" -g -i wordlist.tmp -o dict.tmp -t $nj
     echo -e "!SIL\tsil"   > ${1}/lexicon.txt
     echo -e "<UNK>\tspn" >> ${1}/lexicon.txt
@@ -77,7 +77,7 @@ function create_lexicon() {
 # ay
 # eh
 function create_nonsilence_phones() {
-    echo "[$(date +'%F %T')] $0: creating nonsilence_phones.txt file... "
+    echo "$0: creating nonsilence_phones.txt file... "
     tail -n +3 ${1}/lexicon.txt | awk '{$1="" ; print}' > plist.tmp
     for phone in $(cat plist.tmp) ; do
         echo $phone >> phonelist.tmp
@@ -89,7 +89,7 @@ function create_nonsilence_phones() {
 # sil
 # spn
 function create_silence_phones() {
-    echo "[$(date +'%F %T')] $0: creating silence_phones.txt file... "
+    echo "$0: creating silence_phones.txt file... "
     echo "sil"  > ${1}/silence_phones.txt
     echo "spn" >> ${1}/silence_phones.txt
 }
@@ -97,7 +97,7 @@ function create_silence_phones() {
 # d.) create optional_silence.txt
 # sil
 function create_optional_silence() {
-    echo "[$(date +'%F %T')] $0: creating optional_silence.txt file... "
+    echo "$0: creating optional_silence.txt file... "
     echo "sil"  > ${1}/optional_silence.txt
 }
 
