@@ -14,6 +14,7 @@ function kill_bg() {
     rm -f .keep_running
     echo -e "\n** trapped CTRL+C"
     sleep 1
+    rm -f .keep_running reclist rec.* slice.*
     exit 1
 }
 
@@ -60,6 +61,17 @@ function cut_audios() {
     done < $1
 }
 
+function progress_thread() {
+    n=0
+    while [ $n -lt $1 ] ; do
+        [ -f .keep_running ] || break
+        n=$(find $out_dir -name "*.wav" | wc -l)
+        p=$(echo "100 * $n / $1" | bc)
+        echo -ne "\r$0: splitting audios via sox: $n / $1 ($p%)"
+        sleep 2
+    done
+}
+
 mkdir -p $out_dir || exit 1
 rm -f rec.* slice.*
 
@@ -78,23 +90,22 @@ while read line ; do
 done < $rttm
 echo
 
-echo -n "$0: splitting audios via sox "
+echo -n "$0: splitting audios via sox:"
 find . -name "rec.*" | sort > reclist
 split -de -a 2 -n l/$nj reclist "slice."
-for slice in $(find . -name "slice.*") ; do
-    echo -n "$(basename $slice | cut -d '.' -f 2)"
+for slice in $(find . -name "slice.*" | sort) ; do
+    echo -n " $(basename $slice | cut -d '.' -f 2)"
     (cut_audios $slice) &
     sleep 0.1
 done
 echo
 
 n=$(wc -l < $rttm)
+(progress_thread $n)&
 for pid in $(jobs -p) ; do
-    echo -ne "\rprogress: $(find $out_dir -name "*.wav") / $n"
     wait $pid
-    sleep 10
 done
 echo
 
-rm -f rec.* slice.*
+rm -f .keep_running reclist rec.* slice.*
 exit 0

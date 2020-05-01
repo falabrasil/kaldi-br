@@ -58,28 +58,28 @@ if [ $stage -le 1 ] ; then
   fblocal/prep_data.sh $data/english data/original/
 
   echo "[$(date +'%F %T')] $0: compute mfcc from original dataset" | lolcat
-  steps/make_mfcc.sh --nj 10 --cmd "$train_cmd" \
+  steps/make_mfcc.sh --nj 5 --cmd "$train_cmd" \
       data/original/ exp/make_mfcc/original/ mfcc/original/
   utils/fix_data_dir.sh data/original/
 
   echo "[$(date +'%F %T')] $0: compute vad decisions from original dataset" | lolcat
-  sid/compute_vad_decision.sh --nj 10 --cmd "$train_cmd" \
+  sid/compute_vad_decision.sh --nj 5 --cmd "$train_cmd" \
       data/original/ exp/make_vad/original/ mfcc/original/
 
   echo "[$(date +'%F %T')] $0: creating segments file from vad decisions" | lolcat
-  diarization/vad_to_segments.sh --nj 10 --cmd "$train_cmd" \
+  diarization/vad_to_segments.sh --nj 5 --cmd "$train_cmd" \
       data/original/ data/$segname/
 fi
 
 # feature extraction
 if [ $stage -le 2 ] ; then
   echo "[$(date +'%F %T')] $0: compute mfcc from segmented dataset" | lolcat
-  steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --nj 10 \
+  steps/make_mfcc.sh --mfcc-config conf/mfcc.conf --nj 5 \
       --cmd "$train_cmd" --write-utt2num-frames true \
       data/$segname/ exp/make_mfcc/$segname/ mfcc/$segname/
 
   echo "[$(date +'%F %T')] $0: apply cmvn and dump it to disk" | lolcat
-  local/nnet3/xvector/prepare_feats.sh --nj 10 --cmd "$train_cmd" \
+  local/nnet3/xvector/prepare_feats.sh --nj 5 --cmd "$train_cmd" \
       data/$segname/ data/${segname}_cmn/ exp/${segname}_cmn/
 
   cp data/$segname/{vad.scp,segments} data/${segname}_cmn/
@@ -102,7 +102,7 @@ fi
 if [ $stage -le 4 ] ; then
   echo "[$(date +'%F %T')] $0: compute pair-wise similarity via plda score" | lolcat
   diarization/nnet3/xvector/score_plda.sh --cmd "$train_cmd --mem 4G" \
-      --target-energy 0.9 --nj 10 exp/$plda_dir \
+      --target-energy 0.9 --nj 5 exp/$plda_dir \
       exp/xvectors_$segname/ exp/xvectors_$segname/plda_scores/
 fi
 
@@ -111,14 +111,14 @@ if [ $stage -le 5 ] ; then
   echo "[$(date +'%F %T')] $0: perform agglomerative hierarchical clustering" | lolcat
   if [ -f data/$segname/reco2num_spk ] ; then
     echo "$0: reco2num_spk file found. number of speakers per audio is known"
-    diarization/cluster.sh --cmd "$train_cmd --mem 4G" --nj 10 \
+    diarization/cluster.sh --cmd "$train_cmd --mem 4G" --nj 5 \
         --reco2num-spk data/$segname/reco2num_spk \
         exp/xvectors_$segname/plda_scores/ \
         exp/xvectors_$segname/plda_scores_num_speakers/
   else
     threshold=0.5 # CB: see towardsdatascience article (run.sh header)
     echo "$0: unknown number of speakers per audio. applying threshold $threshold"
-    diarization/cluster.sh --cmd "$train_cmd --mem 4G" --nj 10 \
+    diarization/cluster.sh --cmd "$train_cmd --mem 4G" --nj 5 \
         --threshold $threshold \
         exp/xvectors_$segname/plda_scores/ \
         exp/xvectors_$segname/plda_scores_threshold_$threshold/

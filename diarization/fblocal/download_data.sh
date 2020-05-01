@@ -34,7 +34,6 @@ for f in ${files[@]} ; do
             -R "*.html*" $corpus_url/$f.wav -P $data_dir || exit 1
     fi
 done
-echo
 
 # sanity check
 msg="$0: error: number of files do not match $num_wavs"
