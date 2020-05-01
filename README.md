@@ -1,8 +1,7 @@
-# Kaldi - tutorial for training acoustic models
-
-# TL;DR
+# FalaBrasil scripts for Kaldi
 
 ## Model training
+See [`train/`](./online) dir.
 ```bash
 $ ./prep_train.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
@@ -10,14 +9,15 @@ $ ./run.sh
 ```
 
 ## Diarization
+See [`diarization/`](./online) dir.
 ```bash
 $ ./prep_dia.sh /path/to/kaldi/egs/myproject
-$ cd /path/to/kaldi/egs/myproject/s5/
+$ cd /path/to/kaldi/egs/myproject/v1/
 $ ./run.sh
 ```
 
 ## Online decoding
-See [online](./online) dir.
+See [`online/`](./online) dir.
 
 
 # Citation
@@ -46,4 +46,3 @@ us as one of the following:
 __Grupo FalaBrasil (2020)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
 Cassio Batista - https://cassota.gitlab.io/    
-Larissa Dias - larissa.engcomp@gmail.com
