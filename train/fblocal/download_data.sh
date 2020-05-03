@@ -46,4 +46,5 @@ for ext in wav txt ; do
     fi
 done
 
+touch $data_dir/.done
 exit 0

@@ -28,6 +28,8 @@ fi
 src=$(readlink -f $1)
 dst=$(readlink -f $2)
 
+[ -f $dst/.done ] && echo "$0: data seem to be in place. skipping" && exit 0
+
 function create_dirs() {
     src=$1
     dst=$2
@@ -76,4 +78,5 @@ for pid in $(jobs -p) ; do
 done
 
 rm *.tmp slice.*
+touch $dst/.done
 exit 0
