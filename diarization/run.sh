@@ -92,7 +92,7 @@ if [ $stage -le 3 ] ; then
   # TODO having a single GPU whats the impact of nj = 1 vs nj = 2?
   echo "[$(date +'%F %T')] $0: extract xvector embeddings" | lolcat
   diarization/nnet3/xvector/extract_xvectors.sh --cmd "$train_cmd --mem 5G" \
-      --nj 2 --use-gpu true \
+      --nj 1 --use-gpu true \
       --window 1.5 --period 0.75 --apply-cmn false \
       --min-segment 0.5 exp/$nnet_dir \
       data/${segname}_cmn/ exp/xvectors_$segname/
@@ -130,6 +130,8 @@ if [ $stage -le 6 ] ; then
   echo "[$(date +'%F %T')] $0: split original files with sox" | lolcat
   fblocal/split_but_merge_by_speaker.sh --nj 6 exp/xvectors_$segname/ \
       $data/english/ $data/diarized/ || exit 1
+  fbutils/get_wav_dur.sh $data/english/
+  fbutils/get_wav_dur.sh $data/diarized/
 fi
 
 exit 0
