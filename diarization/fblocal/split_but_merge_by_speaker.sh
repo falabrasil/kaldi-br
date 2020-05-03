@@ -73,6 +73,7 @@ function merge_audios() {
         spk_id=$(basename $line | sed 's/rec\.//g' | cut -d '.' -f 2)
         infiles=$(find $out_dir/split/ -name "${rec_id}_${spk_id}_*.wav")
         outfile=$out_dir/${rec_id}_${spk_id}.wav
+        [ -z "$infiles" ] && echo -e "\n$0: warning: ${rec_id}_${spk_id}*.wav not found" && continue
         sox $infiles $outfile
         rm rec.$rec_id.$spk_id
     done < $filelist
