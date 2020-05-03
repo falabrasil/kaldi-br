@@ -16,11 +16,11 @@
 data=./corpus/
 
 # NOTE: CB: this dataset is huge, therefore the script is gonna be
-#       downloading only the first 10 audios from the english part.
+#       downloading only the first 5 audios from the english part.
 #       bear in mind that these corpus contains 64 kbps, 2-channel
 #       μ-law-encoded telephone speech, which is converted by sox
-#       to signed-integer linear PCM at 16 kHz via wav.scp file
-#       (see fblocal/prep_data.sh)
+#       to single-channel (mono), signed-integer linear PCM at
+#       16 kHz via wav.scp file (see fblocal/prep_data.sh)
 data_url=https://media.talkbank.org/ca/CallHome/eng/0wav/
 
 # https://david-ryan-snyder.github.io/2017/10/04/model_sre16_v2.html
@@ -129,7 +129,7 @@ fi
 if [ $stage -le 6 ] ; then
   echo "[$(date +'%F %T')] $0: split original files with sox" | lolcat
   fblocal/split_but_merge_by_speaker.sh --nj 6 exp/xvectors_$segname/ \
-      $data/english/ data/diarized/ || exit 1
+      $data/english/ $data/diarized/ || exit 1
 fi
 
 exit 0
