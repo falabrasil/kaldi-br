@@ -32,7 +32,7 @@ elif [ -d "$1" ] ; then
         echo "$0: aborted."
         exit 0
     else
-        rm -rf ${1}/v1/{data,exp,mfcc,fblocal,fbutils}
+        rm -rf ${1}/v1/{data,exp,mfcc,fblocal,fbutils,corpus/diarized}
     fi
 # https://stackoverflow.com/questions/8426058/getting-the-parent-of-a-directory-in-bash
 elif [ "$(basename $(readlink -f $(dirname "$1")))" != "egs" ] ; then
