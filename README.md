@@ -1,7 +1,7 @@
 # FalaBrasil scripts for Kaldi
 
 ## Model training
-See [`train/`](./online) dir.
+See [`train/`](./train) dir.
 ```bash
 $ ./prep_train.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
@@ -9,7 +9,7 @@ $ ./run.sh
 ```
 
 ## Diarization
-See [`diarization/`](./online) dir.
+See [`diarization/`](./diarization) dir.
 ```bash
 $ ./prep_dia.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/v1/
