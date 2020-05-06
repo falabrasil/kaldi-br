@@ -56,7 +56,7 @@ if [ $stage -le 1 ]; then
     "<UNK>" data/local/lang_tmp_nosp/ data/lang_nosp/
 
   echo "[$(date +'%F %T')] $0: format lms" | lolcat
-  fblocal/format_lms.sh --src-dir data/lang_nosp/ data/local/lm/
+  fblocal/format_lms.sh --src-dir data/lang_nosp data/local/lm
 
   # Create ConstArpaLm format language model for full 3-gram and 4-gram LMs
   echo "[$(date +'%F %T')] $0: build const arpa" | lolcat
