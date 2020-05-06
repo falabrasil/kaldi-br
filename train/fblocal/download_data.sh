@@ -20,7 +20,7 @@ for f in tar wget ; do
     fi
 done
 
-data_dir=$(readlink -f $1)
+data_dir=$1
 corpus_url=$2
 num_files=700
 sha=460eab24bf0f069526a64fe7fb29639d7aa6f238
