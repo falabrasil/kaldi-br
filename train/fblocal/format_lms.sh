@@ -50,7 +50,7 @@ mkdir -p $tmpdir
 test=${src_dir}_test
 mkdir -p $test
 cp -r ${src_dir}/* $test
-cat $lm_dir/lm_tglarge.arpa | \
+gunzip -c $lm_dir/lm_tglarge.arpa.gz | \
     arpa2fst --disambig-symbol=#0 \
              --read-symbol-table=$test/words.txt - $test/G.fst
 

@@ -9,8 +9,9 @@
 data=./corpus/
 
 data_url=https://gitlab.com/fb-audio-corpora/lapsbm16k/-/archive/master/lapsbm16k-master.tar.gz
-lm_url=https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources/-/raw/master/lm/lm.arpa
-nlp_dir=${HOME}/fb-gitlab/fb-nlp/nlp-generator/
+lex_url=https://gitlab.com/fb-nlp/nlp-resources/-/raw/master/res/lexicon.utf8.dict.gz
+lm_url=https://gitlab.com/fb-nlp/nlp-resources/-/raw/master/res/lm.3gram.arpa.gz
+#nlp_dir=${HOME}/fb-gitlab/fb-nlp/nlp-generator/ # TODO CB: deploy heroku java server?
 
 . ./cmd.sh
 . ./path.sh
@@ -24,44 +25,43 @@ mkdir -p $data
 
 start_time=$(date)
 
-# CB: you may call this script multiple times if you have more than one
-#     dataset by changing the url, however you'll have to edit the SHA1
-#     key
-# CB: however if you have multiple datasets you better comment out this
-#     script and call "link_local_data.sh" instead.
+# NOTE: CB: if you have multiple datasets you better download them beforehand,
+#       comment out this script and call "link_local_data.sh" instead.
 echo "[$(date +'%F %T')] $0: download data" | lolcat
 fblocal/download_data.sh $data $data_url || exit 1
-## TODO CB: verify if data (dir? link?) exists first. it'll run much faster
 #fblocal/link_local_data.sh --nj 8 ${HOME}/fb-gitlab/fb-audio-corpora $data || exit 1
 
 if [ $stage -le 0 ]; then
   # CB: args 1 and 2 are swapped from the original
   echo "[$(date +'%F %T')] $0: download lm" | lolcat
-  fblocal/download_lm.sh $data $lm_url data/local/lm || exit 1
+  fblocal/download_lm.sh $data $lm_url data/local/lm/ || exit 1
+
+  echo "[$(date +'%F %T')] $0: download lexicon" | lolcat
+  fblocal/download_lexicon.sh $data $lex_url data/local/dict_nosp/ || exit 1
 fi
 
 if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   echo "[$(date +'%F %T')] $0: prep data" | lolcat
-  fblocal/prep_data.sh --nj 3 --split-random true $data ./data
+  fblocal/prep_data.sh --nj 3 --split-random true $data data/
   #fblocal/prep_data.sh --nj 8 --test-dir lapsbm16k $data ./data
 
   # CB: stage 3 doesn't need local/lm dir
   echo "[$(date +'%F %T')] $0: prep dict" | lolcat 
-  fblocal/prep_dict.sh --nj 4 $nlp_dir data/local/dict_nosp
+  fblocal/prep_dict.sh --nj 4 data/local/dict_nosp/  # TODO: CB: do nj
 
   # CB: leave as it is
   echo "[$(date +'%F %T')] $0: prep lang" | lolcat
   utils/prepare_lang.sh data/local/dict_nosp \
-    "<UNK>" data/local/lang_tmp_nosp data/lang_nosp
+    "<UNK>" data/local/lang_tmp_nosp/ data/lang_nosp/
 
   echo "[$(date +'%F %T')] $0: format lms" | lolcat
-  fblocal/format_lms.sh --src-dir data/lang_nosp data/local/lm
+  fblocal/format_lms.sh --src-dir data/lang_nosp/ data/local/lm/
 
   # Create ConstArpaLm format language model for full 3-gram and 4-gram LMs
   echo "[$(date +'%F %T')] $0: build const arpa" | lolcat
-  fbutils/build_const_arpa_lm.sh data/local/lm/lm_tglarge.arpa \
-    data/lang_nosp data/lang_nosp_test
+  utils/build_const_arpa_lm.sh data/local/lm/lm_tglarge.arpa.gz \
+    data/lang_nosp/ data/lang_nosp_test/
 fi
 
 if [ $stage -le 2 ]; then
@@ -210,25 +210,27 @@ if [ $stage -le 7 ]; then
     data/train data/lang exp/tri3b exp/tri3b_ali_train
 fi
 
-if [ $stage -le 8 ]; then
-  # Test the tri3b system with the silprobs and pron-probs.
-
-  # changed 1st arg -- CB
-  # decode using the tri3b model
-  echo "[$(date +'%F %T')] $0: creating GMM graph" | lolcat
-  utils/mkgraph.sh data/lang_nosp_test \
-                   exp/tri3b exp/tri3b/graph_tgsmall
-  #for test in test; do
-  #  steps/decode_fmllr.sh --nj 10 --cmd "$decode_cmd" \
-  #                        exp/tri3b/graph_tgsmall data/$test \
-  #                        exp/tri3b/decode_tgsmall_$test
-  #  steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
-  #                     data/$test exp/tri3b/decode_{tgsmall,tgmed}_$test
-  #  steps/lmrescore_const_arpa.sh \
-  #    --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
-  #    data/$test exp/tri3b/decode_{tgsmall,tglarge}_$test
-  #done
-fi
+## CB: commented after lexicon has been updated. if you need the GMM model
+##     then uncomment this stage
+#if [ $stage -le 8 ]; then
+#  # Test the tri3b system with the silprobs and pron-probs.
+#
+#  # changed 1st arg -- CB
+#  # decode using the tri3b model
+#  echo "[$(date +'%F %T')] $0: creating GMM graph" | lolcat
+#  utils/mkgraph.sh data/lang_nosp_test \
+#                   exp/tri3b exp/tri3b/graph_tgsmall
+#  #for test in test; do
+#  #  steps/decode_fmllr.sh --nj 10 --cmd "$decode_cmd" \
+#  #                        exp/tri3b/graph_tgsmall data/$test \
+#  #                        exp/tri3b/decode_tgsmall_$test
+#  #  steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
+#  #                     data/$test exp/tri3b/decode_{tgsmall,tgmed}_$test
+#  #  steps/lmrescore_const_arpa.sh \
+#  #    --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
+#  #    data/$test exp/tri3b/decode_{tgsmall,tglarge}_$test
+#  #done
+#fi
 
 # Train a chain model
 # FIXME beware the number of epochs reduced by a half, original is 20.

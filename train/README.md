@@ -89,16 +89,19 @@ it is faster to train). Therefore, it **will NOT** give you good results, as
 you probably need hundreds of hours of recorded data for a proper recognizer to 
 reliably work.
 
-### Dictionary
-You will need our [`nlp-generator`](https://gitlab.com/fb-nlp/nlp-generator)
-software in order to generate the dictionary. Java is required to be installed. 
-Although this does cause some burden during the script execution, it is easy
-when switching datasets, especially if such dataset doesn't come with a 
-phonetic dictionary.
+### Dictionary (lexicon)
+The recipe downloads a phonetic dictionary from 
+[`nlp-resources`](https://gitlab.com/fb-nlp/nlp-resources), which was
+generated over the 200k most frequent words of Brazilian Portuguese language.
+You better check if your transription files contain some words that are not in
+the dictionary yet. If so, then you will need our 
+[`nlp-generator`](https://gitlab.com/fb-nlp/nlp-generator) software in order to
+generate the G2P conversion for such missing words. Java is required to be 
+installed for the generator.
 
 ### Language model
 An already-trained 3-gram language model is available at our 
-[`kaldi-resources`](https://gitlab.com/fb-asr/fb-asr-resources/kaldi-resources)
+[`nlp-resources`](https://gitlab.com/fb-nlp/nlp-resources)
 repo. It is also automatically downloaded.
 
 ## GMM model training
@@ -119,6 +122,11 @@ this entire pipeline below.
 - [Kaldi Tutorial](https://www.eleanorchodroff.com/tutorial/kaldi/) by Eleanor Chodroff
 - [Understanding Kaldi mini librispeech recipe - part I - GMM](https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-1-hmm-models-472a7f4a0488) by Qianhui Wan
 - [Understanding Kaldi mini librispeech recipe - part II - DNN](https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-1-hmm-models-472a7f4a0488) by Qiangui Wan
+
+Beware that `train.py` is very hungry: it took more than 3 days (~76h) to train
+the DNN over 20 epochs in a single NVIDIA GPU using an audio corpora of
+approximately 180h data. Other scripts such as `train_ivector_extractor.sh`,
+OTOH, are CPU-intensive and take some hours to run on a 64-core cluster (~5h).
 
 
 [![FalaBrasil](../doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](../doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
