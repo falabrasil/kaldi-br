@@ -202,8 +202,8 @@ if [ $stage -le 7 ]; then
   fblocal/format_lms.sh --src-dir data/lang data/local/lm
 
   echo "[$(date +'%F %T')] $0: build const arpa" | lolcat
-  fbutils/build_const_arpa_lm.sh \
-    data/local/lm/lm_tglarge.arpa data/lang data/lang_test_tglarge
+  utils/build_const_arpa_lm.sh data/local/lm/lm_tglarge.arpa.gz \
+      data/lang data/lang_test_tglarge
 
   echo "[$(date +'%F %T')] $0: align fmllr" | lolcat
   steps/align_fmllr.sh --nj 5 --cmd "$train_cmd" \
