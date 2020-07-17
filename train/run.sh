@@ -3,10 +3,14 @@
 # adapted from kaldi/egs/mini_librispeech/s5/run.sh (fa95730be)
 #
 # author: apr 2020
-# cassio batista - https://cassota.gitlab.io/
+# cassio batista - https://cassota.gitlab.io/ (comments signed as CB)
+# last updated: july 2020
 
 # Change this location to somewhere where you want to put the data.
 data=./corpus/
+
+decode=true     # perform decode for each model?
+decode_bg=false # throw decoding processes to background?
 
 data_url=https://gitlab.com/fb-audio-corpora/lapsbm16k/-/archive/master/lapsbm16k-master.tar.gz
 lex_url=https://gitlab.com/fb-nlp/nlp-resources/-/raw/master/res/lexicon.utf8.dict.gz
@@ -48,7 +52,7 @@ if [ $stage -le 1 ]; then
 
   # CB: stage 3 doesn't need local/lm dir
   echo "[$(date +'%F %T')] $0: prep dict" | lolcat 
-  fblocal/prep_dict.sh --nj 4 data/local/dict_nosp/  # TODO: CB: do nj
+  fblocal/prep_dict.sh --nj 4 data/local/dict_nosp/
 
   # CB: leave as it is
   echo "[$(date +'%F %T')] $0: prep lang" | lolcat
@@ -86,16 +90,19 @@ if [ $stage -le 3 ]; then
   steps/train_mono.sh --boost-silence 1.25 --nj 5 --cmd "$train_cmd" \
     data/train_500short data/lang_nosp exp/mono
 
-  # commented -- CB
-  ## TODO: Understand why we use lang_nosp here...
-  #(
-  #  utils/mkgraph.sh data/lang_nosp_test_tgsmall \
-  #    exp/mono exp/mono/graph_nosp_tgsmall
-  #  for test in dev_clean_2; do
-  #    steps/decode.sh --nj 10 --cmd "$decode_cmd" exp/mono/graph_nosp_tgsmall \
-  #      data/$test exp/mono/decode_nosp_tgsmall_$test
-  #  done
-  #)&
+  if $decode ; then
+    echo "[$(date +'%F %T')] $0: decoding mono" | lolcat
+    # TODO: Understand why we use lang_nosp here...
+    (
+      utils/mkgraph.sh data/lang_nosp_test_tgsmall \
+        exp/mono exp/mono/graph_nosp_tgsmall
+      steps/decode.sh --nj 6 --cmd "$decode_cmd" exp/mono/graph_nosp_tgsmall \
+        data/test exp/mono/decode_nosp_tgsmall_test
+      grep -Rn WER exp/mono/decode_nosp_tgsmall_test | \
+          utils/best_wer.sh  > exp/mono/decode_nosp_tgsmall_test/fbwer.txt
+    )&
+    $decode_bg || { echo "NOTE: this might take a while" && wait; }
+  fi
 
   echo "[$(date +'%F %T')] $0: align mono" | lolcat
   steps/align_si.sh --boost-silence 1.25 --nj 5 --cmd "$train_cmd" \
@@ -108,21 +115,25 @@ if [ $stage -le 4 ]; then
   steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" \
     2000 10000 data/train data/lang_nosp exp/mono_ali_train exp/tri1
 
-  # commented - CB
-  ## decode using the tri1 model
-  #(
-  #  utils/mkgraph.sh data/lang_nosp_test_tgsmall \
-  #    exp/tri1 exp/tri1/graph_nosp_tgsmall
-  #  for test in dev_clean_2; do
-  #    steps/decode.sh --nj 5 --cmd "$decode_cmd" exp/tri1/graph_nosp_tgsmall \
-  #    data/$test exp/tri1/decode_nosp_tgsmall_$test
-  #    steps/lmrescore.sh --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tgmed} \
-  #      data/$test exp/tri1/decode_nosp_{tgsmall,tgmed}_$test
-  #    steps/lmrescore_const_arpa.sh \
-  #      --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
-  #      data/$test exp/tri1/decode_nosp_{tgsmall,tglarge}_$test
-  #  done
-  #)&
+  # decode using the tri1 model
+  if $decode ; then
+    echo "[$(date +'%F %T')] $0: decoding deltas" | lolcat
+    (
+      utils/mkgraph.sh data/lang_nosp_test_tgsmall \
+        exp/tri1 exp/tri1/graph_nosp_tgsmall
+      steps/decode.sh --nj 6 --cmd "$decode_cmd" exp/tri1/graph_nosp_tgsmall \
+        data/test exp/tri1/decode_nosp_tgsmall_test
+      grep -Rn WER exp/tri1/decode_nosp_tgsmall_test | \
+          utils/best_wer.sh > exp/tri1/decode_nosp_tgsmall_test/fbwer.txt
+      ## CB: we don't have a huge LM to do rescoring yet
+      #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tgmed} \
+      #  data/test exp/tri1/decode_nosp_{tgsmall,tgmed}_test
+      #steps/lmrescore_const_arpa.sh \
+      #  --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
+      #  data/test exp/tri1/decode_nosp_{tgsmall,tglarge}_test
+    )&
+    $decode_bg || { echo "NOTE: this might take a while" && wait; }
+  fi
 
   echo "[$(date +'%F %T')] $0: align deltas" | lolcat
   steps/align_si.sh --nj 5 --cmd "$train_cmd" \
@@ -136,21 +147,25 @@ if [ $stage -le 5 ]; then
     --splice-opts "--left-context=3 --right-context=3" 2500 15000 \
     data/train data/lang_nosp exp/tri1_ali_train exp/tri2b
 
-  # commented -- CB
-  ## decode using the LDA+MLLT model
-  #(
-  #  utils/mkgraph.sh data/lang_nosp_test_tgsmall \
-  #    exp/tri2b exp/tri2b/graph_nosp_tgsmall
-  #  for test in dev_clean_2; do
-  #    steps/decode.sh --nj 10 --cmd "$decode_cmd" exp/tri2b/graph_nosp_tgsmall \
-  #      data/$test exp/tri2b/decode_nosp_tgsmall_$test
-  #    steps/lmrescore.sh --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tgmed} \
-  #      data/$test exp/tri2b/decode_nosp_{tgsmall,tgmed}_$test
-  #    steps/lmrescore_const_arpa.sh \
-  #      --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
-  #      data/$test exp/tri2b/decode_nosp_{tgsmall,tglarge}_$test
-  #  done
-  #)&
+  # decode using the LDA+MLLT model
+  if $decode ; then
+    echo "[$(date +'%F %T')] $0: decoding lda mllt" | lolcat
+    (
+      utils/mkgraph.sh data/lang_nosp_test_tgsmall \
+        exp/tri2b exp/tri2b/graph_nosp_tgsmall
+      steps/decode.sh --nj 6 --cmd "$decode_cmd" exp/tri2b/graph_nosp_tgsmall \
+        data/test exp/tri2b/decode_nosp_tgsmall_test
+      grep -Rn WER exp/tri2b/decode_nosp_tgsmall_test | \
+          utils/best_wer.sh > exp/tri2b/decode_nosp_tgsmall_test/fbwer.txt
+      ## CB: we don't have a huge LM to do rescoring yet
+      #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tgmed} \
+      #  data/$test exp/tri2b/decode_nosp_{tgsmall,tgmed}_$test
+      #steps/lmrescore_const_arpa.sh \
+      #  --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
+      #  data/$test exp/tri2b/decode_nosp_{tgsmall,tglarge}_$test
+    )&
+    $decode_bg || { echo "NOTE: this might take a while" && wait; }
+  fi
 
   # Align utts using the tri2b model
   echo "[$(date +'%F %T')] $0: align lda mllt" | lolcat
@@ -164,22 +179,26 @@ if [ $stage -le 6 ]; then
   steps/train_sat.sh --cmd "$train_cmd" 2500 15000 \
     data/train data/lang_nosp exp/tri2b_ali_train exp/tri3b
 
-  # commented -- CB
-  ## decode using the tri3b model
-  #(
-  #  utils/mkgraph.sh data/lang_nosp_test_tgsmall \
-  #    exp/tri3b exp/tri3b/graph_nosp_tgsmall
-  #  for test in dev_clean_2; do
-  #    steps/decode_fmllr.sh --nj 10 --cmd "$decode_cmd" \
-  #      exp/tri3b/graph_nosp_tgsmall data/$test \
-  #      exp/tri3b/decode_nosp_tgsmall_$test
-  #    steps/lmrescore.sh --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tgmed} \
-  #      data/$test exp/tri3b/decode_nosp_{tgsmall,tgmed}_$test
-  #    steps/lmrescore_const_arpa.sh \
-  #      --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
-  #      data/$test exp/tri3b/decode_nosp_{tgsmall,tglarge}_$test
-  #  done
-  #)&
+  # decode using the tri3b model
+  if $decode ; then
+    echo "[$(date +'%F %T')] $0: decoding sat" | lolcat
+    (
+      utils/mkgraph.sh data/lang_nosp_test_tgsmall \
+        exp/tri3b exp/tri3b/graph_nosp_tgsmall
+      steps/decode_fmllr.sh --nj 6 --cmd "$decode_cmd" \
+        exp/tri3b/graph_nosp_tgsmall data/test \
+        exp/tri3b/decode_nosp_tgsmall_test
+      grep -Rn WER exp/tri3b/decode_nosp_tgsmall_test | \
+          utils/best_wer.sh > exp/tri3b/decode_nosp_tgsmall_test/fbwer.txt
+      ## CB: we don't have a huge LM to do rescoring yet
+      #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tgmed} \
+      #  data/$test exp/tri3b/decode_nosp_{tgsmall,tgmed}_$test
+      #steps/lmrescore_const_arpa.sh \
+      #  --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
+      #  data/$test exp/tri3b/decode_nosp_{tgsmall,tglarge}_$test
+    )&
+    $decode_bg || { echo "NOTE: this might take a while" && wait; }
+  fi
 fi
 
 # Now we compute the pronunciation and silence probabilities from training data,
@@ -210,34 +229,37 @@ if [ $stage -le 7 ]; then
     data/train data/lang exp/tri3b exp/tri3b_ali_train
 fi
 
-## CB: commented after lexicon has been updated. if you need the GMM model
-##     then uncomment this stage
-#if [ $stage -le 8 ]; then
-#  # Test the tri3b system with the silprobs and pron-probs.
-#
-#  # changed 1st arg -- CB
-#  # decode using the tri3b model
-#  echo "[$(date +'%F %T')] $0: creating GMM graph" | lolcat
-#  utils/mkgraph.sh data/lang_nosp_test \
-#                   exp/tri3b exp/tri3b/graph_tgsmall
-#  #for test in test; do
-#  #  steps/decode_fmllr.sh --nj 10 --cmd "$decode_cmd" \
-#  #                        exp/tri3b/graph_tgsmall data/$test \
-#  #                        exp/tri3b/decode_tgsmall_$test
-#  #  steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
-#  #                     data/$test exp/tri3b/decode_{tgsmall,tgmed}_$test
-#  #  steps/lmrescore_const_arpa.sh \
-#  #    --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
-#  #    data/$test exp/tri3b/decode_{tgsmall,tglarge}_$test
-#  #done
-#fi
+# Test the tri3b system with the silprobs and pron-probs.
+if [ $stage -le 8 ]; then
+  # decode using the tri3b model
+  if $decode ; then
+    (
+      echo "[$(date +'%F %T')] $0: decoding sat with sil probs" | lolcat
+      utils/mkgraph.sh data/lang_test_tgsmall \
+                       exp/tri3b exp/tri3b/graph_tgsmall
+      steps/decode_fmllr.sh --nj 6 --cmd "$decode_cmd" \
+                            exp/tri3b/graph_tgsmall data/test \
+                            exp/tri3b/decode_tgsmall_test
+      grep -Rn WER exp/tri3b/decode_tgsmall_test | \
+          utils/best_wer.sh > exp/tri3b/decode_tgsmall_test/fbwer.txt
+      ## CB: we don't have a huge LM to do rescoring yet
+      #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
+      #                   data/$test exp/tri3b/decode_{tgsmall,tgmed}_$test
+      #steps/lmrescore_const_arpa.sh \
+      #  --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
+      #  data/$test exp/tri3b/decode_{tgsmall,tglarge}_$test
+    )&
+    $decode_bg || { echo "NOTE: this might take a while" && wait; }
+  fi
+fi
 
 # Train a chain model
-# FIXME beware the number of epochs reduced by a half, original is 20.
-# NOTE: CB: if you do not have a NVIDIA card, then set use-gpu to 
+# FIXME CB: beware the number of epochs reduced by a half, original is 20.
+#       I reduced it for things to run faster while debugging.
+# NOTE: CB: if you do not have an NVIDIA card, then set use-gpu to
 #       'false', jobs initial to 2 and jobs final to 4. OTOH, if you
-#       have multiple GPUs, then you might want to increase the 
-#       number of jobs final accordinly
+#       have multiple NVIDIA GPUs, then you might want to increase the
+#       number of jobs final accordingly
 if [ $stage -le 9 ]; then
   echo "[$(date +'%F %T')] $0: run TDNN script" | lolcat
   fblocal/chain/run_tdnn.sh --use-gpu true \
@@ -250,4 +272,12 @@ end_time=$(date)
 
 # Don't finish until all background decoding jobs are finished.
 wait
+
 echo "$0: done! started at '$start_time' and finished at '$end_time'" | lolcat
+
+# https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
+if $decode ; then
+    find -name fbwer.txt -printf "%T@ %Tc %p\n" | \
+        sort -n | awk '{print $NF}' | xargs cat
+fi
+
