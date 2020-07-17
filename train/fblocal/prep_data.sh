@@ -190,7 +190,7 @@ done
 for part in train test ; do 
     utils/utt2spk_to_spk2utt.pl \
         ${data_dir}/${part}/utt2spk > ${data_dir}/${part}/spk2utt || exit 1
-    utils/validate_data_dir.sh --no-feats ${data_dir}/${part}  || exit 1
+    utils/validate_data_dir.sh --non-print --no-feats ${data_dir}/${part}  || exit 1
 done
 
 rm *.slice *.list
