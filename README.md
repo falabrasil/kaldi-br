@@ -41,6 +41,11 @@ us as one of the following:
 }
 ```    
 
+:warning: This paper uses the outdated nnet2 recipes, while this repo has been
+updated to the chain models' recipe via nnet3 scripts. If you really want nnet2
+scripts, you may find them on tag `nnet2`. Try running `git tag`.
+
+
 [![FalaBrasil](doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
 __Grupo FalaBrasil (2020)__ - https://ufpafalabrasil.gitlab.io/      

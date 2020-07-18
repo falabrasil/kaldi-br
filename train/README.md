@@ -1,16 +1,5 @@
 # Tutorial for training models with Kaldi
 
-[Paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html): 
-**Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools**     
-A comparison between Kaldi and CMU Sphinx for Brazilian Portuguese was
-performed. Resources for both toolkits were developed and made publicly 
-available to the community. 
-
-**NOTE**: this paper uses the outdated nnet2 recipes, while this repo has been
-updated to the chain models' recipe via nnet3 scripts. If you really want nnet2
-scripts, you may find them on git tag.
-
-
 The tutorial is composed mainly by three big steps:
 
 ```mermaid
@@ -81,13 +70,14 @@ LapsBM-M033              LapsBM-F014               LapsBM-F013              Laps
 ├── LapsBM_0642.txt      ├── LapsBM_0262.txt       ├── LapsBM_0242.txt      ├── LapsBM_0522.txt
 ├── LapsBM_0642.wav      ├── LapsBM_0262.wav       ├── LapsBM_0242.wav      ├── LapsBM_0522.wav
 ├── LapsBM_0643.txt      ├── LapsBM_0263.txt       ├── LapsBM_0243.txt      ├── LapsBM_0523.txt
+...                      ...                       ...                      ...
 ```
 
-**NOTE**: this corpus contains less than an hour of recorded speech and is 
+:warning: this corpus contains less than an hour of recorded speech and is 
 being used for just for demonstration of the script's correctness (and because 
 it is faster to train). Therefore, it **will NOT** give you good results, as 
-you probably need hundreds of hours of recorded data for a proper recognizer to 
-reliably work.
+you probably need hundreds or rather thousands of hours of recorded data for a 
+proper recognizer to reliably work.
 
 ### Dictionary (lexicon)
 The recipe downloads a phonetic dictionary from 
@@ -123,11 +113,23 @@ this entire pipeline below.
 - [Understanding Kaldi mini librispeech recipe - part I - GMM](https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-1-hmm-models-472a7f4a0488) by Qianhui Wan
 - [Understanding Kaldi mini librispeech recipe - part II - DNN](https://medium.com/@qianhwan/understanding-kaldi-recipes-with-mini-librispeech-example-part-1-hmm-models-472a7f4a0488) by Qiangui Wan
 
-Beware that `train.py` is very hungry: it took more than 3 days (~76h) to train
-the DNN over 20 epochs in a single NVIDIA GPU using an audio corpora of
-approximately 180h data. Other scripts such as `train_ivector_extractor.sh`,
-OTOH, are CPU-intensive and take some hours to run on a 64-core cluster (~5h).
+:warning: Beware that `train.py` is very memory-, IO-, and CPU-hungry: it took 
+more than 3 days (~76h) to train the DNN over 20 epochs in a single NVIDIA GPU 
+using an audio corpora of approximately 180h data. Other scripts such as 
+`train_ivector_extractor.sh`, OTOH, are CPU-intensive and take some hours to 
+run on a 64-core cluster (~5h).
 
+
+## Log
+We recorded an entire training over LapsBM corpus via Linux's 
+[`script`](https://www.ostechnix.com/how-to-replay-the-recorded-terminal-sessions-using-scriptreplay-command/)
+command. You can watch us training the model in a sort of live manner by
+running `scriptreplay`. Although it originally takes about 1.5 hour, you can 
+always speed things up by specifying a very low value to the `-m` flag:
+
+```bash
+$ scriptreplay -s doc/kaldi.log -t doc/time.log -m 0.02
+```
 
 [![FalaBrasil](../doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](../doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
