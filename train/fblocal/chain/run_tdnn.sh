@@ -92,12 +92,12 @@ echo "$0 $@"  # Print the command line for logging
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
 echo "[$(date +'%F %T')] $0: run ivector common" | lolcat
-local/nnet3/run_ivector_common.sh --stage $stage \
-                                  --train-set $train_set \
-                                  --test-sets $test_sets \
-                                  --gmm $gmm \
-                                  --online-cmvn-iextractor $online_cmvn \
-                                  --nnet3-affix "$nnet3_affix" || exit 1;
+fblocal/nnet3/run_ivector_common.sh --stage $stage \
+                                    --train-set $train_set \
+                                    --test-sets $test_sets \
+                                    --gmm $gmm \
+                                    --online-cmvn-iextractor $online_cmvn \
+                                    --nnet3-affix "$nnet3_affix" || exit 1;
 
 # Problem: We have removed the "train_" prefix of our training set in
 # the alignment directory names! Bad!
@@ -259,9 +259,9 @@ if [ $stage -le 15 ]; then
   # Note: it's not important to give mkgraph.sh the lang directory with the
   # matched topology (since it gets the topology file from the model).
   # CB: changed 'lang_test_tgsmall' to 'lang_test'
-  echo "[$(date +'%F %T')] $0: generating DNN model" | lolcat
+  echo "[$(date +'%F %T')] $0: generating dnn graph" | lolcat
   utils/mkgraph.sh \
-    --self-loop-scale 1.0 data/lang_test \
+    --self-loop-scale 1.0 data/lang_test_tgsmall \
     $tree_dir $tree_dir/graph_tgsmall || exit 1;
 fi
 
@@ -269,7 +269,7 @@ if [ $stage -le 16 ]; then
   frames_per_chunk=$(echo $chunk_width | cut -d, -f1)
   rm $dir/.error 2>/dev/null || true
 
-  echo "[$(date +'%F %T')] $0: decoding" | lolcat
+  echo "[$(date +'%F %T')] $0: decoding dnn" | lolcat
   for data in $test_sets; do
     nspk=$(wc -l <data/${data}_hires/spk2utt)
     steps/nnet3/decode.sh \
@@ -278,6 +278,8 @@ if [ $stage -le 16 ]; then
       --nj $nspk --cmd "$decode_cmd"  --num-threads 4 \
       --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${data}_hires \
       $tree_dir/graph_tgsmall data/${data}_hires ${dir}/decode_tgsmall_${data} || exit 1
+    grep -Rn WER $dir/decode_tgsmall_$data | \
+        utils/best_wer.sh  > $dir/decode_tgsmall_$data/fbwer.txt
     ## CB: we don't have a huge LM to do rescoring yet
     #steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
     #  data/lang_test_{tgsmall,tglarge} \
@@ -307,7 +309,9 @@ if $test_online_decoding && [ $stage -le 17 ]; then
       --acwt 1.0 --post-decode-acwt 10.0 \
       --nj $nspk --cmd "$decode_cmd" \
       $tree_dir/graph_tgsmall data/${data} ${dir}_online/decode_tgsmall_${data} || exit 1
-    ## commented -- CB
+    grep -Rn WER ${dir}_online/decode_tgsmall_$data | \
+        utils/best_wer.sh  > ${dir}_online/decode_tgsmall_$data/fbwer.txt
+    ## CB: we don't have a huge LM to do rescoring yet
     #steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
     #  data/lang_test_{tgsmall,tglarge} \
     #  data/${data}_hires ${dir}_online/decode_{tgsmall,tglarge}_${data} || exit 1
