@@ -3,7 +3,7 @@
 # Grupo FalaBrasil (2020)
 # Federal University of Pará (UFPA)
 #
-# author; Apr 2020
+# author: Apr 2020
 # cassio batista - https://cassota.gitlab.io/
 
 if test $# -ne 3 ; then
@@ -11,6 +11,7 @@ if test $# -ne 3 ; then
     echo "  <data-dir> is the dir where the lm will downloaded"
     echo "  <lm-url> is the remote url where the lm will be fetched"
     echo "  <link-dir> is the dir where lm will be symlinked with a special name"
+    exit 1
 fi
 
 data_dir=$1
@@ -27,7 +28,7 @@ mkdir -p $link_dir || exit 1
 
 sha=e4062301e4c131b1f9c686b40288edab650b33c2
 filename=$(basename $lm_url)
-if [ ! -f ${data_dir}/${filename} ] ; then
+if [ ! -f $data_dir/$filename ] ; then
     wget -q --show-progress $lm_url -P $data_dir || exit 1
 else
     echo "$0: file '$filename' exists under $data_dir. skipping download"

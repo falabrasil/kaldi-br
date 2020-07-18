@@ -91,11 +91,12 @@ if [ $stage -le 3 ]; then
     data/train_500short data/lang_nosp exp/mono
 
   if $decode ; then
-    echo "[$(date +'%F %T')] $0: decoding mono" | lolcat
     # TODO: Understand why we use lang_nosp here...
     (
+      echo "[$(date +'%F %T')] $0: generating mono graph" | lolcat
       utils/mkgraph.sh data/lang_nosp_test_tgsmall \
         exp/mono exp/mono/graph_nosp_tgsmall
+      echo "[$(date +'%F %T')] $0: decoding mono" | lolcat
       steps/decode.sh --nj 6 --cmd "$decode_cmd" exp/mono/graph_nosp_tgsmall \
         data/test exp/mono/decode_nosp_tgsmall_test
       grep -Rn WER exp/mono/decode_nosp_tgsmall_test | \
@@ -117,10 +118,11 @@ if [ $stage -le 4 ]; then
 
   # decode using the tri1 model
   if $decode ; then
-    echo "[$(date +'%F %T')] $0: decoding deltas" | lolcat
     (
+      echo "[$(date +'%F %T')] $0: generating tri deltas graph" | lolcat
       utils/mkgraph.sh data/lang_nosp_test_tgsmall \
         exp/tri1 exp/tri1/graph_nosp_tgsmall
+      echo "[$(date +'%F %T')] $0: decoding deltas" | lolcat
       steps/decode.sh --nj 6 --cmd "$decode_cmd" exp/tri1/graph_nosp_tgsmall \
         data/test exp/tri1/decode_nosp_tgsmall_test
       grep -Rn WER exp/tri1/decode_nosp_tgsmall_test | \
@@ -149,10 +151,11 @@ if [ $stage -le 5 ]; then
 
   # decode using the LDA+MLLT model
   if $decode ; then
-    echo "[$(date +'%F %T')] $0: decoding lda mllt" | lolcat
     (
+      echo "[$(date +'%F %T')] $0: generating lda mllt graph" | lolcat
       utils/mkgraph.sh data/lang_nosp_test_tgsmall \
         exp/tri2b exp/tri2b/graph_nosp_tgsmall
+      echo "[$(date +'%F %T')] $0: decoding lda mllt" | lolcat
       steps/decode.sh --nj 6 --cmd "$decode_cmd" exp/tri2b/graph_nosp_tgsmall \
         data/test exp/tri2b/decode_nosp_tgsmall_test
       grep -Rn WER exp/tri2b/decode_nosp_tgsmall_test | \
@@ -181,10 +184,11 @@ if [ $stage -le 6 ]; then
 
   # decode using the tri3b model
   if $decode ; then
-    echo "[$(date +'%F %T')] $0: decoding sat" | lolcat
     (
+      echo "[$(date +'%F %T')] $0: generating sat graph (nosp)" | lolcat
       utils/mkgraph.sh data/lang_nosp_test_tgsmall \
         exp/tri3b exp/tri3b/graph_nosp_tgsmall
+      echo "[$(date +'%F %T')] $0: decoding sat (nosp)" | lolcat
       steps/decode_fmllr.sh --nj 6 --cmd "$decode_cmd" \
         exp/tri3b/graph_nosp_tgsmall data/test \
         exp/tri3b/decode_nosp_tgsmall_test
@@ -234,9 +238,10 @@ if [ $stage -le 8 ]; then
   # decode using the tri3b model
   if $decode ; then
     (
-      echo "[$(date +'%F %T')] $0: decoding sat with sil probs" | lolcat
+      echo "[$(date +'%F %T')] $0: generating sat graph (with sil probs)" | lolcat
       utils/mkgraph.sh data/lang_test_tgsmall \
                        exp/tri3b exp/tri3b/graph_tgsmall
+      echo "[$(date +'%F %T')] $0: decoding sat (with sil probs)" | lolcat
       steps/decode_fmllr.sh --nj 6 --cmd "$decode_cmd" \
                             exp/tri3b/graph_tgsmall data/test \
                             exp/tri3b/decode_tgsmall_test
@@ -276,8 +281,4 @@ wait
 echo "$0: done! started at '$start_time' and finished at '$end_time'" | lolcat
 
 # https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
-if $decode ; then
-    find -name fbwer.txt -printf "%T@ %Tc %p\n" | \
-        sort -n | awk '{print $NF}' | xargs cat
-fi
-
+find -name fbwer.txt -printf "%T@ %Tc %p\n" | sort -n | awk '{print $NF}' | xargs cat
