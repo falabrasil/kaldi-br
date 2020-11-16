@@ -131,6 +131,12 @@ always speed things up by specifying a very low value to the `-m` flag:
 $ scriptreplay -s doc/kaldi.log -t doc/time.log -m 0.02
 ```
 
+Here's a screenshot of how things go when the script reaches the DNN training
+part. Kaldi's `nnet3-chain-train` script that runs on GPU spawns a single
+thread on GPU, which speeds things up by a lot.
+
+![](../doc/run_tdnn.png)
+
 [![FalaBrasil](../doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](../doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
 __Grupo FalaBrasil (2020)__ - https://ufpafalabrasil.gitlab.io/      
