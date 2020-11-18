@@ -46,7 +46,7 @@ KALDI_ROOT="$(readlink -f $(dirname "$(dirname "$1")"))"
 MINILIBRI_DIR=$KALDI_ROOT/egs/mini_librispeech/s5
 
 mkdir -p $PROJECT_DIR/
-cp -r train/* $PROJECT_DIR/
+cp -r train_asr/* $PROJECT_DIR/
 
 ln -sf $MINILIBRI_DIR/conf/  $PROJECT_DIR/
 ln -sf $MINILIBRI_DIR/local/ $PROJECT_DIR/
