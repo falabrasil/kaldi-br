@@ -13,13 +13,6 @@ if test $# -ne 2 ; then
     exit 1
 fi
 
-for f in tar wget ; do
-    if ! type -t $f > /dev/null ; then
-        echo "$0: please install $f"
-        exit 1
-    fi
-done
-
 data_dir=$1
 corpus_url=$2
 

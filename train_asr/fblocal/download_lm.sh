@@ -18,11 +18,6 @@ data_dir=$1
 lm_url=$2
 link_dir=$3
 
-if ! type -t wget > /dev/null ; then
-    echo "$0: please install wget"
-    exit 1
-fi
-
 mkdir -p $data_dir || exit 1
 mkdir -p $link_dir || exit 1
 

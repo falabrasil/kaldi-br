@@ -18,13 +18,6 @@ data_dir=$1
 lex_url=$2
 link_dir=$3
 
-for f in wget gzip ; do
-    if ! type -t $f > /dev/null ; then
-        echo "$0: please install $f"
-        exit 1
-    fi
-done
-
 mkdir -p $data_dir || exit 1
 mkdir -p $link_dir || exit 1
 

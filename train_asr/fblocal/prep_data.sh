@@ -43,14 +43,6 @@ fi
 corpus_dir=$(readlink -f $1)
 data_dir=$2
 
-# check dependencies
-for f in gawk dos2unix ; do
-    if ! type -t $f > /dev/null ; then
-        echo "$0: error: please install $f"
-        exit 1
-    fi
-done
-
 if $split_random ; then
     echo -n "$0: dataset will be random split. "
     echo "this might take a while... "
