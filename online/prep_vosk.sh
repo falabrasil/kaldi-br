@@ -6,6 +6,8 @@
 # author: apr 2020
 # cassio batista - https://cassota.gitlab.io/
 
+python -c "import vosk" || { echo "$0: vosk not installed" && exit 1; }
+
 echo -e "\033[94m  ____                         \033[93m _____     _           \033[0m"
 echo -e "\033[94m / ___| _ __ _   _ _ __   ___  \033[93m|  ___|_ _| | __ _     \033[0m"
 echo -e "\033[94m| |  _ | '__| | | | '_ \ / _ \ \033[93m| |_ / _\` | |/ _\` |  \033[0m"

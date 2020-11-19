@@ -154,23 +154,23 @@ The last line should print the word error rate:
 </details>
 
 
-## Model training for speech recognition
+## Model training for speech recognition (Vosk)
 
-See [`train_asr/`](./train_asr) dir. Based on Mini-librispeech recipe.
+See [`train_vosk/`](./train_vosk) dir. Based on Mini-librispeech `nnet3` recipe.
 
 ```bash
-$ ./prep_train_asr.sh /path/to/kaldi/egs/myproject
+$ ./prep_train_vosk.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run.sh
 ```
 
 
-## Model training for phonetic alignment
+## Model training for phonetic alignment (Gentle)
 
-See [`train_align/`](./train_align) dir. Based on ASpIRE recipe.
+See [`train_gentle/`](./train_gentle) dir. Based on ASpIRE `nnet3` recipe.
 
 ```bash
-$ ./prep_train_asr.sh /path/to/kaldi/egs/myproject
+$ ./prep_train_gentle.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run.sh
 ```

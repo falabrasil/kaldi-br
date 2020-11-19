@@ -4,12 +4,10 @@ This folder contains scripts that help gather the most important files from
 your already-trained model with Kaldi, and use these files into the online
 decoder for recognising a single file.
 
-Right now the two most common APIs over the Kaldi online decoding environment
-are the Alumäe's [GStreamer server API][1], and the most-recent Alpha Cephei's 
-[Vosk API][2]. See scripts `prep_gst.sh` and `prep_vosk.sh`, respectively.
+Right now the most common/used/famous API over Kaldi's online decoding
+environment is Alpha Cephei's [Vosk API][1]. See `prep_vosk.sh` script.
 
-[1]: https://github.com/alumae/kaldi-gstreamer-server
-[2]: https://github.com/alphacep/vosk-api 
+[1]: https://github.com/alphacep/vosk-api 
 
 [![FalaBrasil](../../doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](../../doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
