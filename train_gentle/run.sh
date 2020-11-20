@@ -13,13 +13,13 @@
 #   kaldi/egs/aspire/s5/run.sh           (7a45e657d)
 #
 # Author: Nov 2020
-# Cassio Batista - https://cassota.gitlab.io/
+# Cassio Batista - https://cassota.gitlab.io
 # Last updated: dec 2020
 
 # Change this location to somewhere where you want to put the data.
-data=./corpus/
+data=./corpus
 
-decode=true     # perform decode for each model?
+decode=false    # perform decode for each model?
 decode_bg=false # throw decoding processes to background?
 
 data_url=https://gitlab.com/fb-audio-corpora/lapsbm16k/-/archive/master/lapsbm16k-master.tar.gz
@@ -48,25 +48,25 @@ fblocal/download_data.sh $data $data_url || exit 1
 if [ $stage -le 0 ]; then
   # CB: args 1 and 2 are swapped from the original
   echo "[$(date +'%F %T')] $0: download lm" | lolcat
-  fblocal/download_lm.sh $data $lm_url data/local/lm/ || exit 1
+  fblocal/download_lm.sh $data $lm_url data/local/lm || exit 1
 
   echo "[$(date +'%F %T')] $0: download lexicon" | lolcat
-  fblocal/download_lexicon.sh $data $lex_url data/local/dict/ || exit 1
+  fblocal/download_lexicon.sh $data $lex_url data/local/dict || exit 1
 fi
 
 if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   echo "[$(date +'%F %T')] $0: prep data" | lolcat
-  fblocal/prep_data.sh --nj 3 --split-random true $data data/
+  fblocal/prep_data.sh --nj 3 --split-random true $data data
   #fblocal/prep_data.sh --nj 8 --test-dir lapsbm16k $data ./data
 
   # stage 3 doesn't need local/lm dir - Cassio
   echo "[$(date +'%F %T')] $0: prep dict" | lolcat 
-  fblocal/prep_dict.sh --nj 4 data/local/dict/
+  fblocal/prep_dict.sh --nj 4 data/local/dict
 
   # leave as it is - Cassio
   echo "[$(date +'%F %T')] $0: prep lang" | lolcat
-  utils/prepare_lang.sh data/local/dict/ "<UNK>" data/local/lang/ data/lang/
+  utils/prepare_lang.sh data/local/dict "<UNK>" data/local/lang data/lang
 
   # lm file had to be renamed inside this script
   echo "[$(date +'%F %T')] $0: create test lang" | lolcat
@@ -111,7 +111,7 @@ if [ $stage -le 3 ]; then
       grep -Rn WER exp/mono0a/decode_test | \
           utils/best_wer.sh | tee exp/mono0a/decode_test/fbwer.txt
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   echo "[$(date +'%F %T')] $0: align mono" | lolcat
@@ -136,7 +136,7 @@ if [ $stage -le 4 ]; then
       grep -Rn WER exp/tri1/decode_test | \
           utils/best_wer.sh | tee exp/tri1/decode_test/fbwer.txt
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   echo "[$(date +'%F %T')] $0: align deltas (1st pass)" | lolcat
@@ -161,7 +161,7 @@ if [ $stage -le 5 ]; then
       grep -Rn WER exp/tri2/decode_test | \
           utils/best_wer.sh | tee exp/tri2/decode_test/fbwer.txt
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   echo "[$(date +'%F %T')] $0: align deltas (2nd pass)" | lolcat
@@ -187,7 +187,7 @@ if [ $stage -le 6 ]; then
       grep -Rn WER exp/tri3a/decode_test | \
           utils/best_wer.sh | tee exp/tri3a/decode_test/fbwer.txt
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   echo "[$(date +'%F %T')] $0: align lda mllt" | lolcat
@@ -212,7 +212,7 @@ if [ $stage -le 7 ]; then
       grep -Rn WER exp/tri4a/decode_test | \
           utils/best_wer.sh | tee exp/tri4a/decode_test/fbwer.txt
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   echo "[$(date +'%F %T')] $0: align sat (1st pass)" | lolcat
@@ -237,38 +237,49 @@ if [ $stage -le 8 ]; then
       grep -Rn WER exp/tri5a/decode_test | \
           utils/best_wer.sh | tee exp/tri5a/decode_test/fbwer.txt
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 fi
 
-exit 0
-
 # Now we compute the pronunciation and silence probabilities from training data,
 # and re-create the lang directory.
+# NOTE: in aspire recipe, this comes within a script named build_silprob.sh
 if [ $stage -le 9 ]; then
   echo "[$(date +'%F %T')] $0: get prons" | lolcat
   steps/get_prons.sh --cmd "$train_cmd" \
-    data/train data/lang exp/tri3b
-  echo "[$(date +'%F %T')] $0: dict add pron probs" | lolcat
+    data/train data/lang exp/tri5a
+
+  echo "[$(date +'%F %T')] $0: dict add pron probs (pp)" | lolcat
   utils/dict_dir_add_pronprobs.sh --max-normalize true \
     data/local/dict \
-    exp/tri3b/pron_counts_nowb.txt exp/tri3b/sil_counts_nowb.txt \
-    exp/tri3b/pron_bigram_counts_nowb.txt data/local/dict
+    exp/tri5a/pron_counts_nowb.txt \
+    exp/tri5a/sil_counts_nowb.txt \
+    exp/tri5a/pron_bigram_counts_nowb.txt \
+    data/local/dict_pp
 
-  echo "[$(date +'%F %T')] $0: prep lang" | lolcat
-  utils/prepare_lang.sh data/local/dict \
-    "<UNK>" data/local/lang_tmp data/lang
+  echo "[$(date +'%F %T')] $0: prep lang pp" | lolcat
+  utils/prepare_lang.sh data/local/dict_pp \
+    "<UNK>" data/local/lang_pp data/lang_pp
 
-  echo "[$(date +'%F %T')] $0: format lm" | lolcat
-  fblocal/format_lms.sh --src-dir data/lang data/local/lm
+  cp -rT data/lang_pp         data/lang_pp_test
+  cp -fv data/lang_test/G.fst data/lang_pp_test
 
-  echo "[$(date +'%F %T')] $0: build const arpa" | lolcat
-  utils/build_const_arpa_lm.sh data/local/lm/lm_tglarge.arpa.gz \
-      data/lang data/lang_test_tglarge
+  cp -rT data/lang_pp              data/lang_pp_test_fg
+  cp -fv data/lang_test_fg/G.carpa data/lang_pp_test_fg
 
-  echo "[$(date +'%F %T')] $0: align fmllr" | lolcat
-  steps/align_fmllr.sh --nj 5 --cmd "$train_cmd" \
-    data/train data/lang exp/tri3b exp/tri3b_ali_train
+  echo "[$(date +'%F %T')] $0: generating graph pp" | lolcat
+  utils/mkgraph.sh data/lang_pp_test exp/tri5a exp/tri5a/graph_pp
+
+  # echo "[$(date +'%F %T')] $0: format lm" | lolcat
+  # fblocal/format_lms.sh --src-dir data/lang data/local/lm
+
+  # echo "[$(date +'%F %T')] $0: build const arpa" | lolcat
+  # utils/build_const_arpa_lm.sh data/local/lm/lm_tglarge.arpa.gz \
+  #     data/lang data/lang_test_tglarge
+
+  # echo "[$(date +'%F %T')] $0: align fmllr" | lolcat
+  # steps/align_fmllr.sh --nj 5 --cmd "$train_cmd" \
+  #   data/train data/lang exp/tri3b exp/tri3b_ali_train
 fi
 
 ## Test the tri3b system with the silprobs and pron-probs.
@@ -285,14 +296,8 @@ fi
 #                            exp/tri3b/decode_tgsmall_test
 #      grep -Rn WER exp/tri3b/decode_tgsmall_test | \
 #          utils/best_wer.sh > exp/tri3b/decode_tgsmall_test/fbwer.txt
-#      ## CB: we don't have a huge LM to do rescoring yet
-#      #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
-#      #                   data/$test exp/tri3b/decode_{tgsmall,tgmed}_$test
-#      #steps/lmrescore_const_arpa.sh \
-#      #  --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
-#      #  data/$test exp/tri3b/decode_{tgsmall,tglarge}_$test
 #    )&
-#    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+#    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
 #  fi
 #fi
 

@@ -100,13 +100,13 @@ using Kaldi (for more details read our
 [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
 These steps are accomplished by running stages 2 to 8 in `run.sh`.
 
-![alt text](../doc/gmm.png)
+![alt text](doc/gmm.png)
 
 ## DNN model training
 Stage 9 in `run.sh` calls a script called `run_tdnn.sh`, which actually follows
 this entire pipeline below.
 
-![](../doc/tdnn.png)
+![](doc/tdnn.png)
 
 # References
 - [Kaldi Tutorial](https://www.eleanorchodroff.com/tutorial/kaldi/) by Eleanor Chodroff
@@ -135,7 +135,7 @@ Here's a screenshot of how things go when the script reaches the DNN training
 part. Kaldi's `nnet3-chain-train` script that runs on GPU spawns a single
 thread on GPU, which speeds things up by a lot.
 
-![](../doc/run_tdnn.png)
+![](doc/run_tdnn.png)
 
 [![FalaBrasil](../doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](../doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 

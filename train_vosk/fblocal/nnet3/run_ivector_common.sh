@@ -26,7 +26,7 @@ ali_dir=exp/${gmm}_ali_${train_set}_sp
 
 for f in data/${train_set}/feats.scp ${gmm_dir}/final.mdl; do
   if [ ! -f $f ]; then
-    echo "[$(date +'%F %T')] $0: expected file $f to exist" | lolcat
+    echo "$0: expected file $f to exist"
     exit 1
   fi
 done

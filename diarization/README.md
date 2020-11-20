@@ -2,7 +2,7 @@
 
 Recipe for spekaer diarization using Kaldi.
 
-![](../doc/dia.png)
+![](doc/dia.png)
 
 ## Notes
 - Dataset used in the recipe consists of 5 audios from the English portion of
