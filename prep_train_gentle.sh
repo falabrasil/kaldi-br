@@ -47,8 +47,7 @@ KALDI_ROOT="$(readlink -f $(dirname "$(dirname "$1")"))"
 ASPIRE_DIR=$KALDI_ROOT/egs/aspire/s5
 
 mkdir -p $PROJECT_DIR
-mkdir -p $PROJECT_DIR
-cp -r train_align/* $PROJECT_DIR
+cp -r train_gentle/* $PROJECT_DIR || exit 1
 
 #ln -sf $ASPIRE_DIR/conf/  $PROJECT_DIR
 ln -sf $ASPIRE_DIR/local/ $PROJECT_DIR
@@ -60,5 +59,3 @@ sed 's/"queue.pl/"run.pl/g' $ASPIRE_DIR/cmd.sh > $PROJECT_DIR/cmd.sh
 
 tree $PROJECT_DIR -I corpus
 echo "$0: all set up! check out your project at '$(readlink -f $PROJECT_DIR)'"
-
-exit 0

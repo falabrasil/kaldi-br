@@ -102,7 +102,7 @@ if [ $stage -le 3 ]; then
       grep -Rn WER exp/mono/decode_nosp_tgsmall_test | \
           utils/best_wer.sh  > exp/mono/decode_nosp_tgsmall_test/fbwer.txt
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   echo "[$(date +'%F %T')] $0: align mono" | lolcat
@@ -134,7 +134,7 @@ if [ $stage -le 4 ]; then
       #  --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
       #  data/test exp/tri1/decode_nosp_{tgsmall,tglarge}_test
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   echo "[$(date +'%F %T')] $0: align deltas" | lolcat
@@ -167,7 +167,7 @@ if [ $stage -le 5 ]; then
       #  --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
       #  data/$test exp/tri2b/decode_nosp_{tgsmall,tglarge}_$test
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 
   # Align utts using the tri2b model
@@ -201,7 +201,7 @@ if [ $stage -le 6 ]; then
       #  --cmd "$decode_cmd" data/lang_nosp_test_{tgsmall,tglarge} \
       #  data/$test exp/tri3b/decode_nosp_{tgsmall,tglarge}_$test
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 fi
 
@@ -254,7 +254,7 @@ if [ $stage -le 8 ]; then
       #  --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
       #  data/$test exp/tri3b/decode_{tgsmall,tglarge}_$test
     )&
-    $decode_bg || { echo "NOTE: mkgraph takes a while a while" && wait; }
+    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
 fi
 

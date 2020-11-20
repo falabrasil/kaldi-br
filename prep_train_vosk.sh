@@ -48,17 +48,15 @@ KALDI_ROOT="$(readlink -f $(dirname "$(dirname "$1")"))"
 MINILIBRI_DIR=$KALDI_ROOT/egs/mini_librispeech/s5
 
 mkdir -p $PROJECT_DIR/
-cp -r train_asr/* $PROJECT_DIR/
+cp -r train_vosk/* $PROJECT_DIR || exit 1
 
-ln -sf $MINILIBRI_DIR/conf/  $PROJECT_DIR/
-ln -sf $MINILIBRI_DIR/local/ $PROJECT_DIR/
-ln -sf $MINILIBRI_DIR/steps/ $PROJECT_DIR/
-ln -sf $MINILIBRI_DIR/utils/ $PROJECT_DIR/
+ln -sf $MINILIBRI_DIR/conf/  $PROJECT_DIR
+ln -sf $MINILIBRI_DIR/local/ $PROJECT_DIR
+ln -sf $MINILIBRI_DIR/steps/ $PROJECT_DIR
+ln -sf $MINILIBRI_DIR/utils/ $PROJECT_DIR
 
 ln -sf $MINILIBRI_DIR/path.sh $PROJECT_DIR/path.sh
 sed 's/"queue.pl/"run.pl/g' $MINILIBRI_DIR/cmd.sh > $PROJECT_DIR/cmd.sh
 
 tree $PROJECT_DIR -I corpus
 echo "$0: all set up! check out your project at '$(readlink -f $PROJECT_DIR)'"
-
-exit 0
