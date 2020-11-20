@@ -310,8 +310,7 @@ fi
 #       number of jobs final accordingly - Cassio
 if [ $stage -le 10 ]; then
   echo "[$(date +'%F %T')] $0: run TDNN script" | lolcat
-  fblocal/chain/run_tdnn.sh --use-gpu true \
-      --jobs-initial 1 --jobs-final 1 --num-epochs 10
+  fblocal/chain/run_tdnn.sh
 fi
 
 end_time=$(date +'%F %T')

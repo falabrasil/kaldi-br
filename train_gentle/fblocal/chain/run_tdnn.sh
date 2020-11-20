@@ -44,7 +44,8 @@ lang=data/lang_chain
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 8" if you have already
 # run those things.
-fblocal/nnet3/run_ivector_common.sh --stage $stage --num-data-reps ${num_data_reps} || exit 1;
+#fblocal/nnet3/run_ivector_common.sh --stage $stage --num-data-reps ${num_data_reps} || exit 1;
+fblocal/nnet3/run_ivector_common.sh --num-data-reps ${num_data_reps} || exit 1;
 
 exit 0  # FIXME debugging here
 

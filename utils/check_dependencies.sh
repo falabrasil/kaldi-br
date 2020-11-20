@@ -9,11 +9,13 @@
 # cassio batista - https://cassota.gitlab.io
 
 deps_ok=true
-for f in wget gzip tar gawk dos2unix tree lolcat ; do
+for f in wget gzip tar unzip gawk dos2unix tree lolcat ; do
     if ! type -t "$f" > /dev/null ; then
         echo "$0: error: please install '$f'"
         deps_ok=false
     fi
 done
+
+python -c "import scipy" || { echo "$0: error: please install python 'scipy'" && deps_ok=false; }
 
 $deps_ok || exit 1

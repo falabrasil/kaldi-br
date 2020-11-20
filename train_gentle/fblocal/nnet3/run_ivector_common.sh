@@ -22,8 +22,8 @@ mkdir -p exp/nnet3
 if [ $stage -le 1 ]; then
   # Download the package that includes the real RIRs, simulated RIRs, isotropic noises and point-source noises
   echo "[$(date +'%F %T')] $0: download RIRs data (1.2G)" | lolcat
-  wget --no-check-certificate http://www.openslr.org/resources/28/rirs_noises.zip
-  unzip rirs_noises.zip
+  wget -q --show-progress --no-check-certificate http://www.openslr.org/resources/28/rirs_noises.zip
+  unzip -q rirs_noises.zip
 
   rvb_opts=()
   if [ "$base_rirs" == "simulated" ]; then
@@ -72,7 +72,7 @@ if [ $stage -le 2 ]; then
         exp/make_reverb_hires/${data_dir} $mfccdir || exit 1;
     steps/compute_cmvn_stats.sh data/${data_dir}_hires exp/make_reverb_hires/${data_dir} $mfccdir || exit 1;
     utils/fix_data_dir.sh data/${data_dir}_hires
-    utils/validate_data_dir.sh data/${data_dir}_hires
+    utils/validate_data_dir.sh --non-print data/${data_dir}_hires
   done
 
   # I'm dividing the original value by 1000 because lapsbm doesn't have enough
