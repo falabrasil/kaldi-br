@@ -66,13 +66,14 @@ if [ $stage -le 2 ]; then
   echo "[$(date +'%F %T')] $0: compute mfcc and cmvn" | lolcat
   mfccdir=mfcc_reverb
   for data_dir in train_rvb test_rvb ; do
-    utils/copy_data_dir.sh data/$data_dir data/${data_dir}_hires
+    utils/copy_data_dir.sh --validate-opts "--non-print" \
+        data/$data_dir data/${data_dir}_hires
     steps/make_mfcc.sh --nj 70 --mfcc-config conf/mfcc_hires.conf \
         --cmd "$train_cmd" data/${data_dir}_hires \
         exp/make_reverb_hires/${data_dir} $mfccdir || exit 1;
     steps/compute_cmvn_stats.sh data/${data_dir}_hires exp/make_reverb_hires/${data_dir} $mfccdir || exit 1;
     utils/fix_data_dir.sh data/${data_dir}_hires
-    utils/validate_data_dir.sh --non-print data/${data_dir}_hires
+    utils/validate_data_dir.sh --non-print --no-feats data/${data_dir}_hires || exit 1
   done
 
   # I'm dividing the original value by 1000 because lapsbm doesn't have enough
@@ -84,6 +85,7 @@ if [ $stage -le 2 ]; then
 fi
 
 if [ $stage -le 3 ]; then
+  echo "[$(date +'%F %T')] $0: get pca transform" | lolcat
   steps/online/nnet2/get_pca_transform.sh --cmd "$train_cmd" \
     --splice-opts "--left-context=3 --right-context=3" \
     --max-utts 30000 --subsample 2 \
@@ -93,6 +95,7 @@ fi
 if [ $stage -le 4 ]; then
   # To train a diagonal UBM we don't need very much data, so use the smallest
   # subset.
+  echo "[$(date +'%F %T')] $0: train diag ubm" | lolcat
   steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 30 --num-frames 400000 \
     data/train_rvb_hires_30k 512 exp/nnet3/pca_transform \
     exp/nnet3/diag_ubm
@@ -102,16 +105,19 @@ if [ $stage -le 5 ]; then
   # iVector extractors can in general be sensitive to the amount of data, but
   # this one has a fairly small dim (defaults to 100) so we don't use all of it,
   # we use just the 100k subset (about one sixteenth of the data).
+  echo "[$(date +'%F %T')] $0: train ivector extractor" | lolcat
   steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 10 \
     data/train_rvb_hires_100k exp/nnet3/diag_ubm \
     exp/nnet3/extractor || exit 1;
 fi
 
 if [ $stage -le 6 ]; then
+  echo "[$(date +'%F %T')] $0: extract ivectors" | lolcat
   ivectordir=exp/nnet3/ivectors_train_rvb
   # having a larger number of speakers is helpful for generalization, and to
   # handle per-utterance decoding well (iVector starts at zero).
   steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 \
+  fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
     data/train_rvb_hires data/train_rvb_hires_max2
 
   steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 60 \
