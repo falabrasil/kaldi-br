@@ -5,7 +5,7 @@ set -e
 # based on run_tdnn_7b.sh in the swbd recipe
 
 # configs for 'chain'
-stage=7 # assuming you already ran the xent systems
+stage=7 # assuming you already ran the xent systems # CB: originally 7
 train_stage=-10
 get_egs_stage=-10
 dir=exp/chain/tdnn_7b
@@ -47,12 +47,12 @@ lang=data/lang_chain
 #fblocal/nnet3/run_ivector_common.sh --stage $stage --num-data-reps ${num_data_reps} || exit 1;
 fblocal/nnet3/run_ivector_common.sh --num-data-reps ${num_data_reps} || exit 1;
 
-exit 0  # FIXME debugging here
-
 if [ $stage -le 7 ]; then
   # Create a version of the lang/ directory that has one state per phone in the
   # topo file. [note, it really has two states.. the first one is only repeated
   # once, the second one has zero or more repeats.]
+
+  echo "[$(date +'%F %T')] $0: generating topo" | lolcat
   rm -rf $lang
   cp -r data/lang $lang
   silphonelist=$(cat $lang/phones/silence.csl) || exit 1;
@@ -67,6 +67,7 @@ if [ $stage -le 8 ]; then
   # we build the tree using clean features (data/train) rather than
   # the augmented features (data/train_rvb) to get better alignments
 
+  echo "[$(date +'%F %T')] $0: building tree" | lolcat
   steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 3 \
       --cmd "$train_cmd" 11000 data/train $lang exp/tri5a $treedir
 fi
@@ -76,6 +77,7 @@ if [ -z $min_seg_len ]; then
 fi
 
 if [ $stage -le 9 ]; then
+  echo "[$(date +'%F %T')] $0: extracting ivectos online" | lolcat
   rm -rf data/train_rvb_min${min_seg_len}_hires
   utils/data/combine_short_segments.sh \
       data/train_rvb_hires $min_seg_len data/train_rvb_min${min_seg_len}_hires
@@ -86,7 +88,7 @@ if [ $stage -le 9 ]; then
     data/train_rvb_min${min_seg_len}_hires data/train_rvb_min${min_seg_len}_hires_max2
   ivectordir=exp/nnet3/ivectors_train_min${min_seg_len}
 
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 200 \
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 20 \
     data/train_rvb_min${min_seg_len}_hires_max2 \
     exp/nnet3/extractor $ivectordir || exit 1;
 

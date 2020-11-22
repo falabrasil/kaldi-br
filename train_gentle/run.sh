@@ -30,7 +30,7 @@ lm_url=https://gitlab.com/fb-nlp/nlp-resources/-/raw/master/res/lm.3gram.arpa.gz
 . ./cmd.sh
 . ./path.sh
 
-stage=0
+stage=-1
 . utils/parse_options.sh
 
 set -euo pipefail
@@ -39,11 +39,13 @@ mkdir -p $data
 
 start_time=$(date +'%F %T')
 
-# NOTE: CB: if you have multiple datasets you better download them beforehand,
-#       comment out this script and call "link_local_data.sh" instead.
-echo "[$(date +'%F %T')] $0: download data (85M)" | lolcat
-fblocal/download_data.sh $data $data_url || exit 1
-#fblocal/link_local_data.sh --nj 8 ${HOME}/fb-gitlab/fb-audio-corpora $data || exit 1
+if [ $stage -le -1 ]; then
+  # NOTE: CB: if you have multiple datasets you better download them beforehand,
+  #       comment out this script and call "link_local_data.sh" instead.
+  echo "[$(date +'%F %T')] $0: download data (85M)" | lolcat
+  fblocal/download_data.sh $data $data_url || exit 1
+  fblocal/link_local_data.sh --nj 8 $HOME/fb-gitlab/fb-audio-corpora $data || exit 1
+fi
 
 if [ $stage -le 0 ]; then
   # CB: args 1 and 2 are swapped from the original

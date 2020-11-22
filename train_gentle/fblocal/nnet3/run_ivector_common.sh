@@ -15,6 +15,7 @@ set -e
 . ./path.sh
 . ./utils/parse_options.sh
 
+
 # check if the required tools are present
 local/multi_condition/check_version.sh || exit 1;
 
@@ -22,8 +23,12 @@ mkdir -p exp/nnet3
 if [ $stage -le 1 ]; then
   # Download the package that includes the real RIRs, simulated RIRs, isotropic noises and point-source noises
   echo "[$(date +'%F %T')] $0: download RIRs data (1.2G)" | lolcat
-  wget -q --show-progress --no-check-certificate http://www.openslr.org/resources/28/rirs_noises.zip
-  unzip -q rirs_noises.zip
+  if [ ! -f rirs_noises.zip ] ; then
+    wget -q --show-progress --no-check-certificate http://www.openslr.org/resources/28/rirs_noises.zip
+    unzip -q rirs_noises.zip
+  else
+    echo "$0: skipping download. file exists: $(du -sh rirs_noises.zip)"
+  fi
 
   rvb_opts=()
   if [ "$base_rirs" == "simulated" ]; then
@@ -68,7 +73,7 @@ if [ $stage -le 2 ]; then
   for data_dir in train_rvb test_rvb ; do
     utils/copy_data_dir.sh --validate-opts "--non-print" \
         data/$data_dir data/${data_dir}_hires
-    steps/make_mfcc.sh --nj 70 --mfcc-config conf/mfcc_hires.conf \
+    steps/make_mfcc.sh --nj 10 --mfcc-config conf/mfcc_hires.conf \
         --cmd "$train_cmd" data/${data_dir}_hires \
         exp/make_reverb_hires/${data_dir} $mfccdir || exit 1;
     steps/compute_cmvn_stats.sh data/${data_dir}_hires exp/make_reverb_hires/${data_dir} $mfccdir || exit 1;
@@ -96,7 +101,7 @@ if [ $stage -le 4 ]; then
   # To train a diagonal UBM we don't need very much data, so use the smallest
   # subset.
   echo "[$(date +'%F %T')] $0: train diag ubm" | lolcat
-  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 30 --num-frames 400000 \
+  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 10 --num-frames 400000 \
     data/train_rvb_hires_30k 512 exp/nnet3/pca_transform \
     exp/nnet3/diag_ubm
 fi
@@ -116,10 +121,10 @@ if [ $stage -le 6 ]; then
   ivectordir=exp/nnet3/ivectors_train_rvb
   # having a larger number of speakers is helpful for generalization, and to
   # handle per-utterance decoding well (iVector starts at zero).
-  steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 \
+  #steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 \
   fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
     data/train_rvb_hires data/train_rvb_hires_max2
 
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 60 \
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 10 \
     data/train_rvb_hires_max2 exp/nnet3/extractor $ivectordir || exit 1;
 fi
