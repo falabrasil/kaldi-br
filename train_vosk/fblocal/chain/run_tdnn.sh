@@ -260,9 +260,8 @@ if [ $stage -le 15 ]; then
   # matched topology (since it gets the topology file from the model).
   # CB: changed 'lang_test_tgsmall' to 'lang_test'
   echo "[$(date +'%F %T')] $0: generating dnn graph" | lolcat
-  utils/mkgraph.sh \
-    --self-loop-scale 1.0 data/lang_test_tgsmall \
-    $tree_dir $tree_dir/graph_tgsmall || exit 1;
+  utils/mkgraph.sh --self-loop-scale 1.0 \
+    data/lang_test_tgsmall $tree_dir $tree_dir/graph_tgsmall || exit 1;
 fi
 
 if [ $stage -le 16 ]; then

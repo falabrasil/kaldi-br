@@ -125,6 +125,14 @@ if [ $stage -le 6 ]; then
   fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
     data/train_rvb_hires data/train_rvb_hires_max2
 
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 10 \
-    data/train_rvb_hires_max2 exp/nnet3/extractor $ivectordir || exit 1;
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 5 \
+    data/train_rvb_hires_max2 \
+    exp/nnet3/extractor \
+    $ivectordir || exit 1;
+
+  # Cassio
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 5 \
+    data/test_rvb_hires \
+    exp/nnet3/extractor \
+    exp/nnet3/ivectors_test_rvb_hires || exit 1;
 fi

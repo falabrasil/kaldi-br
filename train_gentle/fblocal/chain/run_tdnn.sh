@@ -5,7 +5,7 @@ set -e
 # based on run_tdnn_7b.sh in the swbd recipe
 
 # configs for 'chain'
-stage=1 # assuming you already ran the xent systems # CB: originally 7
+stage=13 # assuming you already ran the xent systems # CB: originally 7
 train_stage=-10
 get_egs_stage=-10
 dir=exp/chain/tdnn_7b
@@ -78,21 +78,21 @@ fi
 
 if [ $stage -le 9 ]; then
   echo "[$(date +'%F %T')] $0: extracting ivectors online" | lolcat
-#  rm -rf data/train_rvb_min${min_seg_len}_hires
-#  utils/data/combine_short_segments.sh \
-#      data/train_rvb_hires $min_seg_len data/train_rvb_min${min_seg_len}_hires
-#  steps/compute_cmvn_stats.sh data/train_rvb_min${min_seg_len}_hires exp/make_reverb_hires/train_rvb_min${min_seg_len} mfcc_reverb || exit 1;
-#
-#  #extract ivectors for the new data
-#  #steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 \
-#  fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
-#    data/train_rvb_min${min_seg_len}_hires data/train_rvb_min${min_seg_len}_hires_max2
-#  ivectordir=exp/nnet3/ivectors_train_min${min_seg_len}
-#
-#  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 20 \
-#    data/train_rvb_min${min_seg_len}_hires_max2 \
-#    exp/nnet3/extractor $ivectordir || exit 1;
-#
+  rm -rf data/train_rvb_min${min_seg_len}_hires
+  utils/data/combine_short_segments.sh \
+      data/train_rvb_hires $min_seg_len data/train_rvb_min${min_seg_len}_hires
+  steps/compute_cmvn_stats.sh data/train_rvb_min${min_seg_len}_hires exp/make_reverb_hires/train_rvb_min${min_seg_len} mfcc_reverb || exit 1;
+
+  #extract ivectors for the new data
+  #steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 \
+  fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
+    data/train_rvb_min${min_seg_len}_hires data/train_rvb_min${min_seg_len}_hires_max2
+  ivectordir=exp/nnet3/ivectors_train_min${min_seg_len}
+
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 10 \
+    data/train_rvb_min${min_seg_len}_hires_max2 \
+    exp/nnet3/extractor $ivectordir || exit 1;
+
  # combine the non-hires features for alignments/lattices
  rm -rf data/${latgen_train_set}_min${min_seg_len}
   utt_prefix="THISISUNIQUESTRING-"
@@ -215,22 +215,58 @@ if [ $stage -le 12 ]; then
 fi
 
 if [ $stage -le 13 ]; then
-  echo "[$(date +'%F %T')] $0: creating dnn graph" | lolcat
   # Note: it might appear that this $lang directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
-  utils/mkgraph.sh --self-loop-scale 1.0 data/lang_pp_test $dir $dir/graph_pp
+  echo "[$(date +'%F %T')] $0: creating dnn graph" | lolcat
+  utils/mkgraph.sh --self-loop-scale 1.0 \
+    data/lang_pp_test $dir $dir/graph_pp || exit 1
 fi
 
 if [ $stage -le 14 ]; then
-#%WER 27.8 | 2120 27217 | 78.2 13.6 8.2 6.0 27.8 75.9 | -0.613 | exp/chain/tdnn_7b/decode_dev_aspire_whole_uniformsegmented_win10_over5_v6_200jobs_iterfinal_pp_fg/score_9/penalty_0.0/ctm.filt.filt.sys
-  echo "[$(date +'%F %T')] $0: decoding dnn" | lolcat
-  local/nnet3/decode.sh --stage 1 --decode-num-jobs 10 --affix "v7" \
-   --acwt 1.0 --post-decode-acwt 10.0 \
-   --window 10 --overlap 5 \
-   --sub-speaker-frames 6000 --max-count 75 --ivector-scale 0.75 \
-   --pass2-decode-opts "--min-active 1000" \
-   dev_aspire data/lang $dir/graph_pp $dir
+  steps/nnet3/decode.sh \
+    --acwt 1.0 --post-decode-acwt 10.0 \
+    --frames-per-chunk 150 \
+    --nj 5 --cmd "$decode_cmd" --num-threads 4 \
+    --online-ivector-dir exp/nnet3/ivectors_test_rvb_hires \
+    $dir/graph_pp data/test_rvb_hires $dir/decode_test_rvb_hires
+    #$tree_dir/graph_tgsmall data/${data}_hires ${dir}/decode_tgsmall_${data} || exit 1
+  grep -Rn WER $dir/decode_test_rvb_hires
+      utils/best_wer.sh | tee > $dir/decode_test_rvb_hires/fbwer.txt
+fi
+
+##commented by Cassio
+#if [ $stage -le 14 ]; then
+##%WER 27.8 | 2120 27217 | 78.2 13.6 8.2 6.0 27.8 75.9 | -0.613 | exp/chain/tdnn_7b/decode_dev_aspire_whole_uniformsegmented_win10_over5_v6_200jobs_iterfinal_pp_fg/score_9/penalty_0.0/ctm.filt.filt.sys
+#  echo "[$(date +'%F %T')] $0: decoding dnn" | lolcat
+#  local/nnet3/decode.sh --stage 1 --decode-num-jobs 10 --affix "v7" \
+#   --acwt 1.0 --post-decode-acwt 10.0 \
+#   --window 10 --overlap 5 \
+#   --sub-speaker-frames 6000 --max-count 75 --ivector-scale 0.75 \
+#   --pass2-decode-opts "--min-active 1000" \
+#   dev_aspire data/lang $dir/graph_pp $dir
+#fi
+
+# NOTE: created by Cassio
+# this step is equivalent to stage 17 of mini librispeech recipe
+if [ $stage -le 15 ] ; then
+  echo "[$(date +'%F %T')] $0: prepare online decoding" | lolcat
+  steps/online/nnet3/prepare_online_decoding.sh \
+    --mfcc-config conf/mfcc_hires.conf \
+    --online-cmvn-config conf/online_cmvn.conf \
+    data/lang exp/nnet3/extractor $dir ${dir}_chain_online
+
+  echo "[$(date +'%F %T')] $0: online decode" | lolcat
+  for data in $test_sets; do
+    # note: we just give it "data/${data}" as it only uses the wav.scp, the
+    # feature type does not matter.
+    steps/online/nnet3/decode.sh \
+      --acwt 1.0 --post-decode-acwt 10.0 \
+      --nj 5 --cmd "$decode_cmd" \
+      $dir/graph_pp data/test_rvb_hires ${dir}_chain_online/decode_test_rvb_hires || exit 1
+    grep -Rn WER ${dir}_chain_online/decode_test_rvb_hires \
+        utils/best_wer.sh | tee > ${dir}_chain_online/decode_test_rvb_hires/fbwer.txt
+  done
 fi
 
 #if [ $stage -le 15 ]; then
