@@ -83,10 +83,11 @@ if [ $stage -le 2 ]; then
 
   # I'm dividing the original value by 100 because alcaim16k-DVD1de4 doesn't
   # have enough files for this absurd split - Cassio
-  m=$((100000/100))
-  n=$((30000/100))
-  utils/subset_data_dir.sh data/train_rvb_hires $m data/train_rvb_hires_100k
-  utils/subset_data_dir.sh data/train_rvb_hires $n data/train_rvb_hires_30k
+  num_utts=$(wc -l data/train_rvb_hires)
+  n30k=$((num_utts/4))  # 25%
+  n100k=$((num_utts-m)) # 75%
+  utils/subset_data_dir.sh data/train_rvb_hires $n100k data/train_rvb_hires_100k
+  utils/subset_data_dir.sh data/train_rvb_hires $n30k  data/train_rvb_hires_30k
 fi
 
 if [ $stage -le 3 ]; then
