@@ -5,7 +5,7 @@ set -e
 # based on run_tdnn_7b.sh in the swbd recipe
 
 # configs for 'chain'
-stage=7 # assuming you already ran the xent systems # CB: originally 7
+stage=1 # assuming you already ran the xent systems # CB: originally 7
 train_stage=-10
 get_egs_stage=-10
 dir=exp/chain/tdnn_7b
@@ -44,9 +44,9 @@ lang=data/lang_chain
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 8" if you have already
 # run those things.
-#fblocal/nnet3/run_ivector_common.sh --stage $stage --num-data-reps ${num_data_reps} || exit 1;
-fblocal/nnet3/run_ivector_common.sh --num-data-reps ${num_data_reps} || exit 1;
+fblocal/nnet3/run_ivector_common.sh --stage $stage --num-data-reps ${num_data_reps} || exit 1;
 
+# NOTE: it starts at 7 bc ivector_common ranges from 1 up to 6 -Cassio
 if [ $stage -le 7 ]; then
   # Create a version of the lang/ directory that has one state per phone in the
   # topo file. [note, it really has two states.. the first one is only repeated
@@ -73,30 +73,32 @@ if [ $stage -le 8 ]; then
 fi
 
 if [ -z $min_seg_len ]; then
-  min_seg_len=$(python -c "print ($frames_per_eg+5)/100.0")
+  min_seg_len=$(python -c "print(($frames_per_eg+5)/100.0)")
 fi
 
 if [ $stage -le 9 ]; then
-  echo "[$(date +'%F %T')] $0: extracting ivectos online" | lolcat
-  rm -rf data/train_rvb_min${min_seg_len}_hires
-  utils/data/combine_short_segments.sh \
-      data/train_rvb_hires $min_seg_len data/train_rvb_min${min_seg_len}_hires
-  steps/compute_cmvn_stats.sh data/train_rvb_min${min_seg_len}_hires exp/make_reverb_hires/train_rvb_min${min_seg_len} mfcc_reverb || exit 1;
-
-  #extract ivectors for the new data
-  steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 \
-    data/train_rvb_min${min_seg_len}_hires data/train_rvb_min${min_seg_len}_hires_max2
-  ivectordir=exp/nnet3/ivectors_train_min${min_seg_len}
-
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 20 \
-    data/train_rvb_min${min_seg_len}_hires_max2 \
-    exp/nnet3/extractor $ivectordir || exit 1;
-
+  echo "[$(date +'%F %T')] $0: extracting ivectors online" | lolcat
+#  rm -rf data/train_rvb_min${min_seg_len}_hires
+#  utils/data/combine_short_segments.sh \
+#      data/train_rvb_hires $min_seg_len data/train_rvb_min${min_seg_len}_hires
+#  steps/compute_cmvn_stats.sh data/train_rvb_min${min_seg_len}_hires exp/make_reverb_hires/train_rvb_min${min_seg_len} mfcc_reverb || exit 1;
+#
+#  #extract ivectors for the new data
+#  #steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 \
+#  fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
+#    data/train_rvb_min${min_seg_len}_hires data/train_rvb_min${min_seg_len}_hires_max2
+#  ivectordir=exp/nnet3/ivectors_train_min${min_seg_len}
+#
+#  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 20 \
+#    data/train_rvb_min${min_seg_len}_hires_max2 \
+#    exp/nnet3/extractor $ivectordir || exit 1;
+#
  # combine the non-hires features for alignments/lattices
  rm -rf data/${latgen_train_set}_min${min_seg_len}
   utt_prefix="THISISUNIQUESTRING-"
   spk_prefix="THISISUNIQUESTRING-"
   utils/copy_data_dir.sh --spk-prefix "$spk_prefix" --utt-prefix "$utt_prefix" \
+    --validate-opts "--non-print" \
     data/train data/train_temp_for_lats
   utils/data/combine_short_segments.sh \
       data/train_temp_for_lats $min_seg_len data/train_min${min_seg_len}
@@ -104,9 +106,10 @@ if [ $stage -le 9 ]; then
 fi
 
 if [ $stage -le 10 ]; then
+  echo "[$(date +'%F %T')] $0: align lattices" | lolcat
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
-  nj=200
+  nj=10
   lat_dir=exp/tri5a_min${min_seg_len}_lats
   steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" data/train_min${min_seg_len} \
     data/lang exp/tri5a $lat_dir
@@ -135,7 +138,7 @@ if [ $stage -le 10 ]; then
 fi
 
 if [ $stage -le 11 ]; then
-  echo "$0: creating neural net configs using the xconfig parser";
+  echo "[$(date +'%F %T')] $0: creating neural net configs using the xconfig parser" | lolcat
 
   num_targets=$(tree-info $treedir/tree |grep num-pdfs|awk '{print $2}')
   learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
@@ -179,6 +182,7 @@ EOF
 fi
 
 if [ $stage -le 12 ]; then
+  echo "[$(date +'%F %T')] $0: train dnn" | lolcat
   mkdir -p $dir/egs
   touch $dir/egs/.nodelete # keep egs around when that run dies.
 
@@ -198,8 +202,8 @@ if [ $stage -le 12 ]; then
     --trainer.num-chunk-per-minibatch 128 \
     --trainer.frames-per-iter 1500000 \
     --trainer.num-epochs $num_epochs \
-    --trainer.optimization.num-jobs-initial 3 \
-    --trainer.optimization.num-jobs-final 16 \
+    --trainer.optimization.num-jobs-initial 1 \
+    --trainer.optimization.num-jobs-final 1 \
     --trainer.optimization.initial-effective-lrate 0.001 \
     --trainer.optimization.final-effective-lrate 0.0001 \
     --trainer.max-param-change 2.0 \
@@ -211,6 +215,7 @@ if [ $stage -le 12 ]; then
 fi
 
 if [ $stage -le 13 ]; then
+  echo "[$(date +'%F %T')] $0: creating dnn graph" | lolcat
   # Note: it might appear that this $lang directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
@@ -219,7 +224,8 @@ fi
 
 if [ $stage -le 14 ]; then
 #%WER 27.8 | 2120 27217 | 78.2 13.6 8.2 6.0 27.8 75.9 | -0.613 | exp/chain/tdnn_7b/decode_dev_aspire_whole_uniformsegmented_win10_over5_v6_200jobs_iterfinal_pp_fg/score_9/penalty_0.0/ctm.filt.filt.sys
-  local/nnet3/decode.sh --stage 1 --decode-num-jobs 30 --affix "v7" \
+  echo "[$(date +'%F %T')] $0: decoding dnn" | lolcat
+  local/nnet3/decode.sh --stage 1 --decode-num-jobs 10 --affix "v7" \
    --acwt 1.0 --post-decode-acwt 10.0 \
    --window 10 --overlap 5 \
    --sub-speaker-frames 6000 --max-count 75 --ivector-scale 0.75 \

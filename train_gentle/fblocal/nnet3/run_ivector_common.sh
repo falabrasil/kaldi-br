@@ -81,10 +81,10 @@ if [ $stage -le 2 ]; then
     utils/validate_data_dir.sh --non-print --no-feats data/${data_dir}_hires || exit 1
   done
 
-  # I'm dividing the original value by 1000 because lapsbm doesn't have enough
-  # files for this absurd split - Cassio
-  m=$((100000/1000))
-  n=$((30000/1000))
+  # I'm dividing the original value by 100 because alcaim16k-DVD1de4 doesn't
+  # have enough files for this absurd split - Cassio
+  m=$((100000/100))
+  n=$((30000/100))
   utils/subset_data_dir.sh data/train_rvb_hires $m data/train_rvb_hires_100k
   utils/subset_data_dir.sh data/train_rvb_hires $n data/train_rvb_hires_30k
 fi

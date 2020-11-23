@@ -43,8 +43,8 @@ if [ $stage -le -1 ]; then
   # NOTE: CB: if you have multiple datasets you better download them beforehand,
   #       comment out this script and call "link_local_data.sh" instead.
   echo "[$(date +'%F %T')] $0: download data (85M)" | lolcat
-  fblocal/download_data.sh $data $data_url || exit 1
-  fblocal/link_local_data.sh --nj 8 $HOME/fb-gitlab/fb-audio-corpora $data || exit 1
+  #fblocal/download_data.sh $data $data_url || exit 1
+  fblocal/link_local_data.sh --nj 8 $HOME/fb-gitlab/fb-audio-corpora/alcaim16k-DVD1de4 $data || exit 1
 fi
 
 if [ $stage -le 0 ]; then
