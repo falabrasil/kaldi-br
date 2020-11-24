@@ -231,8 +231,7 @@ if [ $stage -le 14 ]; then
     --nj 5 --cmd "$decode_cmd" --num-threads 4 \
     --online-ivector-dir exp/nnet3/ivectors_test_rvb_hires \
     $dir/graph_pp data/test_rvb_hires $dir/decode_test_rvb_hires
-    #$tree_dir/graph_tgsmall data/${data}_hires ${dir}/decode_tgsmall_${data} || exit 1
-  grep -Rn WER $dir/decode_test_rvb_hires
+  grep -Rn WER $dir/decode_test_rvb_hires | \
       utils/best_wer.sh | tee > $dir/decode_test_rvb_hires/fbwer.txt
 fi
 
@@ -252,6 +251,6 @@ if [ $stage -le 15 ] ; then
     --acwt 1.0 --post-decode-acwt 10.0 \
     --nj 5 --cmd "$decode_cmd" \
     $dir/graph_pp data/test_rvb_hires ${dir}_chain_online/decode_test_rvb_hires || exit 1
-  grep -Rn WER ${dir}_chain_online/decode_test_rvb_hires \
+  grep -Rn WER ${dir}_chain_online/decode_test_rvb_hires | \
       utils/best_wer.sh | tee > ${dir}_chain_online/decode_test_rvb_hires/fbwer.txt
 fi

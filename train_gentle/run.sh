@@ -16,6 +16,8 @@
 # Cassio Batista - https://cassota.gitlab.io
 # Last updated: dec 2020
 
+#export LC_ALL=pt_BR.UTF-8
+
 # Change this location to somewhere where you want to put the data.
 data=./corpus
 
@@ -64,6 +66,7 @@ if [ $stage -le 1 ]; then
 
   # stage 3 doesn't need local/lm dir - Cassio
   echo "[$(date +'%F %T')] $0: prep dict" | lolcat 
+  fblocal/lapsbm_add_words_to_lexicon.sh data data/local/dict/lexicon.txt
   fblocal/prep_dict.sh --nj 4 data/local/dict
 
   # leave as it is - Cassio
@@ -111,7 +114,7 @@ if [ $stage -le 3 ]; then
       steps/decode.sh --nj 6 --cmd "$decode_cmd" \
           exp/mono0a/graph data/test exp/mono0a/decode_test
       grep -Rn WER exp/mono0a/decode_test | \
-          utils/best_wer.sh | tee exp/mono0a/decode_test/fbwer.txt
+          utils/best_wer.sh | tee > exp/mono0a/decode_test/fbwer.txt
     )&
     $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
@@ -136,7 +139,7 @@ if [ $stage -le 4 ]; then
       steps/decode.sh --nj 6 --cmd "$decode_cmd" \
           exp/tri1/graph data/test exp/tri1/decode_test
       grep -Rn WER exp/tri1/decode_test | \
-          utils/best_wer.sh | tee exp/tri1/decode_test/fbwer.txt
+          utils/best_wer.sh | tee > exp/tri1/decode_test/fbwer.txt
     )&
     $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
@@ -161,7 +164,7 @@ if [ $stage -le 5 ]; then
       steps/decode.sh --nj 6 --cmd "$decode_cmd" \
           exp/tri2/graph data/test exp/tri2/decode_test
       grep -Rn WER exp/tri2/decode_test | \
-          utils/best_wer.sh | tee exp/tri2/decode_test/fbwer.txt
+          utils/best_wer.sh | tee > exp/tri2/decode_test/fbwer.txt
     )&
     $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
@@ -187,7 +190,7 @@ if [ $stage -le 6 ]; then
       steps/decode.sh --nj 6 --cmd "$decode_cmd" \
           exp/tri3a/graph data/test exp/tri3a/decode_test
       grep -Rn WER exp/tri3a/decode_test | \
-          utils/best_wer.sh | tee exp/tri3a/decode_test/fbwer.txt
+          utils/best_wer.sh | tee > exp/tri3a/decode_test/fbwer.txt
     )&
     $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
@@ -212,7 +215,7 @@ if [ $stage -le 7 ]; then
       steps/decode_fmllr.sh --nj 6 --cmd "$decode_cmd" \
         exp/tri4a/graph data/test exp/tri4a/decode_test
       grep -Rn WER exp/tri4a/decode_test | \
-          utils/best_wer.sh | tee exp/tri4a/decode_test/fbwer.txt
+          utils/best_wer.sh | tee > exp/tri4a/decode_test/fbwer.txt
     )&
     $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
@@ -237,7 +240,7 @@ if [ $stage -le 8 ]; then
       steps/decode_fmllr.sh --nj 6 --cmd "$decode_cmd" \
         exp/tri5a/graph data/test exp/tri5a/decode_test
       grep -Rn WER exp/tri5a/decode_test | \
-          utils/best_wer.sh | tee exp/tri5a/decode_test/fbwer.txt
+          utils/best_wer.sh | tee > exp/tri5a/decode_test/fbwer.txt
     )&
     $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
   fi
@@ -297,7 +300,7 @@ fi
 #                            exp/tri3b/graph_tgsmall data/test \
 #                            exp/tri3b/decode_tgsmall_test
 #      grep -Rn WER exp/tri3b/decode_tgsmall_test | \
-#          utils/best_wer.sh > exp/tri3b/decode_tgsmall_test/fbwer.txt
+#          utils/best_wer.sh | tee > exp/tri3b/decode_tgsmall_test/fbwer.txt
 #    )&
 #    $decode_bg || { echo "NOTE: mkgraph takes a while" && wait; }
 #  fi

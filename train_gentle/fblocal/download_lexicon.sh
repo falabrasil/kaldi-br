@@ -7,10 +7,10 @@
 # cassio batista - https://cassota.gitlab.io/
 
 if test $# -ne 3 ; then
-    echo "usage: $0 <data-dir> <lex-url>"
+    echo "usage: $0 <data-dir> <lex-url> <link-dir>"
     echo "  <data-dir> is the dir where the lexicon will be downloaded to"
     echo "  <lex-url> is the remote url where the lexicon will be fetched from"
-    echo "  <link-dir> is the dir where lm will be symlinked with a special name"
+    echo "  <link-dir> is the dir where lexicon will be extracted to"
     exit 1
 fi
 
@@ -36,5 +36,3 @@ if [ "$(sha1sum $data_dir/$filename | awk '{print $1}')" != $sha ] ; then
 fi
 
 gzip -cd $data_dir/$filename > $link_dir/lexicon.txt
-
-exit 0
