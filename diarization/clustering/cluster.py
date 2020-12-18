@@ -12,6 +12,7 @@ import shutil
 import glob
 import argparse
 import logging
+from collections import OrderedDict
 
 import torch
 import numpy as np
@@ -23,8 +24,6 @@ from pyannote.pipeline.blocks.clustering import (
 
 logging.basicConfig(format="[%(filename)s] %(levelname)s: %(message)s",
                     level=logging.INFO)
-model = torch.hub.load("pyannote/pyannote-audio", "emb")
-clustering = HierarchicalAgglomerativeClustering()
 
 
 if __name__ == "__main__":
@@ -39,10 +38,8 @@ if __name__ == "__main__":
         logging.error("input dir does not exist: '%s'" % args.in_dir)
         sys.exit(1)
     if os.path.isdir(args.out_dir):
-        logging.warning("output dir exists and will be overwritten: "
-                        "'%s'" % args.out_dir)
-        shutil.rmtree(args.out_dir)
-        os.mkdir(args.out_dir)
+        logging.warning("output dir '%s' exists and *WILL NOT* "
+                        "be overwritten " % args.out_dir)
     else:
         logging.info("creating output dir: '%s'" % args.out_dir)
         os.mkdir(args.out_dir)
@@ -55,17 +52,20 @@ if __name__ == "__main__":
         if os.path.isdir(d):
             subdirs.append(d)
 
-    if len(subdirs) != 2:
-        logging.warning("number of subdirs under '%s' was supposed to be 2. "
-                        "found %d instead" % (args.in_dir, len(subdirs)))
+    if len(subdirs) < 1:
+        logging.warning("expected at least one subdir in '%s'" % args.in_dir)
         sys.exit(1)
 
+    logging.info("loading pyannote's speaker embedding model")
+    model = torch.hub.load("pyannote/pyannote-audio", "emb")
+    clustering = HierarchicalAgglomerativeClustering()
+
     for d in subdirs:
-        # get folder id and gender tag from dir name
-        folderid, gender = d.split("/")[-1].split("_")
+        # get broadcaster name and gender tag + transmission date from dir name
+        broadcaster, gtx = d.split("/")[-1].split("_")
+        gender, txdate = gtx[0].upper(), gtx[1:]
 
         # sanity check on gender tag
-        gender = gender[0].upper()
         if gender != "M" and gender != "F":
             logging.error("gender flag expected to be either M or F. "
                           "got '%s' instead" % gender)
@@ -120,18 +120,30 @@ if __name__ == "__main__":
         clusters = clustering(np.vstack(X))  # int indices
 
         # map each clustered label to its cluster (between 1 and N_CLUSTERS)
+        # https://stackoverflow.com/questions/16772071/sort-dict-by-value-python
         mapping = {label: cluster for label, cluster in zip(labels, clusters)}
+        mapping = OrderedDict(sorted(mapping.items(), key=lambda x:x[1]))
 
         # https://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python/11101867#11101867
-        for label, cluster in mapping.items():
+        for fileid, (label, cluster) in enumerate(mapping.items()):
+            # dir names store tag and speaker id information
+            tag = "%s%s" % (broadcaster, txdate)        # andaiafm20201105
+            spk = "%s-%s%04d" % (tag, gender, cluster)  # andaiafm20201105-F0001
+
             src = os.path.join(d, label.replace(".wav", ""))
-            dst = os.path.join(args.out_dir, folderid,
-                               "%s-%s%08d" % (folderid, gender, cluster))
+            dst = os.path.join(args.out_dir, tag, spk)
             if not os.path.isdir(dst):
                 os.makedirs(dst, exist_ok=True)
-            logging.info("copy: '%s'.{wav,txt} -> '%s'" % (src, dst))
-            shutil.copy2("%s.wav" % src, dst)
-            shutil.copy2("%s.txt" % src, dst)
+
+            # andaiafm20201105/andaiafm20201105-F0001/andaiafm20201105F0001_000001.{wav,txt}
+            dst = os.path.join(dst, "%s_%06d" % (spk.replace("-", ""), fileid))
+            logging.info("copy: '%s'.{wav,txt} -> '%s'.{wav,txt}" % (src, dst))
+            for ext in ("wav", "txt"):
+                f = "%s.%s" % (src, ext)  # from source
+                t = "%s.%s" % (dst, ext)  # to destination
+                if os.path.isfile(t):
+                    logging.warning("dst file '%s' exists, that's odd" % t)
+                shutil.copy2(f, t)
 
         logging.info("done scanning subdir %s: %d embeddings extracted, "
                      "%d embeddings processed" % (d, num_emb, len(X)))
