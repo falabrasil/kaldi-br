@@ -36,5 +36,3 @@ if [ "$(sha1sum $data_dir/$filename | awk '{print $1}')" != $sha ] ; then
 fi
 
 gzip -cd $data_dir/$filename > $link_dir/lexicon.txt
-
-exit 0

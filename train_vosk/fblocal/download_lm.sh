@@ -36,5 +36,3 @@ if [ "$(sha1sum $data_dir/$filename | awk '{print $1}')" != $sha ] ; then
 fi
 
 ln -sf $(readlink -f ${data_dir}/${filename}) ${link_dir}/lm_tglarge.arpa.gz
-
-exit 0

@@ -35,17 +35,27 @@ if [ $stage -le 1 ]; then
   # Although the nnet will be trained by high resolution data, we still have to
   # perturb the normal data to get the alignment _sp stands for speed-perturbed
   echo "[$(date +'%F %T')] $0: preparing directory for low-resolution speed-perturbed data (for alignment)" | lolcat
+  s_time=$(date +'%F_%T')
   utils/data/perturb_data_dir_speed_3way.sh data/${train_set} data/${train_set}_sp
+  e_time=$(date +'%F_%T')
+  echo "$0 1: speed perturb took $(fbutils/elapsed_time.py $s_stime $e_time)"
+
   echo "[$(date +'%F %T')] $0: making MFCC features for low-resolution speed-perturbed data" | lolcat
-  steps/make_mfcc.sh --cmd "$train_cmd" --nj 10 data/${train_set}_sp || exit 1;
+  s_time=$(date +'%F_%T')
+  steps/make_mfcc.sh --cmd "$train_cmd" --nj 12 data/${train_set}_sp || exit 1;
   steps/compute_cmvn_stats.sh data/${train_set}_sp || exit 1;
   utils/fix_data_dir.sh data/${train_set}_sp
+  e_time=$(date +'%F_%T')
+  echo "$0 1: mfcc on perturbed took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 2 ]; then
   echo "[$(date +'%F %T')] $0: aligning with the perturbed low-resolution data" | lolcat
-  steps/align_fmllr.sh --nj 20 --cmd "$train_cmd" \
+  s_time=$(date +'%F_%T')
+  steps/align_fmllr.sh --nj 12 --cmd "$train_cmd" \
     data/${train_set}_sp data/lang $gmm_dir $ali_dir || exit 1
+  e_time=$(date +'%F_%T')
+  echo "$0 2: align fmllr took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 3 ]; then
@@ -53,26 +63,32 @@ if [ $stage -le 3 ]; then
   # this shows how you can split across multiple file-systems.
   echo "[$(date +'%F %T')] $0: creating high-resolution MFCC features" | lolcat
   mfccdir=data/${train_set}_sp_hires/data
-  if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $mfccdir/storage ]; then
-    utils/create_split_dir.pl /export/fs0{1,2}/$USER/kaldi-data/mfcc/mini_librispeech-$(date +'%m_%d_%H_%M')/s5/$mfccdir/storage $mfccdir/storage
-  fi
 
   # CB: non-print flag needed for non ASCII chars
+  s_time=$(date +'%F_%T')
   for datadir in ${train_set}_sp ${test_sets}; do
     utils/copy_data_dir.sh --validate-opts "--non-print" \
       data/$datadir data/${datadir}_hires
   done
+  e_time=$(date +'%F_%T')
+  echo "$0 3: copy data dir took $(fbutils/elapsed_time.py $s_stime $e_time)"
 
   # do volume-perturbation on the training data prior to extracting hires
   # features; this helps make trained nnets more invariant to test data volume.
+  s_time=$(date +'%F_%T')
   utils/data/perturb_data_dir_volume.sh data/${train_set}_sp_hires || exit 1;
+  e_time=$(date +'%F_%T')
+  echo "$0 3: volume perturb took $(fbutils/elapsed_time.py $s_stime $e_time)"
 
+  s_time=$(date +'%F_%T')
   for datadir in ${train_set}_sp ${test_sets}; do
-    steps/make_mfcc.sh --nj 10 --mfcc-config conf/mfcc_hires.conf \
+    steps/make_mfcc.sh --nj 12 --mfcc-config conf/mfcc_hires.conf \
       --cmd "$train_cmd" data/${datadir}_hires || exit 1;
     steps/compute_cmvn_stats.sh data/${datadir}_hires || exit 1;
     utils/fix_data_dir.sh data/${datadir}_hires || exit 1;
   done
+  e_time=$(date +'%F_%T')
+  echo "$0 3: compute mfcc hires took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 4 ]; then
@@ -83,23 +99,32 @@ if [ $stage -le 4 ]; then
 
   num_utts_total=$(wc -l <data/${train_set}_sp_hires/utt2spk)
   num_utts=$[$num_utts_total/4]
+  s_time=$(date +'%F_%T')
   utils/data/subset_data_dir.sh data/${train_set}_sp_hires \
      $num_utts ${temp_data_root}/${train_set}_sp_hires_subset
+  e_time=$(date +'%F_%T')
+  echo "$0 4: subset data dir took $(fbutils/elapsed_time.py $s_stime $e_time)"
 
   echo "[$(date +'%F %T')] $0: computing a PCA transform from the hires data." | lolcat
+  s_time=$(date +'%F_%T')
   steps/online/nnet2/get_pca_transform.sh --cmd "$train_cmd" \
       --splice-opts "--left-context=3 --right-context=3" \
       --max-utts 10000 --subsample 2 \
        ${temp_data_root}/${train_set}_sp_hires_subset \
        exp/nnet3${nnet3_affix}/pca_transform
+  e_time=$(date +'%F_%T')
+  echo "$0 4: get pca transform took $(fbutils/elapsed_time.py $s_stime $e_time)"
 
   echo "[$(date +'%F %T')] $0: training the diagonal UBM." | lolcat
+  s_time=$(date +'%F_%T')
   # Use 512 Gaussians in the UBM.
-  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 30 \
+  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 6 \
     --num-frames 700000 \
-    --num-threads 8 \
+    --num-threads 2 \
     ${temp_data_root}/${train_set}_sp_hires_subset 512 \
     exp/nnet3${nnet3_affix}/pca_transform exp/nnet3${nnet3_affix}/diag_ubm
+  e_time=$(date +'%F_%T')
+  echo "$0 4: train diag ubm took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 5 ]; then
@@ -107,13 +132,15 @@ if [ $stage -le 5 ]; then
   # can be sensitive to the amount of data.  The script defaults to an iVector dimension of
   # 100.
   echo "[$(date +'%F %T')] $0: training the iVector extractor" | lolcat
-  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 15 \
-     --num-threads 4 --num-processes 2 \
+  s_time=$(date +'%F_%T')
+  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 4 \
+     --num-threads 2 --num-processes 2 \
      --online-cmvn-iextractor $online_cmvn_iextractor \
      data/${train_set}_sp_hires exp/nnet3${nnet3_affix}/diag_ubm \
      exp/nnet3${nnet3_affix}/extractor || exit 1;
+  e_time=$(date +'%F_%T')
+  echo "$0 5: train ivector extractor took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
-
 
 if [ $stage -le 6 ]; then
   echo "[$(date +'%F %T')] $0: extract iVectors from perturbed data" | lolcat
@@ -132,20 +159,27 @@ if [ $stage -le 6 ]; then
   # having a larger number of speakers is helpful for generalization, and to
   # handle per-utterance decoding well (iVector starts at zero).
   temp_data_root=${ivectordir}
+  s_time=$(date +'%F_%T')
   fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
     data/${train_set}_sp_hires ${temp_data_root}/${train_set}_sp_hires_max2
+  e_time=$(date +'%F_%T')
+  echo "$0 6: modify spk info took $(fbutils/elapsed_time.py $s_stime $e_time)"
 
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 5 \
+  s_time=$(date +'%F_%T')
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 12 \
     ${temp_data_root}/${train_set}_sp_hires_max2 \
     exp/nnet3${nnet3_affix}/extractor $ivectordir
+  e_time=$(date +'%F_%T')
+  echo "$0 6: extract ivectors from train data took $(fbutils/elapsed_time.py $s_stime $e_time)"
 
   # Also extract iVectors for the test data, but in this case we don't need the speed
   # perturbation (sp).
+  s_time=$(date +'%F_%T')
   for data in $test_sets; do
-    steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 5 \
+    steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 12 \
       data/${data}_hires exp/nnet3${nnet3_affix}/extractor \
       exp/nnet3${nnet3_affix}/ivectors_${data}_hires
   done
+  e_time=$(date +'%F_%T')
+  echo "$0 6: extract ivectors from test data took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
-
-exit 0

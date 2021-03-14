@@ -91,7 +91,6 @@ echo "$0 $@"  # Print the command line for logging
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
-echo "[$(date +'%F %T')] $0: run ivector common" | lolcat
 fblocal/nnet3/run_ivector_common.sh --stage $stage \
                                     --train-set $train_set \
                                     --test-sets $test_sets \
@@ -118,6 +117,7 @@ done
 
 if [ $stage -le 10 ]; then
   echo "[$(date +'%F %T')] $0: creating lang directory $lang with chain-type topology" | lolcat
+  s_time=$(date +'%F_%T')
   # Create a version of the lang/ directory that has one state per phone in the
   # topo file. [note, it really has two states.. the first one is only repeated
   # once, the second one has zero or more repeats.]
@@ -137,15 +137,20 @@ if [ $stage -le 10 ]; then
     # topology.
     steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
   fi
+  e_time=$(date +'%F_%T')
+  echo "$0 10: gen topo took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 11 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
   echo "[$(date +'%F %T')] $0: align lattices with fmllr" | lolcat
-  steps/align_fmllr_lats.sh --nj 75 --cmd "$train_cmd" ${lores_train_data_dir} \
+  s_time=$(date +'%F_%T')
+  steps/align_fmllr_lats.sh --nj 12 --cmd "$train_cmd" ${lores_train_data_dir} \
     data/lang $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
+  e_time=$(date +'%F_%T')
+  echo "$0 11: align fmllr lats took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 12 ]; then
@@ -154,6 +159,7 @@ if [ $stage -le 12 ]; then
   # those.  The num-leaves is always somewhat less than the num-leaves from
   # the GMM baseline.
   echo "[$(date +'%F %T')] $0: building tree" | lolcat
+  s_time=$(date +'%F_%T')
   if [ -f $tree_dir/final.mdl ]; then
      echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
      exit 1;
@@ -163,12 +169,16 @@ if [ $stage -le 12 ]; then
     --context-opts "--context-width=2 --central-position=1" \
     --cmd "$train_cmd" 3500 ${lores_train_data_dir} \
     $lang $ali_dir $tree_dir
+  e_time=$(date +'%F_%T')
+  echo "$0 12: build tree took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 13 ]; then
   echo "[$(date +'%F %T')] $0: xconfigs to configs" | lolcat
   mkdir -p $dir
   echo "$0: creating neural net configs using the xconfig parser";
+
+  s_time=$(date +'%F_%T')
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
   learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
@@ -219,11 +229,13 @@ if [ $stage -le 13 ]; then
   output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
+  e_time=$(date +'%F_%T')
+  echo "$0 13: create xconfig took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
-
 
 if [ $stage -le 14 ]; then
   echo "[$(date +'%F %T')] $0: training DNN" | lolcat
+  s_time=$(date +'%F_%T')
   steps/nnet3/chain/train.py --stage=$train_stage \
     --cmd="$decode_cmd" \
     --feat.online-ivector-dir=$train_ivector_dir \
@@ -253,6 +265,8 @@ if [ $stage -le 14 ]; then
     --tree-dir=$tree_dir \
     --lat-dir=$lat_dir \
     --dir=$dir  || exit 1;
+  e_time=$(date +'%F_%T')
+  echo "$0 14: train dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 15 ]; then
@@ -260,8 +274,11 @@ if [ $stage -le 15 ]; then
   # matched topology (since it gets the topology file from the model).
   # CB: changed 'lang_test_tgsmall' to 'lang_test'
   echo "[$(date +'%F %T')] $0: generating dnn graph" | lolcat
+  s_time=$(date +'%F_%T')
   utils/mkgraph.sh --self-loop-scale 1.0 \
     data/lang_test_tgsmall $tree_dir $tree_dir/graph_tgsmall || exit 1;
+  e_time=$(date +'%F_%T')
+  echo "$0 15: mkgraph dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 if [ $stage -le 16 ]; then
@@ -269,12 +286,12 @@ if [ $stage -le 16 ]; then
   rm $dir/.error 2>/dev/null || true
 
   echo "[$(date +'%F %T')] $0: decoding dnn" | lolcat
+  s_time=$(date +'%F_%T')
   for data in $test_sets; do
-    nspk=$(wc -l <data/${data}_hires/spk2utt)
     steps/nnet3/decode.sh \
       --acwt 1.0 --post-decode-acwt 10.0 \
       --frames-per-chunk $frames_per_chunk \
-      --nj $nspk --cmd "$decode_cmd"  --num-threads 4 \
+      --nj 6 --cmd "$decode_cmd" --num-threads 2 \
       --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${data}_hires \
       $tree_dir/graph_tgsmall data/${data}_hires ${dir}/decode_tgsmall_${data} || exit 1
     grep -Rn WER $dir/decode_tgsmall_$data | \
@@ -284,6 +301,8 @@ if [ $stage -le 16 ]; then
     #  data/lang_test_{tgsmall,tglarge} \
     # data/${data}_hires ${dir}/decode_{tgsmall,tglarge}_${data} || exit 1
   done
+  e_time=$(date +'%F_%T')
+  echo "$0 16: decoding dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
 
 # Not testing the 'looped' decoding separately, because for
@@ -294,19 +313,22 @@ if $test_online_decoding && [ $stage -le 17 ]; then
   # note: if the features change (e.g. you add pitch features), you will have to
   # change the options of the following command line.
   echo "[$(date +'%F %T')] $0: prepare online decoding" | lolcat
+  s_time=$(date +'%F_%T')
   steps/online/nnet3/prepare_online_decoding.sh \
     --mfcc-config conf/mfcc_hires.conf \
     --online-cmvn-config conf/online_cmvn.conf \
     $lang exp/nnet3${nnet3_affix}/extractor ${dir} ${dir}_online
+  e_time=$(date +'%F_%T')
+  echo "$0 17: prepare online decode took $(fbutils/elapsed_time.py $s_stime $e_time)"
 
   echo "[$(date +'%F %T')] $0: online decode" | lolcat
+  s_time=$(date +'%F_%T')
   for data in $test_sets; do
-    nspk=$(wc -l <data/${data}_hires/spk2utt)
     # note: we just give it "data/${data}" as it only uses the wav.scp, the
     # feature type does not matter.
     steps/online/nnet3/decode.sh \
       --acwt 1.0 --post-decode-acwt 10.0 \
-      --nj $nspk --cmd "$decode_cmd" \
+      --nj 12 --cmd "$decode_cmd" \
       $tree_dir/graph_tgsmall data/${data} ${dir}_online/decode_tgsmall_${data} || exit 1
     grep -Rn WER ${dir}_online/decode_tgsmall_$data | \
         utils/best_wer.sh  > ${dir}_online/decode_tgsmall_$data/fbwer.txt
@@ -315,6 +337,6 @@ if $test_online_decoding && [ $stage -le 17 ]; then
     #  data/lang_test_{tgsmall,tglarge} \
     #  data/${data}_hires ${dir}_online/decode_{tgsmall,tglarge}_${data} || exit 1
   done
+  e_time=$(date +'%F_%T')
+  echo "$0 17 online decoding dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
 fi
-
-exit 0;
