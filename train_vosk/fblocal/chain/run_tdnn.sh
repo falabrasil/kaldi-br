@@ -138,7 +138,7 @@ if [ $stage -le 10 ]; then
     steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
   fi
   e_time=$(date +'%F_%T')
-  echo "$0 10: gen topo took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 10: gen topo took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 11 ]; then
@@ -150,7 +150,7 @@ if [ $stage -le 11 ]; then
     data/lang $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
   e_time=$(date +'%F_%T')
-  echo "$0 11: align fmllr lats took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 11: align fmllr lats took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 12 ]; then
@@ -170,7 +170,7 @@ if [ $stage -le 12 ]; then
     --cmd "$train_cmd" 3500 ${lores_train_data_dir} \
     $lang $ali_dir $tree_dir
   e_time=$(date +'%F_%T')
-  echo "$0 12: build tree took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 12: build tree took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 13 ]; then
@@ -230,7 +230,7 @@ if [ $stage -le 13 ]; then
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
   e_time=$(date +'%F_%T')
-  echo "$0 13: create xconfig took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 13: create xconfig took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 14 ]; then
@@ -266,7 +266,7 @@ if [ $stage -le 14 ]; then
     --lat-dir=$lat_dir \
     --dir=$dir  || exit 1;
   e_time=$(date +'%F_%T')
-  echo "$0 14: train dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 14: train dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 15 ]; then
@@ -278,7 +278,7 @@ if [ $stage -le 15 ]; then
   utils/mkgraph.sh --self-loop-scale 1.0 \
     data/lang_test_tgsmall $tree_dir $tree_dir/graph_tgsmall || exit 1;
   e_time=$(date +'%F_%T')
-  echo "$0 15: mkgraph dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 15: mkgraph dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 16 ]; then
@@ -302,7 +302,7 @@ if [ $stage -le 16 ]; then
     # data/${data}_hires ${dir}/decode_{tgsmall,tglarge}_${data} || exit 1
   done
   e_time=$(date +'%F_%T')
-  echo "$0 16: decoding dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 16: decoding dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 # Not testing the 'looped' decoding separately, because for
@@ -319,7 +319,7 @@ if $test_online_decoding && [ $stage -le 17 ]; then
     --online-cmvn-config conf/online_cmvn.conf \
     $lang exp/nnet3${nnet3_affix}/extractor ${dir} ${dir}_online
   e_time=$(date +'%F_%T')
-  echo "$0 17: prepare online decode took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 17: prepare online decode took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   echo "[$(date +'%F %T')] $0: online decode" | lolcat
   s_time=$(date +'%F_%T')
@@ -338,5 +338,5 @@ if $test_online_decoding && [ $stage -le 17 ]; then
     #  data/${data}_hires ${dir}_online/decode_{tgsmall,tglarge}_${data} || exit 1
   done
   e_time=$(date +'%F_%T')
-  echo "$0 17 online decoding dnn took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 17 online decoding dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi

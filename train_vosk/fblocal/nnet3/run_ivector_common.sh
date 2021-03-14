@@ -38,7 +38,7 @@ if [ $stage -le 1 ]; then
   s_time=$(date +'%F_%T')
   utils/data/perturb_data_dir_speed_3way.sh data/${train_set} data/${train_set}_sp
   e_time=$(date +'%F_%T')
-  echo "$0 1: speed perturb took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 1: speed perturb took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   echo "[$(date +'%F %T')] $0: making MFCC features for low-resolution speed-perturbed data" | lolcat
   s_time=$(date +'%F_%T')
@@ -46,7 +46,7 @@ if [ $stage -le 1 ]; then
   steps/compute_cmvn_stats.sh data/${train_set}_sp || exit 1;
   utils/fix_data_dir.sh data/${train_set}_sp
   e_time=$(date +'%F_%T')
-  echo "$0 1: mfcc on perturbed took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 1: mfcc on perturbed took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 2 ]; then
@@ -55,7 +55,7 @@ if [ $stage -le 2 ]; then
   steps/align_fmllr.sh --nj 12 --cmd "$train_cmd" \
     data/${train_set}_sp data/lang $gmm_dir $ali_dir || exit 1
   e_time=$(date +'%F_%T')
-  echo "$0 2: align fmllr took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 2: align fmllr took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 3 ]; then
@@ -71,14 +71,14 @@ if [ $stage -le 3 ]; then
       data/$datadir data/${datadir}_hires
   done
   e_time=$(date +'%F_%T')
-  echo "$0 3: copy data dir took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 3: copy data dir took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   # do volume-perturbation on the training data prior to extracting hires
   # features; this helps make trained nnets more invariant to test data volume.
   s_time=$(date +'%F_%T')
   utils/data/perturb_data_dir_volume.sh data/${train_set}_sp_hires || exit 1;
   e_time=$(date +'%F_%T')
-  echo "$0 3: volume perturb took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 3: volume perturb took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   s_time=$(date +'%F_%T')
   for datadir in ${train_set}_sp ${test_sets}; do
@@ -88,7 +88,7 @@ if [ $stage -le 3 ]; then
     utils/fix_data_dir.sh data/${datadir}_hires || exit 1;
   done
   e_time=$(date +'%F_%T')
-  echo "$0 3: compute mfcc hires took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 3: compute mfcc hires took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 4 ]; then
@@ -103,7 +103,7 @@ if [ $stage -le 4 ]; then
   utils/data/subset_data_dir.sh data/${train_set}_sp_hires \
      $num_utts ${temp_data_root}/${train_set}_sp_hires_subset
   e_time=$(date +'%F_%T')
-  echo "$0 4: subset data dir took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 4: subset data dir took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   echo "[$(date +'%F %T')] $0: computing a PCA transform from the hires data." | lolcat
   s_time=$(date +'%F_%T')
@@ -113,7 +113,7 @@ if [ $stage -le 4 ]; then
        ${temp_data_root}/${train_set}_sp_hires_subset \
        exp/nnet3${nnet3_affix}/pca_transform
   e_time=$(date +'%F_%T')
-  echo "$0 4: get pca transform took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 4: get pca transform took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   echo "[$(date +'%F %T')] $0: training the diagonal UBM." | lolcat
   s_time=$(date +'%F_%T')
@@ -124,7 +124,7 @@ if [ $stage -le 4 ]; then
     ${temp_data_root}/${train_set}_sp_hires_subset 512 \
     exp/nnet3${nnet3_affix}/pca_transform exp/nnet3${nnet3_affix}/diag_ubm
   e_time=$(date +'%F_%T')
-  echo "$0 4: train diag ubm took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 4: train diag ubm took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 5 ]; then
@@ -139,7 +139,7 @@ if [ $stage -le 5 ]; then
      data/${train_set}_sp_hires exp/nnet3${nnet3_affix}/diag_ubm \
      exp/nnet3${nnet3_affix}/extractor || exit 1;
   e_time=$(date +'%F_%T')
-  echo "$0 5: train ivector extractor took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 5: train ivector extractor took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 6 ]; then
@@ -163,14 +163,14 @@ if [ $stage -le 6 ]; then
   fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
     data/${train_set}_sp_hires ${temp_data_root}/${train_set}_sp_hires_max2
   e_time=$(date +'%F_%T')
-  echo "$0 6: modify spk info took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 6: modify spk info took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   s_time=$(date +'%F_%T')
   steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 12 \
     ${temp_data_root}/${train_set}_sp_hires_max2 \
     exp/nnet3${nnet3_affix}/extractor $ivectordir
   e_time=$(date +'%F_%T')
-  echo "$0 6: extract ivectors from train data took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 6: extract ivectors from train data took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   # Also extract iVectors for the test data, but in this case we don't need the speed
   # perturbation (sp).
@@ -181,5 +181,5 @@ if [ $stage -le 6 ]; then
       exp/nnet3${nnet3_affix}/ivectors_${data}_hires
   done
   e_time=$(date +'%F_%T')
-  echo "$0 6: extract ivectors from test data took $(fbutils/elapsed_time.py $s_stime $e_time)"
+  echo "$0 6: extract ivectors from test data took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
