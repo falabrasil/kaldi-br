@@ -63,9 +63,9 @@ function create_wordlist() {
 # four f ao r
 function create_lexicon() {
     echo "$0: adding UNK and SIL to lexicon.txt..."
-    echo -e "!SIL\tsil"   > dict.tmp
-    echo -e "<UNK>\tspn" >> dict.tmp
-    cat $1/lexicon.txt   >> dict.tmp
+    echo -e "!SIL\tsil"     > dict.tmp
+    echo -e "<UNK>\tspn"   >> dict.tmp
+    sort -u $1/lexicon.txt >> dict.tmp
     mv dict.tmp $1/lexicon.txt
 }
 

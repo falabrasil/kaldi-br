@@ -48,6 +48,7 @@ mkdir -p $data
 
 if [ $stage -le -1 ]; then
   s_time=$(date +'%F_%T')
+  mkdir -p $data
   if [ -z "$audio_dir" ] ; then
     echo "[$(date +'%F %T')] $0: downloading LapsBM data (85M)" | lolcat
     fblocal/download_data.sh $data $data_url || exit 1
@@ -61,9 +62,10 @@ fi
 
 if [ $stage -le 0 ]; then
   s_time=$(date +'%F_%T')
+  mkdir -p $data data/local/dict_nosp
   if [ -z "$lex_file" ] ; then
     echo "[$(date +'%F %T')] $0: downloading dict from FalaBrasil GitLab" | lolcat
-    fblocal/download_lexicon.sh $data $lex_url data/local/dict_nosp/ || exit 1
+    fblocal/download_lexicon.sh $data $lex_url data/local/dict_nosp || exit 1
   else
     echo "[$(date +'%F %T')] $0: copying lexicon from '$lex_file'" | lolcat
     cp -v $lex_file $data || exit 1
@@ -73,13 +75,14 @@ if [ $stage -le 0 ]; then
   echo "$0 0: downloading lexicon took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   s_time=$(date +'%F_%T')
+  mkdir -p data/local/lm
   if [ -z "$lm_file_small" ] ; then
     echo "[$(date +'%F %T')] $0: downloading LM from FalaBrasil GitLab" | lolcat
-    fblocal/download_lm.sh $data $lm_url data/local/lm/ || exit 1
+    fblocal/download_lm.sh $data $lm_url data/local/lm || exit 1
   else
     echo "[$(date +'%F %T')] $0: copying LM small from '$lex_file'" | lolcat
     cp -v $lm_file_small $data || exit 1
-    ln -rsf $data/$(basename $lm_file_small) $link_dir/lm_tglarge.arpa.gz || exit 1
+    ln -rsf $data/$(basename $lm_file_small) data/local/lm/lm_tglarge.arpa.gz || exit 1
   fi
   e_time=$(date +'%F_%T')
   echo "$0 0: downloading LM took $(fbutils/elapsed_time.py $s_time $e_time)"
@@ -99,7 +102,7 @@ if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   echo "[$(date +'%F %T')] $0: prep data" | lolcat
   s_time=$(date +'%F_%T')
-  fblocal/prep_data.sh --nj 12 --split-random true $data data/
+  fblocal/prep_data.sh --nj 8 --split-random true $data data/
   #fblocal/prep_data.sh --nj 8 --test-dir lapsbm16k $data ./data
   e_time=$(date +'%F_%T')
   echo "$0 1: prep data took $(fbutils/elapsed_time.py $s_time $e_time)"
