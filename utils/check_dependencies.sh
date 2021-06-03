@@ -9,7 +9,7 @@
 # cassio batista - https://cassota.gitlab.io
 
 deps_ok=true
-for f in wget gzip tar unzip gawk dos2unix tree lolcat ; do
+for f in wget gzip tar unzip gawk ; do
     if ! type -t "$f" > /dev/null ; then
         echo "$0: error: please install '$f'"
         deps_ok=false
