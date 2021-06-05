@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# NOTE: same as local/nnet3/tuning/run_tdnn_1c.sh -- CB
+
 # 1c is as 1b, but uses more modern TDNN configuration.
 
 # local/nnet3/compare_wer.sh exp/nnet3_cleaned/tdnn_sp exp/nnet3_cleaned/tdnn_1c_sp
@@ -54,7 +56,7 @@ gmm=tri4b #tri6b_cleaned  # this is the source gmm-dir for the data-type of inte
 nnet3_affix=
 
 # Options which are not passed through to run_ivector_common.sh
-affix=
+affix=trisat_nochain_lda_ivector
 train_stage=-10
 common_egs_dir=
 reporting_email=

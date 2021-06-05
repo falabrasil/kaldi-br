@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# NOTE: same as local/chain/tuning/run_cnn_tdnn_1a.sh -- CB
+
 # This is based on tdnn_1d_sp, but adding cnn as the front-end.
 # The cnn-tdnn-f (tdnn_cnn_1a_sp) outperforms the tdnn-f (tdnn_1d_sp).
 
@@ -69,15 +71,15 @@ where "nvcc" is installed.
 EOF
 fi
 
-# The iVector-extraction and feature-dumping parts are the same as the standard
-# nnet3 setup, and you can skip them by setting "--stage 11" if you have already
-# run those things.
-
-local/nnet3/run_ivector_common.sh --stage $stage \
-                                  --train-set $train_set \
-                                  --gmm $gmm \
-                                  --num-threads-ubm 6 --num-processes 3 \
-                                  --nnet3-affix "$nnet3_affix" || exit 1;
+## The iVector-extraction and feature-dumping parts are the same as the standard
+## nnet3 setup, and you can skip them by setting "--stage 11" if you have already
+## run those things.
+#
+#local/nnet3/run_ivector_common.sh --stage $stage \
+#                                  --train-set $train_set \
+#                                  --gmm $gmm \
+#                                  --num-threads-ubm 6 --num-processes 3 \
+#                                  --nnet3-affix "$nnet3_affix" || exit 1;
 
 gmm_dir=exp/$gmm
 ali_dir=exp/${gmm}_ali_${train_set}_sp
@@ -97,16 +99,65 @@ for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector
   [ ! -f $f ] && echo "$0: expected file $f to exist" && exit 1
 done
 
-# Please take this as a reference on how to specify all the options of
-# local/chain/run_chain_common.sh
-local/chain/run_chain_common.sh --stage $stage \
-                                --gmm-dir $gmm_dir \
-                                --ali-dir $ali_dir \
-                                --lores-train-data-dir ${lores_train_data_dir} \
-                                --lang $lang \
-                                --lat-dir $lat_dir \
-                                --num-leaves 7000 \
-                                --tree-dir $tree_dir || exit 1;
+## NOTE: the contents of run_chain_common.sh have been moved in-file here -- CB
+## Please take this as a reference on how to specify all the options of
+## local/chain/run_chain_common.sh
+#local/chain/run_chain_common.sh --stage $stage \
+#                                --gmm-dir $gmm_dir \
+#                                --ali-dir $ali_dir \
+#                                --lores-train-data-dir ${lores_train_data_dir} \
+#                                --lang $lang \
+#                                --lat-dir $lat_dir \
+#                                --num-leaves 7000 \
+#                                --tree-dir $tree_dir || exit 1;
+
+if [ $stage -le 11 ]; then
+  echo "$0: creating lang directory with one state per phone."
+  # Create a version of the lang/ directory that has one state per phone in the
+  # topo file. [note, it really has two states.. the first one is only repeated
+  # once, the second one has zero or more repeats.]
+  if [ -d $lang ]; then
+    if [ $lang/L.fst -nt data/lang/L.fst ]; then
+      echo "$0: $lang already exists, not overwriting it; continuing"
+    else
+      echo "$0: $lang already exists and seems to be older than data/lang..."
+      echo " ... not sure what to do.  Exiting."
+      exit 1;
+    fi
+  else
+    cp -r data/lang $lang
+    silphonelist=$(cat $lang/phones/silence.csl) || exit 1;
+    nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
+    # Use our special topology... note that later on may have to tune this
+    # topology.
+    steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
+  fi
+fi
+
+if [ $stage -le 12 ]; then
+  # Get the alignments as lattices (gives the chain training more freedom).
+  # use the same num-jobs as the alignments
+  nj=$(cat ${ali_dir}/num_jobs) || exit 1;
+  steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" ${lores_train_data_dir} \
+    $lang $gmm_dir $lat_dir
+  rm $lat_dir/fsts.*.gz # save space
+fi
+
+if [ $stage -le 13 ]; then
+  # Build a tree using our new topology. We know we have alignments for the
+  # speed-perturbed data (local/nnet3/run_ivector_common.sh made them), so use
+  # those.
+  if [ -f $tree_dir/final.mdl ]; then
+    echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
+    exit 1;
+  fi
+  num_leaves=7000  # CB
+  steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 3 \
+      --context-opts "--context-width=2 --central-position=1" \
+      --cmd "$train_cmd" $num_leaves $lores_train_data_dir $lang $ali_dir $tree_dir
+fi
+
+## end run_chain_common.sh
 
 if [ $stage -le 14 ]; then
   echo "$0: creating neural net configs using the xconfig parser";

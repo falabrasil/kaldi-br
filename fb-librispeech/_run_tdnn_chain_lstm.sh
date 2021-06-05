@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+# NOTE: same as local/chain/tuning/run_tdnn_lstm_1b.sh -- CB
 # this is the tdnn-lstmp based on the run_tdnn_lstm_1a.sh under Librispeech but with larger model size.
 
 # training acoustic model and decoding:
@@ -99,6 +101,8 @@ fi
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 8" if you have already
 # run those things.
+
+## FIXME no run_chain_common.sh call????
 
 suffix=
 if [ "$speed_perturb" == "true" ]; then

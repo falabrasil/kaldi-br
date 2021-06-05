@@ -7,6 +7,9 @@
 # This script allows one to exchange lexicon
 # and LM files for both decoding and rescoring
 # procedures on user-defined files
+# NOTE: make sure to execute this script from 
+# within a kaldi/egs project dir after you 
+# trained your model.
 #
 # author: may 2021
 # cassio batista - https://cassota.gitlab.io
@@ -79,13 +82,14 @@ if [ $stage -le 1 ] ; then
   /usr/bin/time -f "arpa2fst took %U secs.\tRAM: %M KB" \
     arpa2fst --disambig-symbol=#0 --read-symbol-table=$data/lang/words.txt \
       $data/local/lm/small.arpa $data/lang/G.fst
-  [ -z $lm_large_file ] || /usr/bin/time -f "arpa2carpa took %U secs.\tRAM: %M KB" \
-    arpa-to-const-arpa \
-      --bos-symbol=$(grep "^<s>\s"  $data/lang/words.txt | awk '{print $2}') \
-      --eos-symbol=$(grep "^</s>\s" $data/lang/words.txt | awk '{print $2}') \
-      --unk-symbol=$(cat $data/lang/oov.int) \
-      "cat $data/local/lm/large.arpa | utils/map_arpa_lm.pl $data/lang/words.txt |" \
-      $data/lang/G.carpa
+  [ -z $lm_large_file ] || \
+    /usr/bin/time -f "arpa2carpa took %U secs.\tRAM: %M KB" \
+      arpa-to-const-arpa \
+        --bos-symbol=$(grep "^<s>\s"  $data/lang/words.txt | awk '{print $2}') \
+        --eos-symbol=$(grep "^</s>\s" $data/lang/words.txt | awk '{print $2}') \
+        --unk-symbol=$(cat $data/lang/oov.int) \
+        "cat $data/local/lm/large.arpa | utils/map_arpa_lm.pl $data/lang/words.txt |" \
+        $data/lang/G.carpa
 fi
 
 # feat extract
@@ -122,7 +126,7 @@ if [ $stage -le 5 ] ; then
       $data/nnet3/graph $data/data $data/online/decode_small
 fi
 
-# rescore
+# rescore (extracted from steps/lmrescore_const_arpa.sh)
 if [ ! -z $lm_large_file ] && [ $stage -le 6 ] ; then
   rm -rf $data/online/decode_large/log
   mkdir -p $data/online/decode_large/log
@@ -131,11 +135,23 @@ if [ ! -z $lm_large_file ] && [ $stage -le 6 ] ; then
   new_ark_out="ark,t:|gzip -c > $data/online/decode_large/lat.JOB.gz"
   /usr/bin/time -f "lattice rescoring took %U secs.\tRAM: %M KB" \
     run.pl JOB=1:$nj $data/online/decode_large/log/rescorelm.JOB.log \
-      lattice-lmrescore --lm-scape=-1.0 "$old_ark_in" ark:- \| \
+      lattice-lmrescore --lm-scale=-1.0 "$old_ark_in" ark:- \| \
       lattice-lmrescore-const-arpa --lm-scale=1.0 ark:- $data/lang/G.carpa "$new_ark_out"
 fi
 
-# score
-echo "TBD"
+# score (extracted from local/score.sh)
+if [ $stage -le 7 ] ; then
+  mkdir -p $data/online/decode_large/scoring/log
+  rm -f score.log
+  /usr/bin/time -f "scoring took %U secs.\tRAM: %M KB" \
+    run.pl LMWT=9:9 $data/online/decode_large/scoring/log/best_path.LMWT.0.0.log \
+      lattice-scale --inv-acoustic-scale=LMWT "ark:gunzip -c $data/online/decode_large/lat.*.gz|" ark:- \| \
+      lattice-add-penalty --word-ins-penalty=0.0 ark:- ark:- \| \
+      lattice-best-path --word-symbol-table=$data/lang/words.txt \
+        ark:- ark,t:$data/online/decode_large/scoring/LMWT.0.0.tra
+  for tra in $data/online/decode_large/scoring/*.tra ; do
+    cat $tra | utils/int2sym.pl -f 2- $data/lang/words.txt | tee -a score.log
+  done
+fi
 
 msg "$0: success!"

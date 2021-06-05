@@ -10,12 +10,14 @@
 
 deps_ok=true
 for f in wget gzip tar unzip gawk ; do
-    if ! type -t "$f" > /dev/null ; then
-        echo "$0: error: please install '$f'"
-        deps_ok=false
-    fi
+  if ! type -t "$f" > /dev/null ; then
+    echo "$0: error: please install '$f'"
+    deps_ok=false
+  fi
 done
 
-python -c "import scipy" || { echo "$0: error: please install python 'scipy'" && deps_ok=false; }
+[ -z "$(locale -a | grep ^pt_BR)" ] && \
+  echo "$0: please enable 'pt_BR' in your linux locale" && deps_ok=false
+
 
 $deps_ok || exit 1

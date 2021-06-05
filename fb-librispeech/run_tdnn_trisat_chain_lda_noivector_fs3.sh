@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -e
+
+# NOTE: same as local/chain/run_tdnn.sh -> local/chain/tuning/run_tdnn_1d.sh -- CB
 
 # 1d is as 1c but a recipe based on the newer, more compact configs, and with
 #   various configuration changes; it also includes dropout (although I'm not
@@ -125,6 +126,8 @@ set -e
 # Final train prob (xent)       -1.0502   -0.7708
 # Final valid prob (xent)       -1.0441   -0.7874
 
+set -e
+
 # configs for 'chain'
 stage=0
 decode_nj=50
@@ -134,7 +137,7 @@ nnet3_affix=   #_cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-affix=1d
+affix=trisat_chain_lda_noivector_fs3
 tree_affix=
 train_stage=-10
 get_egs_stage=-10
@@ -182,26 +185,76 @@ lat_dir=exp/chain${nnet3_affix}/${gmm}_${train_set}_sp_lats
 dir=exp/chain${nnet3_affix}/tdnn${affix:+_$affix}_sp
 train_data_dir=data/${train_set}_sp_hires
 lores_train_data_dir=data/${train_set}_sp
-train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires
+#train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires
 
 # if we are using the speed-perturbed data we need to generate
 # alignments for it.
 
-for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
+#for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
+for f in $gmm_dir/final.mdl $train_data_dir/feats.scp \
     $lores_train_data_dir/feats.scp $ali_dir/ali.1.gz; do
   [ ! -f $f ] && echo "$0: expected file $f to exist" && exit 1
 done
 
-# Please take this as a reference on how to specify all the options of
-# local/chain/run_chain_common.sh
-local/chain/run_chain_common.sh --stage $stage \
-                                --gmm-dir $gmm_dir \
-                                --ali-dir $ali_dir \
-                                --lores-train-data-dir ${lores_train_data_dir} \
-                                --lang $lang \
-                                --lat-dir $lat_dir \
-                                --num-leaves 7000 \
-                                --tree-dir $tree_dir || exit 1;
+## NOTE: the contents of run_chain_common.sh have been moved in-file here -- CB
+## Please take this as a reference on how to specify all the options of
+## local/chain/run_chain_common.sh
+#local/chain/run_chain_common.sh --stage $stage \
+#                                --gmm-dir $gmm_dir \
+#                                --ali-dir $ali_dir \
+#                                --lores-train-data-dir ${lores_train_data_dir} \
+#                                --lang $lang \
+#                                --lat-dir $lat_dir \
+#                                --num-leaves 7000 \
+#                                --tree-dir $tree_dir || exit 1;
+
+if [ $stage -le 11 ]; then
+  echo "$0: creating lang directory with one state per phone."
+  # Create a version of the lang/ directory that has one state per phone in the
+  # topo file. [note, it really has two states.. the first one is only repeated
+  # once, the second one has zero or more repeats.]
+  if [ -d $lang ]; then
+    if [ $lang/L.fst -nt data/lang/L.fst ]; then
+      echo "$0: $lang already exists, not overwriting it; continuing"
+    else
+      echo "$0: $lang already exists and seems to be older than data/lang..."
+      echo " ... not sure what to do.  Exiting."
+      exit 1;
+    fi
+  else
+    cp -r data/lang $lang
+    silphonelist=$(cat $lang/phones/silence.csl) || exit 1;
+    nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
+    # Use our special topology... note that later on may have to tune this
+    # topology.
+    steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
+  fi
+fi
+
+if [ $stage -le 12 ]; then
+  # Get the alignments as lattices (gives the chain training more freedom).
+  # use the same num-jobs as the alignments
+  nj=$(cat ${ali_dir}/num_jobs) || exit 1;
+  steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" ${lores_train_data_dir} \
+    $lang $gmm_dir $lat_dir
+  rm $lat_dir/fsts.*.gz # save space
+fi
+
+if [ $stage -le 13 ]; then
+  # Build a tree using our new topology. We know we have alignments for the
+  # speed-perturbed data (local/nnet3/run_ivector_common.sh made them), so use
+  # those.
+  if [ -f $tree_dir/final.mdl ]; then
+    echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
+    exit 1;
+  fi
+  num_leaves=7000  # CB
+  steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 3 \
+      --context-opts "--context-width=2 --central-position=1" \
+      --cmd "$train_cmd" $num_leaves $lores_train_data_dir $lang $ali_dir $tree_dir
+fi
+
+## end run_chain_common.sh
 
 if [ $stage -le 14 ]; then
   echo "$0: creating neural net configs using the xconfig parser";
@@ -217,13 +270,12 @@ if [ $stage -le 14 ]; then
   mkdir -p $dir/configs
 
   cat <<EOF > $dir/configs/network.xconfig
-  input dim=100 name=ivector
   input dim=40 name=input
 
   # please note that it is important to have input layer with the name=input
   # as the layer immediately preceding the fixed-affine-layer to enable
   # the use of short notation for the descriptor
-  fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+  fixed-affine-layer name=lda input=Append(-1,0,1) affine-transform-file=$dir/configs/lda.mat
 
   # the first splicing is moved before the lda layer, so no splicing here
   relu-batchnorm-dropout-layer name=tdnn1 $affine_opts dim=1536
@@ -256,9 +308,9 @@ fi
 
 if [ $stage -le 15 ]; then
 
+    #--feat.online-ivector-dir $train_ivector_dir \
   steps/nnet3/chain/train.py --stage $train_stage \
     --cmd "$decode_cmd" \
-    --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --chain.xent-regularize $xent_regularize \
     --chain.leaky-hmm-coefficient 0.1 \
@@ -284,7 +336,6 @@ if [ $stage -le 15 ]; then
     --tree-dir $tree_dir \
     --lat-dir $lat_dir \
     --dir $dir  || exit 1;
-
 fi
 
 graph_dir=$dir/graph_tgsmall
@@ -298,9 +349,9 @@ fi
 iter_opts=
 [ ! -z $decode_iter ] && iter_opts=" --iter $decode_iter "
 if [ $stage -le 17 ]; then
+      #--online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
   steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 \
       --nj $decode_nj --cmd "$decode_cmd" $iter_opts \
-      --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
       $graph_dir data/test_hires $dir/decode_test${decode_iter:+_$decode_iter}_tgsmall || exit 1
   #steps/lmrescore.sh --cmd "$decode_cmd" --self-loop-scale 1.0 data/lang_test_{tgsmall,tgmed} \
   #    data/${decode_set}_hires $dir/decode_${decode_set}${decode_iter:+_$decode_iter}_{tgsmall,tgmed} || exit 1

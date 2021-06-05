@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# sanity script to compute WER across all models 
+# to make sure the value is decreasing.
+#
 # author: dec 2020
 # cassio batista
 

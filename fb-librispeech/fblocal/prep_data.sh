@@ -8,11 +8,10 @@
 #   - wav.scp
 #   - utt2spk
 #   - spk2gender
-#   - corpus.txt
 #   - extra_questions.txt
 #   - spk2utt
 #
-# Grupo FalaBrasil (2020)
+# Grupo FalaBrasil (2021)
 # Federal University of Pará (UFPA)
 #
 # author: apr 2020
@@ -72,7 +71,7 @@ fi
 function create_data_files() {
     presuffix=$1
     filelist=${presuffix}.slice
-    rm -f {text,wav.scp,utt2spk,spk2gender,corpus.txt}.${presuffix}
+    rm -f {text,wav.scp,utt2spk,spk2gender}.${presuffix}
     tmp=$(mktemp)
     while read line ; do
         # unix.stackexchange - bash-string-replace-multiple-chars-with-one
@@ -86,7 +85,7 @@ function create_data_files() {
         #  dad_4_4_2     four four two
         #  july_1_2_5    one two five
         #  july_6_8_3    six eight three
-        echo "$uttID $(cat ${line}.txt | dos2unix)" >> text.${presuffix}
+        echo "$uttID $(cat ${line}.txt)" >> text.${presuffix}
 
         # d.) utt2spk (uttID = spkID + audio filename with no extension .wav)
         # <utteranceID> <speakerID>
@@ -124,13 +123,6 @@ function create_data_files() {
         aux=$(awk '{print substr ($NF,0,1)}' <<< $aux | tr '[FM]' '[fm]')
         gender=$(grep 'f' <<< $aux || echo "m")
         echo "$spkID $gender" >> $tmp
-
-        # e.) corpus.txt 
-        # <text_transcription>
-        #  one two five
-        #  six eight three
-        #  four four two
-        cat ${line}.txt | grep -avE '^$' | dos2unix >> corpus.txt.${presuffix}
     done < $filelist
     sort $tmp | uniq > spk2gender.${presuffix}
     rm -f $tmp
@@ -158,7 +150,7 @@ for part in train test ; do
     done
 
     # merge
-    for f in {text,wav.scp,utt2spk,spk2gender,corpus.txt} ; do
+    for f in {text,wav.scp,utt2spk,spk2gender} ; do
         echo "$0: merging file '$f' for ${part} dataset"
         rm -f ${data_dir}/${part}/${f}
         for i in $(seq -f "%03g" 0 $((nj-1))); do
@@ -172,7 +164,6 @@ done
 # TODO CB: check the impact of putting this section into the above loop
 tmp=$(mktemp)
 for part in train test ; do
-    #for f in {text,wav.scp,utt2spk,spk2gender,corpus.txt} ; do
     for f in {text,wav.scp,utt2spk,spk2gender} ; do
         sort ${data_dir}/${part}/${f} | uniq > $tmp
         mv $tmp ${data_dir}/${part}/${f}
@@ -186,4 +177,3 @@ for part in train test ; do
 done
 
 rm *.slice *.list
-exit 0

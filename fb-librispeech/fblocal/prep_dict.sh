@@ -4,7 +4,7 @@
 # (lexicon, nonsilence_phones, silence_phones and optional_silence)
 # This scripts was used to be called 'fb_02' in the old days.
 #
-# Grupo FalaBrasil (2020)
+# Grupo FalaBrasil (2021)
 # Federal University of Pará (UFPA)
 #
 # author: apr 2020
@@ -26,31 +26,26 @@ if test $# -ne 1 ; then
     exit 1
 fi
 
-if [ -z "$(locale -a | grep ^pt_BR)" ] ; then
-    echo "$0: please enable 'pt_BR' in your linux locale"
-    exit 1
-fi
-
 export LC_ALL=pt_BR.UTF-8
 
 data_dir=$1
 
-# 0) create wordlist
-# eight
-# five
-# four
-# nine
-# one
-function create_wordlist() {
-    # FIXME CB: this is bad!
-    for corpus in $(find ${1}/../.. -name corpus.txt) ; do
-        echo "$0: creating wordlist from ${corpus}..."
-        for word in $(cat $corpus | dos2unix | tr '[A-Z]' '[a-z]' | tr "\'" " " | sed 's/[,.;<>:?!1234"567890()@%]/ /g') ; do
-            echo $word >> wlist.tmp
-        done 
-    done
-    sort wlist.tmp | uniq > wordlist.tmp
-}
+## 0) create wordlist
+## eight
+## five
+## four
+## nine
+## one
+#function create_wordlist() {
+#    # FIXME CB: this is bad!
+#    for text in $(find ${1}/../.. -name text) ; do
+#        echo "$0: creating wordlist from ${text}..."
+#        for word in $(awk '{$1=""; print}' $text | tr '[A-Z]' '[a-z]' | tr "\'" " " | sed 's/[,.;<>:?!1234"567890()@%]/ /g') ; do
+#            echo $word >> wlist.tmp
+#        done 
+#    done
+#    sort wlist.tmp | uniq > wordlist.tmp
+#}
 
 # a.) lexicon.txt
 # !SIL sil
@@ -112,7 +107,7 @@ function create_extra_questions() {
 
 mkdir -p $data_dir
 rm -f *.tmp
-create_wordlist $data_dir || exit 1
+#create_wordlist $data_dir || exit 1
 create_lexicon $data_dir || exit 1
 create_nonsilence_phones $data_dir || exit 1
 create_silence_phones $data_dir || exit 1
@@ -120,4 +115,3 @@ create_optional_silence $data_dir || exit 1
 create_extra_questions $data_dir || exit 1
 
 rm -f *.tmp
-exit 0

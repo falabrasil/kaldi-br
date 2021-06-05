@@ -32,14 +32,14 @@ if [ -d "$proj_dir" ] ; then
     rm -rf $proj_dir/s5/{data,exp,mfcc,fblocal,fbutils}
   fi
 # https://stackoverflow.com/questions/8426058/getting-the-parent-of-a-directory-in-bash
-elif [ "$(basename $(readlink -f $(dirname "$proj_dir")))" != "egs" ] ; then
+elif [ $(basename $(readlink -f $(dirname $proj_dir))) != "egs" ] ; then
   echo "$0: error: '$proj_dir' must be inside /path/to/kaldi/egs"
   exit 1
 fi
 
-KALDI_ROOT="$(readlink -f $(dirname "$(dirname "$proj_dir")"))"
+KALDI_ROOT=$(readlink -f $(dirname $(dirname $proj_dir)))
 minilibri_dir=$KALDI_ROOT/egs/mini_librispeech/s5
-proj_dir="$(readlink -f "$proj_dir")"/s5
+proj_dir=$(readlink -f $proj_dir)/s5
 mkdir -p $proj_dir
 ln -sf $src_dir/{run.sh,path.sh,fblocal,fbutils} $proj_dir
 ln -sf $minilibri_dir/{conf,local,steps,utils} $proj_dir

@@ -7,17 +7,17 @@ import sys
 import os
 import wave
 
-#if not os.path.exists("model-en"):
-#    print ("Please download the model from https://github.com/alphacep/kaldi-android-demo/releases and unpack as 'model-en' in the current folder.")
-#    exit (1)
+if len(sys.argv) != 3:
+    print("usage: %s <model-dir> <wav-file>")
+    sys.exit(1)
+
+model = Model(sys.argv[1])
+rec = KaldiRecognizer(model, wf.getframerate())
 
 wf = wave.open(sys.argv[2], "rb")
 if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
     print ("Audio file must be WAV format mono PCM.")
     exit (1)
-
-model = Model(sys.argv[1])
-rec = KaldiRecognizer(model, wf.getframerate())
 
 while True:
     data = wf.readframes(1000)
@@ -31,6 +31,3 @@ while True:
         rec.PartialResult()
 
 print(rec.FinalResult())
-#with open(sys.argv[1].replace('.wav', '.txt'), 'r') as txt:
-#    for line in txt:
-#        print('> "text" : "%s" (original)' % line.strip())
