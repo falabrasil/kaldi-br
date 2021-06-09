@@ -11,6 +11,7 @@ stage=1
 
 . cmd.sh
 . path.sh
+. fb_commons.sh
 . utils/parse_options.sh
 
 # NOTE: from now on every feat extraction is from run_ivector_common.sh

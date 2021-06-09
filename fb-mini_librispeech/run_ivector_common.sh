@@ -19,6 +19,7 @@ nnet3_affix=
 
 . ./cmd.sh
 . ./path.sh
+. ./fb_commons.sh
 . utils/parse_options.sh
 
 gmm_dir=exp/${gmm}

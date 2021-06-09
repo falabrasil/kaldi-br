@@ -157,6 +157,7 @@ echo "$0 $@"  # Print the command line for logging
 
 . ./cmd.sh
 . ./path.sh
+. ./fb_commons.sh
 . ./utils/parse_options.sh
 
 if ! cuda-compiled; then

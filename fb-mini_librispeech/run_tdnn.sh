@@ -23,6 +23,9 @@
 # steps/info/chain_dir_info.pl exp/chain_online_cmn/tdnn1k_sp
 # exp/chain_online_cmn/tdnn1k_sp: num-iters=34 nj=2..5 num-params=5.2M dim=40+100->2336 combine=-0.067->-0.062 (over 5) xent:train/valid[21,33,final]=(-1.63,-1.47,-1.44/-1.73,-1.57,-1.55) logprob:train/valid[21,33,final]=(-0.074,-0.067,-0.062/-0.093,-0.085,-0.079)
 
+
+function msg { echo -e "\e[$(shuf -i 91-96 -n 1)m[$(date +'%F %T')] $1\e[0m" ; }
+
 # Set -e here so that we catch if any executable fails immediately
 set -euo pipefail
 
@@ -91,12 +94,12 @@ echo "$0 $@"  # Print the command line for logging
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
-fblocal/nnet3/run_ivector_common.sh --stage $stage \
-                                    --train-set $train_set \
-                                    --test-sets $test_sets \
-                                    --gmm $gmm \
-                                    --online-cmvn-iextractor $online_cmvn \
-                                    --nnet3-affix "$nnet3_affix" || exit 1;
+./run_ivector_common.sh --stage $stage \
+                        --train-set $train_set \
+                        --test-sets $test_sets \
+                        --gmm $gmm \
+                        --online-cmvn-iextractor $online_cmvn \
+                        --nnet3-affix "$nnet3_affix" || exit 1;
 
 # Problem: We have removed the "train_" prefix of our training set in
 # the alignment directory names! Bad!

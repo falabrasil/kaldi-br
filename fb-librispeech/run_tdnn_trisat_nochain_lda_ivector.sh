@@ -64,6 +64,7 @@ remove_egs=true
 
 . ./cmd.sh
 . ./path.sh
+. ./fb_commons.sh
 . ./utils/parse_options.sh
 
 

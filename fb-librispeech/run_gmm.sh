@@ -15,8 +15,9 @@ data=./corpus
 mfccdir=mfcc
 stage=6
 
-. ./cmd.sh
-. ./path.sh
+. cmd.sh
+. path.sh
+. fb_commons.sh
 . parse_options.sh
 
 # you might not want to do this for interactive shells.

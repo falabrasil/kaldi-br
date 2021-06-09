@@ -26,6 +26,7 @@ stage=1
 
 . cmd.sh
 . path.sh 
+. fb_commons.sh
 . utils/parse_options.sh
 
 

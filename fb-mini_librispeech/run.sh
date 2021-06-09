@@ -6,6 +6,7 @@
 # cassio batista - https://cassota.gitlab.io/ (comments signed as CB)
 # last updated: mar 2021
 
+
 # Change this location to somewhere where you want to put the data.
 data=./corpus/
 
@@ -32,6 +33,7 @@ lm_file_large=   # FIXME not implemented
 
 . ./cmd.sh
 . ./path.sh
+. ./fb_commons.sh
 
 stage=-1
 . utils/parse_options.sh
@@ -221,14 +223,14 @@ fi
 # Now we compute the pronunciation and silence probabilities from training data,
 # and re-create the lang directory.
 if [ $stage -le 7 ]; then
-  msg "$0: get prons" | lolcat
+  msg "$0: get prons"
   s_time=$(date +'%F_%T')
   steps/get_prons.sh --cmd "$train_cmd" \
     data/train data/lang_nosp exp/tri3b
   e_time=$(date +'%F_%T')
   echo "$0 7: get prons took $(fbutils/elapsed_time.py $s_time $e_time)"
 
-  msg "$0: dict add pron probs" | lolcat
+  msg "$0: dict add pron probs"
   s_time=$(date +'%F_%T')
   utils/dict_dir_add_pronprobs.sh --max-normalize true \
     data/local/dict_nosp \
@@ -237,27 +239,27 @@ if [ $stage -le 7 ]; then
   e_time=$(date +'%F_%T')
   echo "$0 7: add pp to dict took $(fbutils/elapsed_time.py $s_time $e_time)"
 
-  msg "$0: prep lang" | lolcat
+  msg "$0: prep lang"
   s_time=$(date +'%F_%T')
   utils/prepare_lang.sh data/local/dict \
     "<UNK>" data/local/lang_tmp data/lang
   e_time=$(date +'%F_%T')
   echo "$0 7: prepare lang took $(fbutils/elapsed_time.py $s_time $e_time)"
 
-  msg "$0: format lm" | lolcat
+  msg "$0: format lm"
   s_time=$(date +'%F_%T')
   fblocal/format_lms.sh --src-dir data/lang data/local/lm
   e_time=$(date +'%F_%T')
   echo "$0 7: format lms took $(fbutils/elapsed_time.py $s_time $e_time)"
 
-  #msg "$0: build const arpa" | lolcat
+  #msg "$0: build const arpa" 
   #s_time=$(date +'%F_%T')
   #utils/build_const_arpa_lm.sh data/local/lm/lm_tglarge.arpa.gz \
   #    data/lang data/lang_test_tglarge
   #e_time=$(date +'%F_%T')
   #echo "$0 7: build carpa took $(fbutils/elapsed_time.py $s_time $e_time)"
 
-  msg "$0: align fmllr" | lolcat
+  msg "$0: align fmllr"
   s_time=$(date +'%F_%T')
   steps/align_fmllr.sh --nj 12 --cmd "$train_cmd" \
     data/train data/lang exp/tri3b exp/tri3b_ali_train
@@ -308,8 +310,8 @@ fi
 #       number of jobs final accordingly
 if [ $stage -le 9 ]; then
   msg "$0: run TDNN script"
-  fblocal/chain/run_tdnn.sh --use-gpu true \
-      --jobs-initial 1 --jobs-final 1 --num-epochs 10
+  ./run_tdnn.sh --use-gpu true \
+    --jobs-initial 1 --jobs-final 1 --num-epochs 5
 fi
 
 # local/grammar/simple_demo.sh
