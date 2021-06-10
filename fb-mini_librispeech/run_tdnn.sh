@@ -24,8 +24,6 @@
 # exp/chain_online_cmn/tdnn1k_sp: num-iters=34 nj=2..5 num-params=5.2M dim=40+100->2336 combine=-0.067->-0.062 (over 5) xent:train/valid[21,33,final]=(-1.63,-1.47,-1.44/-1.73,-1.57,-1.55) logprob:train/valid[21,33,final]=(-0.074,-0.067,-0.062/-0.093,-0.085,-0.079)
 
 
-function msg { echo -e "\e[$(shuf -i 91-96 -n 1)m[$(date +'%F %T')] $1\e[0m" ; }
-
 # Set -e here so that we catch if any executable fails immediately
 set -euo pipefail
 
@@ -80,6 +78,7 @@ echo "$0 $@"  # Print the command line for logging
 
 . ./cmd.sh
 . ./path.sh
+. ./fb_commons.sh
 . ./utils/parse_options.sh
 
 ## commented -- CB
@@ -94,12 +93,13 @@ echo "$0 $@"  # Print the command line for logging
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
-./run_ivector_common.sh --stage $stage \
-                        --train-set $train_set \
-                        --test-sets $test_sets \
-                        --gmm $gmm \
-                        --online-cmvn-iextractor $online_cmvn \
-                        --nnet3-affix "$nnet3_affix" || exit 1;
+/usr/bin/time -f "run ivector common took %U secs.\tRAM: %M KB" \
+	./run_ivector_common.sh --stage $stage \
+	                        --train-set $train_set \
+	                        --test-sets $test_sets \
+	                        --gmm $gmm \
+	                        --online-cmvn-iextractor $online_cmvn \
+	                        --nnet3-affix "$nnet3_affix" || exit 1;
 
 # Problem: We have removed the "train_" prefix of our training set in
 # the alignment directory names! Bad!
@@ -120,7 +120,6 @@ done
 
 if [ $stage -le 10 ]; then
   msg "$0: creating lang directory $lang with chain-type topology"
-  s_time=$(date +'%F_%T')
   # Create a version of the lang/ directory that has one state per phone in the
   # topo file. [note, it really has two states.. the first one is only repeated
   # once, the second one has zero or more repeats.]
@@ -138,22 +137,19 @@ if [ $stage -le 10 ]; then
     nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
     # Use our special topology... note that later on may have to tune this
     # topology.
-    steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
+		/usr/bin/time -f "gen topo took %U secs.\tRAM: %M KB" \
+    	steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
   fi
-  e_time=$(date +'%F_%T')
-  echo "$0 10: gen topo took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 11 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
   msg "$0: align lattices with fmllr"
-  s_time=$(date +'%F_%T')
-  steps/align_fmllr_lats.sh --nj 6 --cmd "$train_cmd" ${lores_train_data_dir} \
-    data/lang $gmm_dir $lat_dir
+	/usr/bin/time -f "align lattices took %U secs.\tRAM: %M KB" \
+  	steps/align_fmllr_lats.sh --nj 6 --cmd "$train_cmd" ${lores_train_data_dir} \
+  	  data/lang $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
-  e_time=$(date +'%F_%T')
-  echo "$0 11: align fmllr lats took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 12 ]; then
@@ -162,26 +158,22 @@ if [ $stage -le 12 ]; then
   # those.  The num-leaves is always somewhat less than the num-leaves from
   # the GMM baseline.
   msg "$0: building tree"
-  s_time=$(date +'%F_%T')
   if [ -f $tree_dir/final.mdl ]; then
      echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
      exit 1;
   fi
-  steps/nnet3/chain/build_tree.sh \
-    --frame-subsampling-factor 3 \
-    --context-opts "--context-width=2 --central-position=1" \
-    --cmd "$train_cmd" 3500 ${lores_train_data_dir} \
-    $lang $ali_dir $tree_dir
-  e_time=$(date +'%F_%T')
-  echo "$0 12: build tree took $(fbutils/elapsed_time.py $s_time $e_time)"
+	/usr/bin/time -f "build tree took %U secs.\tRAM: %M KB" \
+  	steps/nnet3/chain/build_tree.sh \
+  	  --frame-subsampling-factor 3 \
+  	  --context-opts "--context-width=2 --central-position=1" \
+  	  --cmd "$train_cmd" 3500 ${lores_train_data_dir} \
+  	  $lang $ali_dir $tree_dir
 fi
 
 if [ $stage -le 13 ]; then
   msg "$0: xconfigs to configs"
   mkdir -p $dir
   echo "$0: creating neural net configs using the xconfig parser";
-
-  s_time=$(date +'%F_%T')
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
   learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
@@ -216,11 +208,6 @@ if [ $stage -le 13 ]; then
   tdnnf-layer name=tdnnf6 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
   tdnnf-layer name=tdnnf7 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
   tdnnf-layer name=tdnnf8 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
-  tdnnf-layer name=tdnnf9 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
-  tdnnf-layer name=tdnnf10 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
-  tdnnf-layer name=tdnnf11 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
-  tdnnf-layer name=tdnnf12 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
-  tdnnf-layer name=tdnnf13 $tdnnf_opts dim=768 bottleneck-dim=96 time-stride=3
   linear-component name=prefinal-l dim=192 $linear_opts
 
   ## adding the layers for chain branch
@@ -232,44 +219,40 @@ if [ $stage -le 13 ]; then
   output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
-  e_time=$(date +'%F_%T')
-  echo "$0 13: create xconfig took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 if [ $stage -le 14 ]; then
   msg "$0: training DNN"
-  s_time=$(date +'%F_%T')
-  steps/nnet3/chain/train.py --stage=$train_stage \
-    --cmd="$decode_cmd" \
-    --feat.online-ivector-dir=$train_ivector_dir \
-    --feat.cmvn-opts="--config=conf/online_cmvn.conf" \
-    --chain.xent-regularize $xent_regularize \
-    --chain.leaky-hmm-coefficient=0.1 \
-    --chain.l2-regularize=0.0 \
-    --chain.apply-deriv-weights=false \
-    --chain.lm-opts="--num-extra-lm-states=2000" \
-    --trainer.add-option="--optimization.memory-compression-level=2" \
-    --trainer.srand=$srand \
-    --trainer.max-param-change=2.0 \
-    --trainer.num-epochs=$num_epochs \
-    --trainer.frames-per-iter=3000000 \
-    --trainer.optimization.num-jobs-initial=$jobs_initial \
-    --trainer.optimization.num-jobs-final=$jobs_final \
-    --trainer.optimization.initial-effective-lrate=0.002 \
-    --trainer.optimization.final-effective-lrate=0.0002 \
-    --trainer.num-chunk-per-minibatch=128,64 \
-    --egs.chunk-width=$chunk_width \
-    --egs.dir="$common_egs_dir" \
-    --egs.opts="--frames-overlap-per-eg 0 --online-cmvn $online_cmvn --max-jobs-run 6 --max-shuffle-jobs-run 6" \
-    --cleanup.remove-egs=$remove_egs \
-    --use-gpu=$use_gpu \
-    --reporting.email="$reporting_email" \
-    --feat-dir=$train_data_dir \
-    --tree-dir=$tree_dir \
-    --lat-dir=$lat_dir \
-    --dir=$dir  || exit 1;
-  e_time=$(date +'%F_%T')
-  echo "$0 14: train dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
+	/usr/bin/time -f "training dnn took %U secs.\tRAM: %M KB" \
+  	steps/nnet3/chain/train.py --stage=$train_stage \
+  	  --cmd="$decode_cmd" \
+  	  --feat.online-ivector-dir=$train_ivector_dir \
+  	  --feat.cmvn-opts="--config=conf/online_cmvn.conf" \
+  	  --chain.xent-regularize $xent_regularize \
+  	  --chain.leaky-hmm-coefficient=0.1 \
+  	  --chain.l2-regularize=0.0 \
+  	  --chain.apply-deriv-weights=false \
+  	  --chain.lm-opts="--num-extra-lm-states=2000" \
+  	  --trainer.add-option="--optimization.memory-compression-level=2" \
+  	  --trainer.srand=$srand \
+  	  --trainer.max-param-change=2.0 \
+  	  --trainer.num-epochs=$num_epochs \
+  	  --trainer.frames-per-iter=3000000 \
+  	  --trainer.optimization.num-jobs-initial=$jobs_initial \
+  	  --trainer.optimization.num-jobs-final=$jobs_final \
+  	  --trainer.optimization.initial-effective-lrate=0.002 \
+  	  --trainer.optimization.final-effective-lrate=0.0002 \
+  	  --trainer.num-chunk-per-minibatch=128,64 \
+  	  --egs.chunk-width=$chunk_width \
+  	  --egs.dir="$common_egs_dir" \
+  	  --egs.opts="--frames-overlap-per-eg 0 --online-cmvn $online_cmvn --max-jobs-run 6 --max-shuffle-jobs-run 6" \
+  	  --cleanup.remove-egs=$remove_egs \
+  	  --use-gpu=$use_gpu \
+  	  --reporting.email="$reporting_email" \
+  	  --feat-dir=$train_data_dir \
+  	  --tree-dir=$tree_dir \
+  	  --lat-dir=$lat_dir \
+  	  --dir=$dir  || exit 1;
 fi
 
 if [ $stage -le 15 ]; then
@@ -277,11 +260,9 @@ if [ $stage -le 15 ]; then
   # matched topology (since it gets the topology file from the model).
   # CB: changed 'lang_test_tgsmall' to 'lang_test'
   msg "$0: generating dnn graph"
-  s_time=$(date +'%F_%T')
-  utils/mkgraph.sh --self-loop-scale 1.0 \
-    data/lang_test_tgsmall $tree_dir $tree_dir/graph_tgsmall || exit 1;
-  e_time=$(date +'%F_%T')
-  echo "$0 15: mkgraph dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
+	/usr/bin/time -f "mkgraph took %U secs.\tRAM: %M KB" \
+  	utils/mkgraph.sh --self-loop-scale 1.0 \
+  	  data/lang_test_small $tree_dir $tree_dir/graph_small || exit 1;
 fi
 
 if [ $stage -le 16 ]; then
@@ -289,23 +270,30 @@ if [ $stage -le 16 ]; then
   rm $dir/.error 2>/dev/null || true
 
   msg "$0: decoding dnn"
-  s_time=$(date +'%F_%T')
   for data in $test_sets; do
-    steps/nnet3/decode.sh \
-      --acwt 1.0 --post-decode-acwt 10.0 \
-      --frames-per-chunk $frames_per_chunk \
-      --nj 4 --cmd "$decode_cmd" --num-threads 2 \
-      --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${data}_hires \
-      $tree_dir/graph_tgsmall data/${data}_hires ${dir}/decode_tgsmall_${data} || exit 1
-    grep -Rn WER $dir/decode_tgsmall_$data | \
-        utils/best_wer.sh  > $dir/decode_tgsmall_$data/fbwer.txt
-    ## CB: we don't have a huge LM to do rescoring yet
-    #steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
-    #  data/lang_test_{tgsmall,tglarge} \
-    # data/${data}_hires ${dir}/decode_{tgsmall,tglarge}_${data} || exit 1
+		/usr/bin/time -f "decoding took %U secs.\tRAM: %M KB" \
+    	steps/nnet3/decode.sh \
+    	  --acwt 1.0 --post-decode-acwt 10.0 \
+    	  --frames-per-chunk $frames_per_chunk \
+    	  --nj 4 --cmd "$decode_cmd" --num-threads 2 \
+    	  --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${data}_hires \
+    	  $tree_dir/graph_small \
+				data/${data}_hires \
+				${dir}/decode_small_${data}
+    grep -Rn WER $dir/decode_small_$data | \
+        utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
+		if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
+			/usr/bin/time -f "rescoring lattices took %U secs.\tRAM: %M KB" \
+    		steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
+    		  data/lang_test_small \
+    		  data/lang_test_large \
+    		 	data/${data}_hires \
+					${dir}/decode_small_${data} \
+					${dir}/decode_large_${data}
+    	grep -Rn WER $dir/decode_large_$data | \
+    	    utils/best_wer.sh | tee $dir/decode_large_$data/fbwer.txt
+		fi
   done
-  e_time=$(date +'%F_%T')
-  echo "$0 16: decoding dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
 
 # Not testing the 'looped' decoding separately, because for
@@ -316,30 +304,40 @@ if $test_online_decoding && [ $stage -le 17 ]; then
   # note: if the features change (e.g. you add pitch features), you will have to
   # change the options of the following command line.
   msg "$0: prepare online decoding"
-  s_time=$(date +'%F_%T')
   steps/online/nnet3/prepare_online_decoding.sh \
     --mfcc-config conf/mfcc_hires.conf \
     --online-cmvn-config conf/online_cmvn.conf \
     $lang exp/nnet3${nnet3_affix}/extractor ${dir} ${dir}_online
-  e_time=$(date +'%F_%T')
-  echo "$0 17: prepare online decode took $(fbutils/elapsed_time.py $s_time $e_time)"
 
   msg "$0: online decode"
-  s_time=$(date +'%F_%T')
   for data in $test_sets; do
     # note: we just give it "data/${data}" as it only uses the wav.scp, the
     # feature type does not matter.
-    steps/online/nnet3/decode.sh \
-      --acwt 1.0 --post-decode-acwt 10.0 \
-      --nj 6 --cmd "$decode_cmd" \
-      $tree_dir/graph_tgsmall data/${data} ${dir}_online/decode_tgsmall_${data} || exit 1
-    grep -Rn WER ${dir}_online/decode_tgsmall_$data | \
-        utils/best_wer.sh  > ${dir}_online/decode_tgsmall_$data/fbwer.txt
-    ## CB: we don't have a huge LM to do rescoring yet
-    #steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
-    #  data/lang_test_{tgsmall,tglarge} \
-    #  data/${data}_hires ${dir}_online/decode_{tgsmall,tglarge}_${data} || exit 1
+		/usr/bin/time -f "online decoding took %U secs.\tRAM: %M KB" \
+    	steps/online/nnet3/decode.sh \
+    	  --acwt 1.0 --post-decode-acwt 10.0 \
+    	  --nj 6 --cmd "$decode_cmd" \
+    	  $tree_dir/graph_small \
+				data/${data} \
+				${dir}_online/decode_small_${data}
+    grep -Rn WER ${dir}_online/decode_small_$data | \
+        utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
+		if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
+			/usr/bin/time -f "rescoring lattices took %U secs.\tRAM: %M KB" \
+    		steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
+    		  data/lang_test_small \
+    		  data/lang_test_large \
+    		  data/${data}_hires \
+					${dir}_online/decode_small_${data} \
+					${dir}_online/decode_large_${data}
+    	grep -Rn WER ${dir}_online/decode_large_$data | \
+    	    utils/best_wer.sh | tee ${dir}_online/decode_large_$data/fbwer.txt
+		fi
   done
-  e_time=$(date +'%F_%T')
-  echo "$0 17 online decoding dnn took $(fbutils/elapsed_time.py $s_time $e_time)"
 fi
+
+msg "$0: success!"
+
+# https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
+echo "------------ wrapping results up ------------"
+find -name fbwer.txt -printf "%T@ %Tc %p\n" | sort -n | awk '{print $NF}' | xargs cat

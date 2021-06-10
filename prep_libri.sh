@@ -42,9 +42,10 @@ KALDI_ROOT=$(readlink -f $(dirname $(dirname $proj_dir)))
 libri_dir=$KALDI_ROOT/egs/librispeech/s5
 proj_dir=$(readlink -e $proj_dir)/s5
 mkdir -p $proj_dir || exit 1
-ln -svf $src_dir/run_*.sh $proj_dir || exit 1
+#ln -svf $src_dir/run_*.sh $proj_dir || exit 1
 #chmod -v +x $proj_dir/run_*.sh || exit 1
-ln -sf $src_dir/{path.sh,fblocal,fbutils} $proj_dir
+ln -sf $src_dir/{fblocal,fbutils} $proj_dir
+cp -v  $src_dir/{fb_commons,path,run_*}.sh $proj_dir || exit 1
 ln -sf $libri_dir/{conf,local,steps,utils} $proj_dir
 sed 's/"queue.pl/"run.pl/g' $libri_dir/cmd.sh > $proj_dir/cmd.sh
 

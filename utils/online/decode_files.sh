@@ -7,9 +7,9 @@
 # This script allows one to exchange lexicon
 # and LM files for both decoding and rescoring
 # procedures on user-defined files
-# NOTE: make sure to execute this script from 
-# within a kaldi/egs project dir after you 
-# trained your model.
+# XXX NOTE: make sure to execute this script from 
+# XXX       within a kaldi/egs project dir after 
+# XXX       you trained your model.
 #
 # author: may 2021
 # cassio batista - https://cassota.gitlab.io
@@ -21,6 +21,8 @@ function msg { echo -e "\e[$(shuf -i 91-96 -n 1)m[$(date +'%F %T')] $1\e[0m" ; }
 
 stage=1
 data=data/decodeme
+
+to_stdout=true
 
 am_dir=exp/chain_online_cmn/tdnn1k_sp
 ie_dir=exp/nnet3_online_cmn/extractor
@@ -36,12 +38,17 @@ lex_file=
 if [ $# -lt 1 ] ; then
   echo "usage: $0 [options] <wav-file> [<wav-file>, <wav-file>, ...]"
   echo "  <wav-file> is an audio file as usual. you may pass multiple files as well"
-  echo "  e.g.: $0 --lm-small-file 3gram.arpa --lm-large-file 4gram.arpa --lex-file lexicon.txt audio1.wav"
+  echo "  e.g.: $0 --lex-file lexicon.txt --lm-small-file 3gram.arpa [--lm-large-file 4gram.arpa] audio1.wav"
   echo
   echo "  Required options:"
   echo "    --lm-small-file is an ARPA LM file used during 1st pass decoding"
-  echo "    --lm-large-file is an ARPA LM file used during 2nd pass decoding (lattice rescoring)"
   echo "    --lex-file is the phonetic dictionary (lexicon), in case you want to change it"
+  echo
+  echo "  Optional options:"
+  echo "    --lm-large-file is an ARPA LM file used during lattice rescoring"
+  echo "    --am-dir is the directory to the acoustic model. default: $am_dir"
+  echo "    --ie-dir is the directory to the ivector extractor model. default: $ie_dir"
+  echo "    --to-stdout print hypothesis sentence to stdout. default: $to_stdout"
   exit 1
 fi
 
@@ -80,17 +87,27 @@ if [ $stage -le 1 ] ; then
   msg "$0: prepare lang"
   /usr/bin/time -f "prepare lang took %U secs.\tRAM: %M KB" \
     utils/prepare_lang.sh $data/local/dict "<UNK>" $data/local/lang_tmp $data/lang
-  /usr/bin/time -f "arpa2fst took %U secs.\tRAM: %M KB" \
-    arpa2fst --disambig-symbol=#0 --read-symbol-table=$data/lang/words.txt \
-      $data/local/lm/small.arpa $data/lang/G.fst
-  [ -z $lm_large_file ] || \
-    /usr/bin/time -f "arpa2carpa took %U secs.\tRAM: %M KB" \
-      arpa-to-const-arpa \
-        --bos-symbol=$(grep "^<s>\s"  $data/lang/words.txt | awk '{print $2}') \
-        --eos-symbol=$(grep "^</s>\s" $data/lang/words.txt | awk '{print $2}') \
-        --unk-symbol=$(cat $data/lang/oov.int) \
-        "cat $data/local/lm/large.arpa | utils/map_arpa_lm.pl $data/lang/words.txt |" \
-        $data/lang/G.carpa
+
+  if [ -f $data/lang/G.fst ] ; then
+    echo "$0: G.fst exists. skipping compilation"
+  else
+    /usr/bin/time -f "arpa2fst took %U secs.\tRAM: %M KB" \
+      arpa2fst --disambig-symbol=#0 --read-symbol-table=$data/lang/words.txt \
+        $data/local/lm/small.arpa $data/lang/G.fst
+  fi
+
+  if [ -f $data/lang/G.carpa ] ; then
+    echo "$0: G.carpa exists. skipping compilation"
+  else
+    [ -z $lm_large_file ] || \
+      /usr/bin/time -f "arpa2carpa took %U secs.\tRAM: %M KB" \
+        arpa-to-const-arpa \
+          --bos-symbol=$(grep "^<s>\s"  $data/lang/words.txt | awk '{print $2}') \
+          --eos-symbol=$(grep "^</s>\s" $data/lang/words.txt | awk '{print $2}') \
+          --unk-symbol=$(cat $data/lang/oov.int) \
+          "cat $data/local/lm/large.arpa | utils/map_arpa_lm.pl $data/lang/words.txt |" \
+          $data/lang/G.carpa
+  fi
 fi
 
 # feat extract
@@ -104,9 +121,13 @@ fi
 # build graph
 if [ $stage -le 3 ] ; then
   msg "$0: mkgraph"
-  /usr/bin/time -f "mkgraph took %U secs.\tRAM: %M KB" \
-    utils/mkgraph.sh --self-loop-scale 1.0 \
-      $data/lang $am_dir $data/tdnn/graph
+  if [ -f $data/tdnn/graph/HCLG.fst ] ; then
+    echo "$0: HCLG.fst exists. skipping graph compilation"
+  else
+    /usr/bin/time -f "mkgraph took %U secs.\tRAM: %M KB" \
+      utils/mkgraph.sh --self-loop-scale 1.0 \
+        $data/lang $am_dir $data/tdnn/graph
+  fi
 fi
 
 # prep online decode
@@ -129,7 +150,7 @@ fi
 
 # rescore (extracted from steps/lmrescore_const_arpa.sh)
 if [ ! -z $lm_large_file ] && [ $stage -le 6 ] ; then
-  rm -rf $data/online/decode_large/log
+  rm -rf   $data/online/decode_large/log
   mkdir -p $data/online/decode_large/log
   msg "$0: rescoring lattices (2nd pass, large LM)"
   old_ark_in="ark:gunzip -c $data/online/decode_small/lat.JOB.gz |"
@@ -141,16 +162,19 @@ if [ ! -z $lm_large_file ] && [ $stage -le 6 ] ; then
 fi
 
 # score (extracted from local/score.sh)
+# NOTE fixing LM weight to 9.0 and disabling word insertion penalty by default
 if [ $stage -le 7 ] ; then
-  mkdir -p $data/online/decode_large/scoring/log
-  rm -f score.log
+  dir=$data/online/decode_large
+  [ -z $lm_large_file ] && dir=$data/online/decode_small
+  rm -rf   $dir/scoring/log score.log
+  mkdir -p $dir/scoring/log
   /usr/bin/time -f "scoring took %U secs.\tRAM: %M KB" \
-    run.pl LMWT=9:9 $data/online/decode_large/scoring/log/best_path.LMWT.0.0.log \
-      lattice-scale --inv-acoustic-scale=LMWT "ark:gunzip -c $data/online/decode_large/lat.*.gz|" ark:- \| \
+    run.pl LMWT=9:9 $dir/scoring/log/best_path.LMWT.0.0.log \
+      lattice-scale --inv-acoustic-scale=LMWT "ark:gunzip -c $dir/lat.*.gz|" ark:- \| \
       lattice-add-penalty --word-ins-penalty=0.0 ark:- ark:- \| \
       lattice-best-path --word-symbol-table=$data/lang/words.txt \
-        ark:- ark,t:$data/online/decode_large/scoring/LMWT.0.0.tra
-  for tra in $data/online/decode_large/scoring/*.tra ; do
+        ark:- ark,t:$dir/scoring/LMWT.0.0.tra
+  for tra in $dir/scoring/*.tra ; do
     cat $tra | utils/int2sym.pl -f 2- $data/lang/words.txt | tee -a score.log
   done
 fi
