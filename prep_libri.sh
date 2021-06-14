@@ -29,8 +29,7 @@ if [ -d "$proj_dir" ] ; then
   if [ "$ans" != "y" ] ; then
     echo "$0: aborted." && exit 0
   else
-    echo "ié ié"
-    #rm -rf $proj_dir/s5/{data,exp,mfcc,fblocal,fbutils}
+    rm -rf $proj_dir/s5/{data,exp,mfcc,fblocal,fbutils}
   fi
 # https://stackoverflow.com/questions/8426058/getting-the-parent-of-a-directory-in-bash
 elif [ "$(basename $(readlink -f $(dirname "$proj_dir")))" != "egs" ] ; then
@@ -40,7 +39,7 @@ fi
 
 KALDI_ROOT=$(readlink -f $(dirname $(dirname $proj_dir)))
 libri_dir=$KALDI_ROOT/egs/librispeech/s5
-proj_dir=$(readlink -e $proj_dir)/s5
+proj_dir=$(readlink -f $proj_dir)/s5
 mkdir -p $proj_dir || exit 1
 #ln -svf $src_dir/run_*.sh $proj_dir || exit 1
 #chmod -v +x $proj_dir/run_*.sh || exit 1
