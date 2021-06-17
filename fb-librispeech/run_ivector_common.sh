@@ -20,23 +20,29 @@ stage=1
 if [ $stage -le 1 ]; then
   msg "$0: preparing directory for low-resolution speed-perturbed data (for alignment)"
   utils/data/perturb_data_dir_speed_3way.sh data/train data/train_sp
-  steps/make_mfcc.sh --cmd "$train_cmd" --nj 10 data/train_sp
+  steps/make_mfcc.sh --cmd "$train_cmd" --nj 8 data/train_sp
   steps/compute_cmvn_stats.sh data/train_sp
   utils/fix_data_dir.sh data/train_sp
 fi
 
 if [ $stage -le 2 ]; then
-  msg "$0: aligning with the perturbed low-resolution data (tri-sat)"
-  ali_dir=exp/tri4b_ali_train_sp
-  [ -f $ali_dir/ali.1.gz ] && echo "$0: alignments in $ali_dir already exist." && exit 1
-  steps/align_fmllr.sh --nj 10 --cmd "$train_cmd" \
-    data/train_sp data/lang exp/tri4b $ali_dir
-
   msg "$0: aligning with the perturbed low-resolution data (mono)"
   ali_dir=exp/mono_ali_train_sp
   [ -f $ali_dir/ali.1.gz ] && echo "$0: alignments in $ali_dir already exist." && exit 1
-  steps/align_fmllr.sh --nj 10 --cmd "$train_cmd" \
+  steps/align_fmllr.sh --nj 8 --cmd "$train_cmd" \
     data/train_sp data/lang exp/mono $ali_dir
+
+  msg "$0: aligning with the perturbed low-resolution data (tri-deltas)"
+  ali_dir=exp/tri1_ali_train_sp
+  [ -f $ali_dir/ali.1.gz ] && echo "$0: alignments in $ali_dir already exist." && exit 1
+  steps/align_fmllr.sh --nj 8 --cmd "$train_cmd" \
+    data/train_sp data/lang exp/tri1 $ali_dir
+
+  msg "$0: aligning with the perturbed low-resolution data (tri-sat)"
+  ali_dir=exp/tri4b_ali_train_sp
+  [ -f $ali_dir/ali.1.gz ] && echo "$0: alignments in $ali_dir already exist." && exit 1
+  steps/align_fmllr.sh --nj 8 --cmd "$train_cmd" \
+    data/train_sp data/lang exp/tri4b $ali_dir
 fi
 
 # Create high-resolution MFCC features (with 40 cepstra instead of 13).
@@ -56,7 +62,7 @@ if [ $stage -le 3 ]; then
   utils/data/perturb_data_dir_volume.sh data/train_sp_hires
 
   for datadir in train_sp test; do
-    steps/make_mfcc.sh --nj 10 --mfcc-config conf/mfcc_hires.conf --cmd "$train_cmd" data/${datadir}_hires
+    steps/make_mfcc.sh --nj 8 --mfcc-config conf/mfcc_hires.conf --cmd "$train_cmd" data/${datadir}_hires
     steps/compute_cmvn_stats.sh data/${datadir}_hires
     utils/fix_data_dir.sh data/${datadir}_hires
   done
@@ -96,7 +102,7 @@ if [ $stage -le 5 ]; then
   # this one has a fairly small dim (defaults to 100) so we don't use all of it,
   # we use just the 60k subset (about one fifth of the data, or 200 hours).
   msg "$0: training the iVector extractor"
-  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 4 \
+  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 2 \
     --num-processes 2 --num-threads 2 \
     data/train_sp_hires exp/nnet3/diag_ubm exp/nnet3/extractor
 fi
@@ -114,14 +120,14 @@ if [ $stage -le 6 ]; then
 
   # extract feats from training data
   msg "$0: extracting iVectors from training data"
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 10 \
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 8 \
     exp/nnet3/ivectors_train_sp_hires/train_sp_hires_max2 \
     exp/nnet3/extractor \
     exp/nnet3/ivectors_train_sp_hires
 
   # extract feats from test data
   msg "$0: extracting iVectors from test data"
-  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 10 \
+  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 8 \
     data/test_hires \
     exp/nnet3/extractor \
     exp/nnet3/ivectors_test_hires

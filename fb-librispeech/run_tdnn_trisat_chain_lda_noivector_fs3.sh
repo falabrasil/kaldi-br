@@ -355,7 +355,9 @@ if [ $stage -le 17 ]; then
       #--online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
   steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 \
       --nj 10 --cmd "$decode_cmd" $iter_opts \
+      --scoring-opts "--word-ins-penalty 0.0 --min-lmwt 8 --max-lmwt 9" \
       $graph_dir data/test_hires $dir/decode_test${decode_iter:+_$decode_iter}_tgsmall || exit 1
+  grep -Rw WER $dir/decode_test${decode_iter:+_$decode_iter}_tgsmall | utils/best_wer.sh
   #steps/lmrescore.sh --cmd "$decode_cmd" --self-loop-scale 1.0 data/lang_test_{tgsmall,tgmed} \
   #    data/${decode_set}_hires $dir/decode_${decode_set}${decode_iter:+_$decode_iter}_{tgsmall,tgmed} || exit 1
   #steps/lmrescore_const_arpa.sh \

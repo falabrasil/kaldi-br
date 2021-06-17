@@ -134,13 +134,13 @@ set -e
 stage=0
 #decode_nj=50
 train_set=train #train_960_cleaned
-gmm=tri4b #tri6b_cleaned
+gmm=tri1 #tri6b_cleaned
 nnet3_affix=   #_cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-affix=trisat_chain_lda_ivector_fs3
-tree_affix=trisat_chain_lda_ivector_fs3
+affix=trideltas_chain_lda_ivector_fs3
+tree_affix=trideltas_chain_lda_ivector_fs3
 train_stage=-10
 get_egs_stage=-10
 decode_iter=
@@ -384,5 +384,3 @@ if $test_online_decoding && [ $stage -le 18 ]; then
       --nj 10 --cmd "$decode_cmd" \
       $graph_dir data/test ${dir}_online/decode_test_tgsmall || exit 1
 fi
-
-wait

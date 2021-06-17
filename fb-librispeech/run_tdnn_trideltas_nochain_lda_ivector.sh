@@ -52,13 +52,13 @@ set -e
 
 stage=0
 train_set=train #train_960_cleaned
-gmm=mono #tri6b_cleaned  # this is the source gmm-dir for the data-type of interest; it
+gmm=tri1 #tri6b_cleaned  # this is the source gmm-dir for the data-type of interest; it
                    # should have alignments for the specified training data.
 #nnet3_affix=_cleaned
 nnet3_affix=
 
 # Options which are not passed through to run_ivector_common.sh
-affix=mono_nochain_lda_ivector
+affix=trideltas_nochain_lda_ivector
 train_stage=-10
 common_egs_dir=
 reporting_email=
@@ -173,5 +173,3 @@ if [ $stage -le 13 ]; then
     #  data/${test}_hires $dir/decode_${test}_{tgsmall,fglarge} || exit 1
   wait
 fi
-
-exit 0;

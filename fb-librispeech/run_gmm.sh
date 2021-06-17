@@ -72,7 +72,7 @@ if [ $stage -le 6 ]; then
   msg "$0: computing mfcc + cmvn"
   for part in train test ; do
     /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-      steps/make_mfcc.sh --cmd "$train_cmd" --nj 10 data/$part exp/make_mfcc/$part $mfccdir
+      steps/make_mfcc.sh --cmd "$train_cmd" --nj 8 data/$part exp/make_mfcc/$part $mfccdir
     /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
       steps/compute_cmvn_stats.sh data/$part exp/make_mfcc/$part $mfccdir
   done
@@ -93,7 +93,7 @@ if [ $stage -le 8 ]; then
   # train a monophone system
   msg "$0: training monophones"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/train_mono.sh --boost-silence 1.25 --nj 10 --cmd "$train_cmd" \
+    steps/train_mono.sh --boost-silence 1.25 --nj 8 --cmd "$train_cmd" \
                       data/train data/lang_nosp exp/mono
 
   (
@@ -105,7 +105,7 @@ if [ $stage -le 8 ]; then
 
   msg "$0: aligning monophones"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_si.sh --boost-silence 1.25 --nj 10 --cmd "$train_cmd" \
+    steps/align_si.sh --boost-silence 1.25 --nj 8 --cmd "$train_cmd" \
                     data/train data/lang_nosp exp/mono exp/mono_ali 
 fi
 
@@ -125,7 +125,7 @@ if [ $stage -le 9 ]; then
 
   msg "$0: aligning triphones"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_si.sh --nj 10 --cmd "$train_cmd" \
+    steps/align_si.sh --nj 8 --cmd "$train_cmd" \
                     data/train data/lang_nosp exp/tri1 exp/tri1_ali 
 fi
 
@@ -142,7 +142,7 @@ if [ $stage -le 10 ]; then
   # Align a 10k utts subset using the tri2b model
   msg "$0: aligning tri-lda"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_si.sh  --nj 10 --cmd "$train_cmd" --use-graphs true \
+    steps/align_si.sh  --nj 8 --cmd "$train_cmd" --use-graphs true \
                      data/train data/lang_nosp exp/tri2b exp/tri2b_ali
 fi
 
@@ -156,7 +156,7 @@ if [ $stage -le 11 ]; then
   # align the entire train_clean_100 subset using the tri3b model
   msg "$0: aligning tri-sat"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_fmllr.sh --nj 10 --cmd "$train_cmd" \
+    steps/align_fmllr.sh --nj 8 --cmd "$train_cmd" \
       data/train data/lang_nosp \
       exp/tri3b exp/tri3b_ali
 fi

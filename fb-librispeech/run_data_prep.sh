@@ -17,8 +17,6 @@ lm_url=https://gitlab.com/fb-nlp/nlp-resources/-/raw/master/res/lm.3gram.arpa.gz
 
 audio_dir=
 lm_file_small=
-lm_file_medium=
-lm_file_large=
 lex_file=
 #ie_file=
 
@@ -67,16 +65,6 @@ if [ $stage -le 3 ]; then
     cp -v $lm_file_small $data || exit 1
     ln -rsf $data/$(basename $lm_file_small) data/local/lm/lm_tglarge.arpa.gz || exit 1
   fi
-
-  # TODO
-  if [ ! -z "$lm_file_medium" ] ; then
-    echo "TBD"
-  fi
-
-  # TODO
-  if [ ! -z "$lm_file_large" ] ; then
-    echo "TBD"
-  fi
 fi
 
 ## NOTE: Vosk's model v0.3 default to 30-dim ivectors, 20 mel bins and 20 
@@ -100,13 +88,13 @@ if [ $stage -le 5 ]; then
   # format the data as Kaldi data directories
   msg "$0: prep data"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    fblocal/prep_data.sh --nj 6 --split-random true $data data/
+    fblocal/prep_data.sh --nj 8 --split-random true $data data/
   #fblocal/prep_data.sh --nj 8 --test-dir lapsbm16k $data ./data
 
   # CB: stage 3 doesn't need local/lm dir
   msg "$0: prep dict"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    fblocal/prep_dict.sh --nj 6 data/local/dict_nosp/
+    fblocal/prep_dict.sh --nj 8 data/local/dict_nosp/
 
   # CB: leave as it is
   msg "$0: prep lang"

@@ -52,13 +52,13 @@ set -e
 
 stage=0
 train_set=train #train_960_cleaned
-gmm=mono #tri6b_cleaned  # this is the source gmm-dir for the data-type of interest; it
+gmm=tri1 #tri6b_cleaned  # this is the source gmm-dir for the data-type of interest; it
                    # should have alignments for the specified training data.
 #nnet3_affix=_cleaned
 nnet3_affix=
 
 # Options which are not passed through to run_ivector_common.sh
-affix=mono_nochain_lda_ivector
+affix=trideltas_nochain_lda_noivector
 train_stage=-10
 common_egs_dir=
 reporting_email=
@@ -88,9 +88,9 @@ graph_dir=$gmm_dir/graph_tgsmall
 ali_dir=exp/${gmm}_ali_${train_set}_sp
 dir=exp/nnet3${nnet3_affix}/tdnn${affix:+_$affix}_sp
 train_data_dir=data/${train_set}_sp_hires
-train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires
+#train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires
 
-for f in $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
+for f in $train_data_dir/feats.scp \
      $graph_dir/HCLG.fst $ali_dir/ali.1.gz $gmm_dir/final.mdl; do
   [ ! -f $f ] && echo "$0: expected file $f to exist" && exit 1
 done
@@ -102,9 +102,8 @@ if [ $stage -le 11 ]; then
 
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
-  input dim=100 name=ivector
   input dim=40 name=input
-  fixed-affine-layer name=lda input=Append(-2,-1,0,1,2,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+  fixed-affine-layer name=lda input=Append(-1,0,1) affine-transform-file=$dir/configs/lda.mat
 
   relu-batchnorm-dropout-layer name=tdnn1 $affine_opts dim=1536
   tdnnf-layer name=tdnnf2 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=1
@@ -134,9 +133,9 @@ fi
 
 if [ $stage -le 12 ]; then
 
+    #--feat.online-ivector-dir $train_ivector_dir \
   steps/nnet3/train_dnn.py --stage=$train_stage \
     --cmd="$decode_cmd" \
-    --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts="--norm-means=false --norm-vars=false" \
     --trainer.num-epochs $fb_num_epochs \
     --trainer.optimization.num-jobs-initial 1 \
@@ -157,10 +156,9 @@ fi
 if [ $stage -le 13 ]; then
   # this does offline decoding that should give about the same results as the
   # real online decoding (the one with --per-utt true)
-  rm $dir/.error 2>/dev/null || true
+      #--online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
     steps/nnet3/decode.sh --nj 10 --cmd "$decode_cmd" \
       --scoring-opts "--word-ins-penalty 0.0 --min-lmwt 8 --max-lmwt 9" \
-      --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
       ${graph_dir} data/test_hires $dir/decode_test_tgsmall || exit 1
   grep -Rw WER $dir/decode_test_tgsmall | utils/best_wer.sh
     #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
@@ -173,5 +171,3 @@ if [ $stage -le 13 ]; then
     #  data/${test}_hires $dir/decode_${test}_{tgsmall,fglarge} || exit 1
   wait
 fi
-
-exit 0;

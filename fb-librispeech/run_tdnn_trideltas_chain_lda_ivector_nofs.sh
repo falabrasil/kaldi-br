@@ -134,13 +134,13 @@ set -e
 stage=0
 #decode_nj=50
 train_set=train #train_960_cleaned
-gmm=tri4b #tri6b_cleaned
+gmm=tri1 #tri6b_cleaned
 nnet3_affix=   #_cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-affix=trisat_chain_lda_ivector_fs3
-tree_affix=trisat_chain_lda_ivector_fs3
+affix=trideltas_chain_lda_ivector_nofs
+tree_affix=trideltas_chain_lda_ivector_nofs
 train_stage=-10
 get_egs_stage=-10
 decode_iter=
@@ -251,7 +251,7 @@ if [ $stage -le 13 ]; then
     exit 1;
   fi
   num_leaves=7000  # CB
-  steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 3 \
+  steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 1 \
       --context-opts "--context-width=2 --central-position=1" \
       --cmd "$train_cmd" $num_leaves $lores_train_data_dir $lang $ali_dir $tree_dir
 fi
@@ -384,5 +384,3 @@ if $test_online_decoding && [ $stage -le 18 ]; then
       --nj 10 --cmd "$decode_cmd" \
       $graph_dir data/test ${dir}_online/decode_test_tgsmall || exit 1
 fi
-
-wait

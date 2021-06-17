@@ -134,13 +134,13 @@ set -e
 stage=0
 #decode_nj=50
 train_set=train #train_960_cleaned
-gmm=tri4b #tri6b_cleaned
+gmm=tri1 #tri6b_cleaned
 nnet3_affix=   #_cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-affix=trisat_chain_lda_ivector_fs3
-tree_affix=trisat_chain_lda_ivector_fs3
+affix=trideltas_chain_lda_noivector_nofs
+tree_affix=trideltas_chain_lda_noivector_nofs
 train_stage=-10
 get_egs_stage=-10
 decode_iter=
@@ -188,12 +188,13 @@ lat_dir=exp/chain${nnet3_affix}/${gmm}_${train_set}_sp_lats
 dir=exp/chain${nnet3_affix}/tdnn${affix:+_$affix}_sp
 train_data_dir=data/${train_set}_sp_hires
 lores_train_data_dir=data/${train_set}_sp
-train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires
+#train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires
 
 # if we are using the speed-perturbed data we need to generate
 # alignments for it.
 
-for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
+#for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
+for f in $gmm_dir/final.mdl $train_data_dir/feats.scp \
     $lores_train_data_dir/feats.scp $ali_dir/ali.1.gz; do
   [ ! -f $f ] && echo "$0: expected file $f to exist" && exit 1
 done
@@ -251,7 +252,7 @@ if [ $stage -le 13 ]; then
     exit 1;
   fi
   num_leaves=7000  # CB
-  steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 3 \
+  steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 1 \
       --context-opts "--context-width=2 --central-position=1" \
       --cmd "$train_cmd" $num_leaves $lores_train_data_dir $lang $ali_dir $tree_dir
 fi
@@ -272,13 +273,12 @@ if [ $stage -le 14 ]; then
   mkdir -p $dir/configs
 
   cat <<EOF > $dir/configs/network.xconfig
-  input dim=100 name=ivector
   input dim=40 name=input
 
   # please note that it is important to have input layer with the name=input
   # as the layer immediately preceding the fixed-affine-layer to enable
   # the use of short notation for the descriptor
-  fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+  fixed-affine-layer name=lda input=Append(-1,0,1) affine-transform-file=$dir/configs/lda.mat
 
   # the first splicing is moved before the lda layer, so no splicing here
   relu-batchnorm-dropout-layer name=tdnn1 $affine_opts dim=1536
@@ -311,9 +311,9 @@ fi
 
 if [ $stage -le 15 ]; then
 
+    #--feat.online-ivector-dir $train_ivector_dir \
   steps/nnet3/chain/train.py --stage $train_stage \
     --cmd "$decode_cmd" \
-    --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
     --chain.xent-regularize $xent_regularize \
     --chain.leaky-hmm-coefficient 0.1 \
@@ -322,7 +322,7 @@ if [ $stage -le 15 ]; then
     --chain.lm-opts="--num-extra-lm-states=2000" \
     --egs.dir "$common_egs_dir" \
     --egs.stage $get_egs_stage \
-    --egs.opts="--frames-overlap-per-eg 0 --constrained false --max-jobs-run 6 --max-shuffle-jobs-run 6" \
+    --egs.opts "--frames-overlap-per-eg 0 --constrained false --max-jobs-run 6 --max-shuffle-jobs-run 6" \
     --egs.chunk-width $frames_per_eg \
     --trainer.dropout-schedule $dropout_schedule \
     --trainer.add-option="--optimization.memory-compression-level=2" \
@@ -352,10 +352,10 @@ fi
 iter_opts=
 [ ! -z $decode_iter ] && iter_opts=" --iter $decode_iter "
 if [ $stage -le 17 ]; then
+      #--online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
   steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 \
-      --nj 10 --cmd "$decode_cmd" $iter_opts \
       --scoring-opts "--word-ins-penalty 0.0 --min-lmwt 8 --max-lmwt 9" \
-      --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
+      --nj 10 --cmd "$decode_cmd" $iter_opts \
       $graph_dir data/test_hires $dir/decode_test${decode_iter:+_$decode_iter}_tgsmall || exit 1
   grep -Rw WER $dir/decode_test${decode_iter:+_$decode_iter}_tgsmall | utils/best_wer.sh
   #steps/lmrescore.sh --cmd "$decode_cmd" --self-loop-scale 1.0 data/lang_test_{tgsmall,tgmed} \
@@ -384,5 +384,3 @@ if $test_online_decoding && [ $stage -le 18 ]; then
       --nj 10 --cmd "$decode_cmd" \
       $graph_dir data/test ${dir}_online/decode_test_tgsmall || exit 1
 fi
-
-wait
