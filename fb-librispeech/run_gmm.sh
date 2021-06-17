@@ -72,7 +72,7 @@ if [ $stage -le 6 ]; then
   msg "$0: computing mfcc + cmvn"
   for part in train test ; do
     /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-      steps/make_mfcc.sh --cmd "$train_cmd" --nj 8 data/$part exp/make_mfcc/$part $mfccdir
+      steps/make_mfcc.sh --cmd "$train_cmd" --nj 10 data/$part exp/make_mfcc/$part $mfccdir
     /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
       steps/compute_cmvn_stats.sh data/$part exp/make_mfcc/$part $mfccdir
   done
@@ -93,61 +93,75 @@ if [ $stage -le 8 ]; then
   # train a monophone system
   msg "$0: training monophones"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/train_mono.sh --boost-silence 1.25 --nj 6 --cmd "$train_cmd" \
+    steps/train_mono.sh --boost-silence 1.25 --nj 10 --cmd "$train_cmd" \
                       data/train data/lang_nosp exp/mono
+
+  (
+    msg "$0: compiling mono graph (in bg)"
+    /usr/bin/time -f "Time mkgraph mono: %U secs. RAM: %M KB" \
+      utils/mkgraph.sh data/lang_nosp_test_tgsmall \
+                      exp/mono exp/mono/graph_tgsmall  || touch .error
+  )&
+
+  msg "$0: aligning monophones"
+  /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
+    steps/align_si.sh --boost-silence 1.25 --nj 10 --cmd "$train_cmd" \
+                    data/train data/lang_nosp exp/mono exp/mono_ali 
 fi
 
 if [ $stage -le 9 ]; then
-  msg "$0: aligning monophones"
-  /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_si.sh --boost-silence 1.25 --nj 6 --cmd "$train_cmd" \
-                    data/train data/lang_nosp exp/mono exp/mono_ali 
-
   # train a first delta + delta-delta triphone system on a subset of 5000 utterances
   msg "$0: training tri-deltas"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
     steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" \
                         2000 10000 data/train data/lang_nosp exp/mono_ali exp/tri1 
+
+  (
+    msg "$0: compiling tri-deltas graph (in bg)"
+    /usr/bin/time -f "Time mkgraph tri-deltas: %U secs. RAM: %M KB" \
+      utils/mkgraph.sh data/lang_nosp_test_tgsmall \
+                     exp/tri1 exp/tri1/graph_tgsmall || touch .error
+  )&
+
+  msg "$0: aligning triphones"
+  /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
+    steps/align_si.sh --nj 10 --cmd "$train_cmd" \
+                    data/train data/lang_nosp exp/tri1 exp/tri1_ali 
 fi
 
 if [ $stage -le 10 ]; then
-  msg "$0: aligning triphones"
-  /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_si.sh --nj 6 --cmd "$train_cmd" \
-                    data/train data/lang_nosp exp/tri1 exp/tri1_ali 
-
-
   # train an LDA+MLLT system.
   msg "$0: training tri-lda"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
     steps/train_lda_mllt.sh --cmd "$train_cmd" \
                           --splice-opts "--left-context=3 --right-context=3" 2500 15000 \
                           data/train data/lang_nosp exp/tri1_ali exp/tri2b 
-fi
 
-if [ $stage -le 11 ]; then
+  # TODO mkgraph?
+
   # Align a 10k utts subset using the tri2b model
   msg "$0: aligning tri-lda"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_si.sh  --nj 6 --cmd "$train_cmd" --use-graphs true \
+    steps/align_si.sh  --nj 10 --cmd "$train_cmd" --use-graphs true \
                      data/train data/lang_nosp exp/tri2b exp/tri2b_ali
+fi
 
+if [ $stage -le 11 ]; then
   # Train tri3b, which is LDA+MLLT+SAT on 10k utts
   msg "$0: training tri-sat (1st time)"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
     steps/train_sat.sh --cmd "$train_cmd" 2500 15000 \
                      data/train data/lang_nosp exp/tri2b_ali exp/tri3b
 
-fi
-
-if [ $stage -le 12 ]; then
   # align the entire train_clean_100 subset using the tri3b model
   msg "$0: aligning tri-sat"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
-    steps/align_fmllr.sh --nj 6 --cmd "$train_cmd" \
+    steps/align_fmllr.sh --nj 10 --cmd "$train_cmd" \
       data/train data/lang_nosp \
       exp/tri3b exp/tri3b_ali
+fi
 
+if [ $stage -le 12 ]; then
   # train another LDA+MLLT+SAT system on the entire 100 hour subset
   msg "$0: training tri-sat (2nd time)"
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
@@ -163,6 +177,7 @@ if [ $stage -le 13 ]; then
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
     steps/get_prons.sh --cmd "$train_cmd" \
                      data/train data/lang_nosp exp/tri4b
+
   /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
     utils/dict_dir_add_pronprobs.sh --max-normalize true \
                                   data/local/dict_nosp \
@@ -268,9 +283,12 @@ fi
 #  done
 #fi
 
+[ -f .error ] && rm .error && \
+  echo "$0: problem with previous graph compilation" && exit 1
+
 if [ $stage -le 18 ]; then
-  msg "$0: compiling tr-sat graph"
-  /usr/bin/time -f "Time: %U secs. RAM: %M KB" \
+  msg "$0: compiling tri-sat graph (no bg)"
+  /usr/bin/time -f "Time mkgraph tri-sat: %U secs. RAM: %M KB" \
     utils/mkgraph.sh data/lang_test_tgsmall \
                    exp/tri4b exp/tri4b/graph_tgsmall
 fi
@@ -325,4 +343,5 @@ fi
 # ## to train but slightly worse.
 # # local/online/run_nnet2.sh
 
+wait
 msg "$0: GMM pipeline successfully executed!"

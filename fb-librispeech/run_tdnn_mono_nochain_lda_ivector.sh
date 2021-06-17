@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+fb_num_epochs=4
+
 # NOTE: same as local/nnet3/tuning/run_tdnn_1c.sh -- CB
 
 # 1c is as 1b, but uses more modern TDNN configuration.
@@ -112,15 +114,15 @@ if [ $stage -le 11 ]; then
   tdnnf-layer name=tdnnf6 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
   tdnnf-layer name=tdnnf7 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
   tdnnf-layer name=tdnnf8 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf9 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf10 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf11 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf12 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf13 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf14 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf15 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf16 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf17 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf9 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf10 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf11 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf12 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf13 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf14 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf15 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf16 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf17 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
   linear-component name=prefinal-l dim=256 $linear_opts
 
   prefinal-layer name=prefinal input=prefinal-l $prefinal_opts big-dim=1536 small-dim=256
@@ -136,7 +138,7 @@ if [ $stage -le 12 ]; then
     --cmd="$decode_cmd" \
     --feat.online-ivector-dir $train_ivector_dir \
     --feat.cmvn-opts="--norm-means=false --norm-vars=false" \
-    --trainer.num-epochs 4 \
+    --trainer.num-epochs $fb_num_epochs \
     --trainer.optimization.num-jobs-initial 1 \
     --trainer.optimization.num-jobs-final 1 \
     --trainer.optimization.initial-effective-lrate 0.0017 \
@@ -156,7 +158,7 @@ if [ $stage -le 13 ]; then
   # this does offline decoding that should give about the same results as the
   # real online decoding (the one with --per-utt true)
   rm $dir/.error 2>/dev/null || true
-    steps/nnet3/decode.sh --nj 8 --cmd "$decode_cmd" \
+    steps/nnet3/decode.sh --nj 10 --cmd "$decode_cmd" \
       --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
       ${graph_dir} data/test_hires $dir/decode_test_tgsmall || exit 1
     #steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \

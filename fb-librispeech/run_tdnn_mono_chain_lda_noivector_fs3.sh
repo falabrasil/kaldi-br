@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+fb_num_epochs=4
+
 # NOTE: same as local/chain/run_tdnn.sh -> local/chain/tuning/run_tdnn_1d.sh -- CB
 
 # 1d is as 1c but a recipe based on the newer, more compact configs, and with
@@ -130,7 +132,7 @@ set -e
 
 # configs for 'chain'
 stage=0
-decode_nj=50
+#decode_nj=50
 train_set=train #train_960_cleaned
 gmm=mono #tri6b_cleaned
 nnet3_affix=   #_cleaned
@@ -138,7 +140,7 @@ nnet3_affix=   #_cleaned
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
 affix=mono_chain_lda_noivector_fs3
-tree_affix=
+tree_affix=mono_chain_lda_noivector_fs3
 train_stage=-10
 get_egs_stage=-10
 decode_iter=
@@ -287,15 +289,15 @@ if [ $stage -le 14 ]; then
   tdnnf-layer name=tdnnf6 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
   tdnnf-layer name=tdnnf7 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
   tdnnf-layer name=tdnnf8 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf9 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf10 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf11 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf12 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf13 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf14 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf15 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf16 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
-  tdnnf-layer name=tdnnf17 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf9 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf10 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf11 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf12 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf13 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf14 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf15 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf16 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+  #tdnnf-layer name=tdnnf17 $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
   linear-component name=prefinal-l dim=256 $linear_opts
 
   prefinal-layer name=prefinal-chain input=prefinal-l $prefinal_opts big-dim=1536 small-dim=256
@@ -320,13 +322,13 @@ if [ $stage -le 15 ]; then
     --chain.lm-opts="--num-extra-lm-states=2000" \
     --egs.dir "$common_egs_dir" \
     --egs.stage $get_egs_stage \
-    --egs.opts "--frames-overlap-per-eg 0 --constrained false" \
+    --egs.opts "--frames-overlap-per-eg 0 --constrained false --max-jobs-run 6 --max-shuffle-jobs-run 6" \
     --egs.chunk-width $frames_per_eg \
     --trainer.dropout-schedule $dropout_schedule \
     --trainer.add-option="--optimization.memory-compression-level=2" \
     --trainer.num-chunk-per-minibatch 64 \
     --trainer.frames-per-iter 2500000 \
-    --trainer.num-epochs 4 \
+    --trainer.num-epochs $fb_num_epochs \
     --trainer.optimization.num-jobs-initial 1 \
     --trainer.optimization.num-jobs-final 1 \
     --trainer.optimization.initial-effective-lrate 0.00015 \
@@ -352,7 +354,7 @@ iter_opts=
 if [ $stage -le 17 ]; then
       #--online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
   steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 \
-      --nj $decode_nj --cmd "$decode_cmd" $iter_opts \
+      --nj 10 --cmd "$decode_cmd" $iter_opts \
       $graph_dir data/test_hires $dir/decode_test${decode_iter:+_$decode_iter}_tgsmall || exit 1
   #steps/lmrescore.sh --cmd "$decode_cmd" --self-loop-scale 1.0 data/lang_test_{tgsmall,tgmed} \
   #    data/${decode_set}_hires $dir/decode_${decode_set}${decode_iter:+_$decode_iter}_{tgsmall,tgmed} || exit 1
@@ -370,14 +372,14 @@ if $test_online_decoding && [ $stage -le 18 ]; then
   # change the options of the following command line.
   steps/online/nnet3/prepare_online_decoding.sh \
        --mfcc-config conf/mfcc_hires.conf \
-       $lang exp/nnet3${nnet3_affix}/extractor $dir ${dir}_online
+       $lang $dir ${dir}_online
 
   #nspk=$(wc -l <data/${data}_hires/spk2utt)
   # note: we just give it "data/${data}" as it only uses the wav.scp, the
   # feature type does not matter.
   steps/online/nnet3/decode.sh \
       --acwt 1.0 --post-decode-acwt 10.0 \
-      --nj 8 --cmd "$decode_cmd" \
+      --nj 10 --cmd "$decode_cmd" \
       $graph_dir data/test ${dir}_online/decode_test_tgsmall || exit 1
 fi
 
