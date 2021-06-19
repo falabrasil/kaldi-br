@@ -8,7 +8,7 @@
 
 set -e 
 
-DATA_DIR=$HOME/fb-gitlab/fb-audio-corpora/male-female-align
+DATA_DIR=$HOME/fb-gitlab/fb-audio-corpora/male-female-aligned
 
 . cmd.sh
 . path.sh
@@ -26,7 +26,7 @@ cp -r data/local/lm   alignme/local
 # TODO: Q: sort -u? A: will displace SIL & UNK
 msg "$0: extend lex"
 rm -fv alignme/local/dict/{lexiconp,lexiconp_silprob}.txt
-cat data/local/dict/lexicon.txt $DATA_DIR/dict_fb.txt > dict.tmp
+cat data/local/dict/lexicon.txt $DATA_DIR/dict_fb.dict > dict.tmp
 head -n +2 dict.tmp  > alignme/local/dict/lexicon.txt  # sil unk
 tail -n +3 dict.tmp >> alignme/local/dict/lexicon.txt  # remainder
 
@@ -38,7 +38,7 @@ utils/prepare_lang.sh \
   alignme/local/lang_tmp \
   alignme/lang
 
-utils/validate_lang.pl --skip-determinization-chech alignme/lang
+utils/validate_lang.pl --skip-determinization-check alignme/lang
 
 # prep data
 msg "$0: prep data"
@@ -61,12 +61,12 @@ rm -rf alignme_{lores,hires}
 utils/copy_data_dir.sh alignme alignme_lores
 utils/copy_data_dir.sh alignme alignme_hires
 
-echo "[$0] computing low resolution features" 
+msg "[$0] computing low resolution features" 
 steps/make_mfcc.sh --cmd "$train_cmd" --nj 1 alignme_lores
 steps/compute_cmvn_stats.sh alignme_lores
 utils/fix_data_dir.sh alignme_lores
 
-echo "[$0] computing high resolution features" 
+msg "[$0] computing high resolution features" 
 steps/make_mfcc.sh --cmd "$train_cmd" --nj 1 --mfcc-config conf/mfcc_hires.conf \
     alignme_hires 
 steps/compute_cmvn_stats.sh alignme_hires
@@ -76,50 +76,25 @@ utils/fix_data_dir.sh alignme_hires
 ### align with GMM models routine ###
 #####################################
 
-echo "[$0] align mono"
-steps/align_si.sh --nj 1 --cmd "$train_cmd" \
-  alignme_lores alignme/lang exp/mono alignme/results/mono_ali
-for i in alignme/results/mono_ali/ali.*.gz ; do 
-  ali-to-phones --ctm-output exp/mono/final.mdl ark:"gunzip -c $i|" - > ${i%.gz}.ctm
-done
-cat alignme/results/mono_ali/*.ctm > alignme/mono.phoneids.CTM  # upper case on purpose
-fblocal/ctm2pts.py alignme/lang/phones.txt alignme/results/mono_ali alignme/results/mono_ali
+msg "[$0] align mono"
+steps/align_si.sh --nj 1 alignme_lores alignme/lang exp/mono alignme/results/mono_ali
+fblocal/ali2ctm2pts.sh mono
 
-echo "[$0] align tri-deltas"
-steps/align_si.sh --nj 1 --cmd "$train_cmd" \
-  alignme_lores alignme/lang exp/tri1 alignme/results/tri1_ali
-for i in alignme/results/tri1_ali/ali.*.gz ; do 
-  ali-to-phones --ctm-output exp/tri1/final.mdl ark:"gunzip -c $i|" - > ${i%.gz}.ctm
-done
-cat alignme/results/tri1_ali/*.ctm > alignme/tri1.phoneids.CTM  # upper case on purpose
-fblocal/ctm2pts.py alignme/lang/phones.txt alignme/results/tri1_ali alignme/results/tri1_ali
+msg "[$0] align tri-deltas"
+steps/align_si.sh --nj 1 alignme_lores alignme/lang exp/tri1 alignme/results/tri1_ali
+fblocal/ali2ctm2pts.sh tri1
 
-echo "[$0] align tri-lda"
-steps/align_fmllr.sh --nj 1 --cmd "$train_cmd" \
-  alignme_lores alignme/lang exp/tri2b alignme/results/tri2b_ali
-for i in alignme/results/tri2b_ali/ali.*.gz ; do 
-  ali-to-phones --ctm-output exp/tri2b/final.mdl ark:"gunzip -c $i|" - > ${i%.gz}.ctm
-done
-cat alignme/results/tri2b_ali/*.ctm > alignme/tri2b.phoneids.CTM  # upper case on purpose
-fblocal/ctm2pts.py alignme/lang/phones.txt alignme/results/tri2b_ali alignme/results/tri2b_ali
+msg "[$0] align tri-lda"
+steps/align_fmllr.sh --nj 1 alignme_lores alignme/lang exp/tri2b alignme/results/tri2b_ali
+fblocal/ali2ctm2pts.sh tri2b
 
-echo "[$0] align tri-sat (1st)"
-steps/align_fmllr.sh --nj 1 --cmd "$train_cmd" \
-  alignme_lores alignme/lang exp/tri3b alignme/results/tri3b_ali
-for i in alignme/results/tri3b_ali/ali.*.gz ; do 
-  ali-to-phones --ctm-output exp/tri3b/final.mdl ark:"gunzip -c $i|" - > ${i%.gz}.ctm
-done
-cat alignme/results/tri3b_ali/*.ctm > alignme/tri3b.phoneids.CTM  # upper case on purpose
-fblocal/ctm2pts.py alignme/lang/phones.txt alignme/results/tri3b_ali alignme/results/tri3b_ali
+msg "[$0] align tri-sat (1st)"
+steps/align_fmllr.sh --nj 1 alignme_lores alignme/lang exp/tri3b alignme/results/tri3b_ali
+fblocal/ali2ctm2pts.sh tri3b
 
-echo "[$0] align tri-sat (2nd)"
-steps/align_fmllr.sh --nj 1 --cmd "$train_cmd" \
-  alignme_lores alignme/lang exp/tri4b alignme/results/tri4b_ali
-for i in alignme/results/tri4b_ali/ali.*.gz ; do 
-  ali-to-phones --ctm-output exp/tri4b/final.mdl ark:"gunzip -c $i|" - > ${i%.gz}.ctm
-done
-cat alignme/results/tri4b_ali/*.ctm > alignme/tri4b.phoneids.CTM  # upper case on purpose
-fblocal/ctm2pts.py alignme/lang/phones.txt alignme/results/tri4b_ali alignme/results/tri4b_ali
+msg "[$0] align tri-sat (2nd)"
+steps/align_fmllr.sh --nj 1 alignme_lores alignme/lang exp/tri4b alignme/results/tri4b_ali
+fblocal/ali2ctm2pts.sh tri4b
 
 exit 0
 
