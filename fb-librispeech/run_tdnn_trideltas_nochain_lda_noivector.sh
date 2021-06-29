@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 fb_num_epochs=4
+decode=true
 
 # NOTE: same as local/nnet3/tuning/run_tdnn_1c.sh -- CB
 
@@ -153,7 +154,7 @@ if [ $stage -le 12 ]; then
 
 fi
 
-if [ $stage -le 13 ]; then
+if $decode && [ $stage -le 13 ]; then
   # this does offline decoding that should give about the same results as the
   # real online decoding (the one with --per-utt true)
       #--online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
@@ -171,3 +172,4 @@ if [ $stage -le 13 ]; then
     #  data/${test}_hires $dir/decode_${test}_{tgsmall,fglarge} || exit 1
   wait
 fi
+echo "$0: success"

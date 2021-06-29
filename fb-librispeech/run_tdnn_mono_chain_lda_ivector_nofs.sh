@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 fb_num_epochs=4
+decode=true
 
 # NOTE: same as local/chain/run_tdnn.sh -> local/chain/tuning/run_tdnn_1d.sh -- CB
 
@@ -251,7 +252,8 @@ if [ $stage -le 13 ]; then
     exit 1;
   fi
   num_leaves=7000  # CB
-  steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 1 \
+  steps/nnet3/chain/build_tree.sh \
+      --frame-subsampling-factor 1 --alignment-subsampling-factor 1 \
       --context-opts "--context-width=2 --central-position=1" \
       --cmd "$train_cmd" $num_leaves $lores_train_data_dir $lang $ali_dir $tree_dir
 fi
@@ -320,6 +322,8 @@ if [ $stage -le 15 ]; then
     --chain.l2-regularize 0.0 \
     --chain.apply-deriv-weights false \
     --chain.lm-opts="--num-extra-lm-states=2000" \
+    --chain.frame-subsampling-factor 1 \
+    --chain.alignment-subsampling-factor 1 \
     --egs.dir "$common_egs_dir" \
     --egs.stage $get_egs_stage \
     --egs.opts "--frames-overlap-per-eg 0 --constrained false --max-jobs-run 6 --max-shuffle-jobs-run 6" \
@@ -342,7 +346,7 @@ if [ $stage -le 15 ]; then
 fi
 
 graph_dir=$dir/graph_tgsmall
-if [ $stage -le 16 ]; then
+if $decode && [ $stage -le 16 ]; then
   # Note: it might appear that this $lang directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
@@ -351,7 +355,7 @@ fi
 
 iter_opts=
 [ ! -z $decode_iter ] && iter_opts=" --iter $decode_iter "
-if [ $stage -le 17 ]; then
+if $decode && [ $stage -le 17 ]; then
   steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 \
       --nj 10 --cmd "$decode_cmd" $iter_opts \
       --scoring-opts "--word-ins-penalty 0.0 --min-lmwt 8 --max-lmwt 9" \
@@ -386,3 +390,4 @@ if $test_online_decoding && [ $stage -le 18 ]; then
 fi
 
 wait
+echo "$0: success!"

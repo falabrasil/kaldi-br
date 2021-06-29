@@ -37,8 +37,7 @@ if __name__ == '__main__':
         mapping[phoneid] = phone.split("_")[0]
 
     for i, ctm_file in enumerate(sorted(glob.glob(os.path.join(ctm_dir, "*.ctm")))):
-        print("\r[%s] processing file %s" % (sys.argv[0], ctm_file),
-              end=" ", flush=True)
+        #print("\r[%s] processing file %s" % (sys.argv[0], ctm_file), end=" ", flush=True)
         pts = []
         with open(ctm_file) as ctm:
             for line in ctm:

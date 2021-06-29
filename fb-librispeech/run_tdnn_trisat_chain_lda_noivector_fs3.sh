@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 fb_num_epochs=4
+decode=true
 
 # NOTE: same as local/chain/run_tdnn.sh -> local/chain/tuning/run_tdnn_1d.sh -- CB
 
@@ -342,7 +343,7 @@ if [ $stage -le 15 ]; then
 fi
 
 graph_dir=$dir/graph_tgsmall
-if [ $stage -le 16 ]; then
+if $decode && [ $stage -le 16 ]; then
   # Note: it might appear that this $lang directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
@@ -351,7 +352,7 @@ fi
 
 iter_opts=
 [ ! -z $decode_iter ] && iter_opts=" --iter $decode_iter "
-if [ $stage -le 17 ]; then
+if $decode && [ $stage -le 17 ]; then
       #--online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_test_hires \
   steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 \
       --nj 10 --cmd "$decode_cmd" $iter_opts \
@@ -386,3 +387,4 @@ if $test_online_decoding && [ $stage -le 18 ]; then
 fi
 
 wait
+echo "$0: success!"

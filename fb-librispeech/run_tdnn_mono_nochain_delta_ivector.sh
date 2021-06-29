@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 fb_num_epochs=4
+decode=true
 
 # NOTE: same as local/nnet3/tuning/run_tdnn_1c.sh -- CB
 
@@ -164,7 +165,7 @@ if [ $stage -le 12 ]; then
 
 fi
 
-if [ $stage -le 13 ]; then
+if $decode && [ $stage -le 13 ]; then
   # this does offline decoding that should give about the same results as the
   # real online decoding (the one with --per-utt true)
   rm $dir/.error 2>/dev/null || true
@@ -185,3 +186,4 @@ if [ $stage -le 13 ]; then
 fi
 
 exit 0;
+echo "$0: success!"
