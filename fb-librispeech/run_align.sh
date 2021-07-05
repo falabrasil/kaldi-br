@@ -63,8 +63,8 @@ fi
 
 # extract feats
 if [ $stage -le 1 ] ; then
-  utils/copy_data_dir.sh alignme alignme_lores
-  utils/copy_data_dir.sh alignme alignme_hires
+  utils/copy_data_dir.sh --validate-opts "--non-print" alignme alignme_lores
+  utils/copy_data_dir.sh --validate-opts "--non-print" alignme alignme_hires
   
   msg "[$0] computing low resolution mfcc features" 
   steps/make_mfcc.sh --nj 1 alignme_lores

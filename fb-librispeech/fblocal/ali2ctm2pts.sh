@@ -45,7 +45,7 @@ cat $RES_DIR/${am_tag}_ali/*.CTM > alignme/$am_tag.phoneids.CTM
 while read line ; do
   utt_id=$(echo $line | awk '{print $1}')
   ctm_file=$(echo $utt_id | cut -d '_' -f 2).ctm
-  #echo -ne "\r$0: extracting $ctm_file from phoneids.ctm"
+  echo -ne "\r$0: extracting $ctm_file from phoneids.ctm" >&2
   grep $utt_id alignme/$am_tag.phoneids.CTM > $RES_DIR/${am_tag}_ali/$ctm_file || echo "$0: file missing: $utt_id"
 done < alignme/utt2spk
 echo

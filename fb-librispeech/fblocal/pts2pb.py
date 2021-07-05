@@ -38,7 +38,8 @@ if __name__ == '__main__':
     predict_pts_filelist = []
     for i in range(1, N + 1):
         basefile = '%s-%03d.pts' % (gender_tag, i)
-        #print('\r[%s] processing file %s' % (TAG, basefile), end=' ', flush=True)
+        print('\r[%s] processing file %s' % (TAG, basefile),
+               end=' ', flush=True, file=sys.stderr)
         truth_pts = os.path.join(truth_dir, basefile)
         predict_pts = os.path.join(predict_dir, basefile)
         if os.path.isfile(truth_pts) and os.path.isfile(predict_pts):
