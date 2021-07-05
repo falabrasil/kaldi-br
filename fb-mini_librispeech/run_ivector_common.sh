@@ -37,11 +37,11 @@ if [ $stage -le 1 ]; then
   # perturb the normal data to get the alignment _sp stands for speed-perturbed
   msg "$0: preparing directory for low-resolution speed-perturbed data (for alignment)"
   /usr/bin/time -f "speed perturb took %U secs.\tRAM: %M KB" \
-  	utils/data/perturb_data_dir_speed_3way.sh data/${train_set} data/${train_set}_sp
+    utils/data/perturb_data_dir_speed_3way.sh data/${train_set} data/${train_set}_sp
 
   msg "$0: making MFCC features for low-resolution speed-perturbed data"
   /usr/bin/time -f "mfcc computation took %U secs.\tRAM: %M KB" \
-  	steps/make_mfcc.sh --cmd "$train_cmd" --nj 6 data/${train_set}_sp || exit 1;
+    steps/make_mfcc.sh --cmd "$train_cmd" --nj 6 data/${train_set}_sp || exit 1;
   steps/compute_cmvn_stats.sh data/${train_set}_sp || exit 1;
   utils/fix_data_dir.sh data/${train_set}_sp
 fi
@@ -49,8 +49,8 @@ fi
 if [ $stage -le 2 ]; then
   msg "$0: aligning with the perturbed low-resolution data"
   /usr/bin/time -f "align fmllr took %U secs.\tRAM: %M KB" \
-  	steps/align_fmllr.sh --nj 6 --cmd "$train_cmd" \
-  	  data/${train_set}_sp data/lang $gmm_dir $ali_dir || exit 1
+    steps/align_fmllr.sh --nj 6 --cmd "$train_cmd" \
+      data/${train_set}_sp data/lang $gmm_dir $ali_dir || exit 1
 fi
 
 if [ $stage -le 3 ]; then
@@ -68,12 +68,12 @@ if [ $stage -le 3 ]; then
   # do volume-perturbation on the training data prior to extracting hires
   # features; this helps make trained nnets more invariant to test data volume.
   /usr/bin/time -f "volume perturb took %U secs.\tRAM: %M KB" \
-  	utils/data/perturb_data_dir_volume.sh data/${train_set}_sp_hires || exit 1;
+    utils/data/perturb_data_dir_volume.sh data/${train_set}_sp_hires || exit 1;
 
   for datadir in ${train_set}_sp ${test_sets}; do
-  	/usr/bin/time -f "mfcc computation took %U secs.\tRAM: %M KB" \
-  	  steps/make_mfcc.sh --nj 6 --mfcc-config conf/mfcc_hires.conf \
-  	    --cmd "$train_cmd" data/${datadir}_hires || exit 1;
+    /usr/bin/time -f "mfcc computation took %U secs.\tRAM: %M KB" \
+      steps/make_mfcc.sh --nj 6 --mfcc-config conf/mfcc_hires.conf \
+        --cmd "$train_cmd" data/${datadir}_hires || exit 1;
     steps/compute_cmvn_stats.sh data/${datadir}_hires || exit 1;
     utils/fix_data_dir.sh data/${datadir}_hires || exit 1;
   done
@@ -91,20 +91,20 @@ if [ $stage -le 4 ]; then
 
   msg "$0: computing a PCA transform from the hires data."
   /usr/bin/time -f "pca transform took %U secs.\tRAM: %M KB" \
-  	steps/online/nnet2/get_pca_transform.sh --cmd "$train_cmd" \
-  	    --splice-opts "--left-context=3 --right-context=3" \
-  	    --max-utts 10000 --subsample 2 \
-  	     ${temp_data_root}/${train_set}_sp_hires_subset \
-  	     exp/nnet3${nnet3_affix}/pca_transform
+    steps/online/nnet2/get_pca_transform.sh --cmd "$train_cmd" \
+        --splice-opts "--left-context=3 --right-context=3" \
+        --max-utts 10000 --subsample 2 \
+         ${temp_data_root}/${train_set}_sp_hires_subset \
+         exp/nnet3${nnet3_affix}/pca_transform
 
   msg "$0: training the diagonal UBM."
   # Use 512 Gaussians in the UBM.
   /usr/bin/time -f "train ubm took %U secs.\tRAM: %M KB" \
-  	steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 4 \
-  	  --num-frames 700000 \
-  	  --num-threads 2 \
-  	  ${temp_data_root}/${train_set}_sp_hires_subset 512 \
-  	  exp/nnet3${nnet3_affix}/pca_transform exp/nnet3${nnet3_affix}/diag_ubm
+    steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 4 \
+      --num-frames 700000 \
+      --num-threads 2 \
+      ${temp_data_root}/${train_set}_sp_hires_subset 512 \
+      exp/nnet3${nnet3_affix}/pca_transform exp/nnet3${nnet3_affix}/diag_ubm
 fi
 
 if [ $stage -le 5 ]; then
@@ -113,11 +113,11 @@ if [ $stage -le 5 ]; then
   # 100.
   msg "$0: training the iVector extractor"
   /usr/bin/time -f "train ie took %U secs.\tRAM: %M KB" \
-  	steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 2 \
-  	   --num-threads 2 --num-processes 2 \
-  	   --online-cmvn-iextractor $online_cmvn_iextractor \
-  	   data/${train_set}_sp_hires exp/nnet3${nnet3_affix}/diag_ubm \
-  	   exp/nnet3${nnet3_affix}/extractor || exit 1;
+    steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 2 \
+       --num-threads 2 --num-processes 2 \
+       --online-cmvn-iextractor $online_cmvn_iextractor \
+       data/${train_set}_sp_hires exp/nnet3${nnet3_affix}/diag_ubm \
+       exp/nnet3${nnet3_affix}/extractor || exit 1;
 fi
 
 if [ $stage -le 6 ]; then
@@ -141,16 +141,16 @@ if [ $stage -le 6 ]; then
     data/${train_set}_sp_hires ${temp_data_root}/${train_set}_sp_hires_max2
 
   /usr/bin/time -f "extracting ivectors took %U secs.\tRAM: %M KB" \
-  	steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 6 \
-  	  ${temp_data_root}/${train_set}_sp_hires_max2 \
-  	  exp/nnet3${nnet3_affix}/extractor $ivectordir
+    steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 6 \
+      ${temp_data_root}/${train_set}_sp_hires_max2 \
+      exp/nnet3${nnet3_affix}/extractor $ivectordir
 
   # Also extract iVectors for the test data, but in this case we don't need the speed
   # perturbation (sp).
   for data in $test_sets; do
-  	/usr/bin/time -f "extracting ivectors took %U secs.\tRAM: %M KB" \
-  	  steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 6 \
-  	    data/${data}_hires exp/nnet3${nnet3_affix}/extractor \
-  	    exp/nnet3${nnet3_affix}/ivectors_${data}_hires
+    /usr/bin/time -f "extracting ivectors took %U secs.\tRAM: %M KB" \
+      steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 6 \
+        data/${data}_hires exp/nnet3${nnet3_affix}/extractor \
+        exp/nnet3${nnet3_affix}/ivectors_${data}_hires
   done
 fi
