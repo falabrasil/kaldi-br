@@ -1,10 +1,11 @@
 #!/usr/bin/env
 # -*- encoding: utf-8 -*-
 #
-# normalises Portuguese portion of OSCAR dataset
+# Normalises Portuguese portion of OSCAR dataset.
+# Tries to adapt to Brazilian Portuguese
 #
 # author: july 2021
-# cassio batista - ctbatista@cpqd.com.br
+# cassio batista - https://cassota.gitlab.io
 
 
 import sys
@@ -191,5 +192,3 @@ if __name__ == "__main__":
                 sent = normalize(sent.lower())
                 logger.debug("» %s" % sent)
         logger.debug("--")
-        if i == 100000:
-            break
