@@ -119,7 +119,7 @@ if [ -f data/lang_test_large/G.carpa ] && [ $stage -le 4 ] ; then
   /usr/bin/time -f "lattice rescoring took %E.\tRAM: %M KB" \
     run.pl JOB=1:$nj $data/online/decode_large/log/rescorelm.JOB.log \
       lattice-lmrescore --lm-scale=-1.0 \
-        old_ark_in="ark:gunzip -c $data/online/decode_small/lat.JOB.gz |" \
+        "ark:gunzip -c $data/online/decode_small/lat.JOB.gz |" \
         "fstproject --project_output=true data/lang_test_small/G.fst |" \
         ark:- \| \
       lattice-lmrescore-const-arpa --lm-scale=1.0 \
