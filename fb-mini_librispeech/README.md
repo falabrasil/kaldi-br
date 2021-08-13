@@ -8,7 +8,7 @@ graph LR;
     B                      --> C[DNN<br>training];
 ```
 
-All three are accomplished through stages across the script `run.sh`. Data
+All three are accomplished through stages across the script `run_gmm.sh`. Data
 preparation occurs on stage one, GMM training on stages two until eight, and
 finally DNN training on stage nine.
 
@@ -43,7 +43,7 @@ train/          test/         local/
 
 The script `prep_env.sh` gives the kick-off by initializing the directory and
 file structure tree, mostly by making symbolic links to the `mini_librispeech` 
-stuff. But the resources are create by the first stage of `run.sh`.
+stuff. But the resources are create by the first stage of `run_gmm.sh`.
 
 ### Audio corpus
 The default data downloaded by the scripts and used during training is the
@@ -98,13 +98,13 @@ repo. It is also automatically downloaded.
 The schematic below shows the pipeline to training a HMM-DNN acoustic model
 using Kaldi (for more details read our 
 [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
-These steps are accomplished by running stages 2 to 8 in `run.sh`.
+These steps are accomplished by running stages 2 to 8 in `run_gmm.sh`.
 
 ![alt text](doc/gmm.png)
 
 ## DNN model training
-Stage 9 in `run.sh` calls a script called `run_tdnn.sh`, which actually follows
-this entire pipeline below.
+Stage 9 in `run_gmm.sh` calls a script called `run_tdnn.sh`, which actually
+follows this entire pipeline below.
 
 ![](doc/tdnn.png)
 

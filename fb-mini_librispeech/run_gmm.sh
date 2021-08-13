@@ -248,18 +248,30 @@ if [ $stage -le 8 ]; then
       exp/tri3b exp/tri3b/graph_small
 fi
 
-# Train a TDNN-F chain model
-# NOTE: if you have multiple NVIDIA GPUs, then you may want to 
-#       increase the number of jobs final accordingly.
-# NOTE: if you do not have an NVIDIA card, then set use-gpu to
-#       'false', jobs initial to 2 and jobs final to 4. However,
-#       it is strongly advisable to get at least one card. Or
-#       you might consider running Kaldi on Google Colab instead.
+# README README README README README README README README README README README 
+# README README README README README README README README README README README 
+# README README README README README README README README README README README 
+# XXX XXX XXX XXX XXX XXX Train a TDNN-F chain model XXX XXX XXX XXX XXX XXX 
+# README README README README README README README README README README README 
+# README README README README README README README README README README README 
+# README README README README README README README README README README README 
+# NOTE: if you do not have an NVIDIA card, then open up this script
+#       and set the following options on stage 14 to `train.py`:
+#           --trainer.optimization.num-jobs-initial=2
+#           --trainer.optimization.num-jobs-final=3
+#           --use-gpu=false
+#       we do not recommend training the DNN on CPU, though. 
+#       you'd better set up Kaldi on Google Colab instead.
+# NOTE: if you do have multiple GPU cards, on the other hand,
+#       then set the parameters as the following:
+#           --trainer.optimization.num-jobs-initial=2
+#           --trainer.optimization.num-jobs-final=4
+#           --use-gpu=wait
+#       (the example above assumes you have 4 NVIDIA cards)
 if [ $stage -le 9 ]; then
   msg "$0: run TDNN-F script"
   /usr/bin/time -f "tdnn %U secs.\tRAM: %M KB" \
-    ./run_tdnn.sh --use-gpu true \
-      --jobs-initial 1 --jobs-final 1 --num-epochs 5
+    ./run_tdnn.sh
 fi
 
 e_time=$(date +'%F_%T')

@@ -34,25 +34,11 @@ decode_nj=10
 train_set=train  # CB: changed
 test_sets=test   # CB: changed
 gmm=tri3b
-nnet3_affix=_online_cmn
-
-# CB: added for easy switch between CPU clusters and GPUs
-use_gpu=
-jobs_initial=
-jobs_final=
-num_epochs=
-
-# Setting 'online_cmvn' to true replaces 'apply-cmvn' by
-# 'apply-cmvn-online' both for i-vector extraction and TDNN input.
-# The i-vector extractor uses the config 'conf/online_cmvn.conf' for
-# both the UBM and the i-extractor. The TDNN input is configured via
-# '--feat.cmvn-opts' that is set to the same config, so we use the
-# same cmvn for i-extractor and the TDNN input.
-online_cmvn=true
+nnet3_affix=
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-affix=1k   # affix for the TDNN directory name
+affix=1j   # affix for the TDNN directory name
 tree_affix=
 train_stage=-10
 get_egs_stage=-10
@@ -98,7 +84,6 @@ echo "$0 $@"  # Print the command line for logging
                           --train-set $train_set \
                           --test-sets $test_sets \
                           --gmm $gmm \
-                          --online-cmvn-iextractor $online_cmvn \
                           --nnet3-affix "$nnet3_affix" || exit 1;
 
 # Problem: We have removed the "train_" prefix of our training set in
@@ -227,7 +212,7 @@ if [ $stage -le 14 ]; then
     steps/nnet3/chain/train.py --stage=$train_stage \
       --cmd="$decode_cmd" \
       --feat.online-ivector-dir=$train_ivector_dir \
-      --feat.cmvn-opts="--config=conf/online_cmvn.conf" \
+      --feat.cmvn-opts="--norm-means=false --norm-vars=false" \
       --chain.xent-regularize $xent_regularize \
       --chain.leaky-hmm-coefficient=0.1 \
       --chain.l2-regularize=0.0 \
@@ -236,18 +221,18 @@ if [ $stage -le 14 ]; then
       --trainer.add-option="--optimization.memory-compression-level=2" \
       --trainer.srand=$srand \
       --trainer.max-param-change=2.0 \
-      --trainer.num-epochs=$num_epochs \
+      --trainer.num-epochs=5 \
       --trainer.frames-per-iter=3000000 \
-      --trainer.optimization.num-jobs-initial=$jobs_initial \
-      --trainer.optimization.num-jobs-final=$jobs_final \
+      --trainer.optimization.num-jobs-initial=1 \
+      --trainer.optimization.num-jobs-final=1 \
       --trainer.optimization.initial-effective-lrate=0.002 \
       --trainer.optimization.final-effective-lrate=0.0002 \
       --trainer.num-chunk-per-minibatch=128,64 \
       --egs.chunk-width=$chunk_width \
       --egs.dir="$common_egs_dir" \
-      --egs.opts="--frames-overlap-per-eg 0 --online-cmvn $online_cmvn --max-jobs-run 6 --max-shuffle-jobs-run 6" \
+      --egs.opts="--frames-overlap-per-eg 0 --max-jobs-run 6 --max-shuffle-jobs-run 6" \
       --cleanup.remove-egs=$remove_egs \
-      --use-gpu=$use_gpu \
+      --use-gpu=true \
       --reporting.email="$reporting_email" \
       --feat-dir=$train_data_dir \
       --tree-dir=$tree_dir \
@@ -306,7 +291,6 @@ if $test_online_decoding && [ $stage -le 17 ]; then
   msg "$0: prepare online decoding"
   steps/online/nnet3/prepare_online_decoding.sh \
     --mfcc-config conf/mfcc_hires.conf \
-    --online-cmvn-config conf/online_cmvn.conf \
     $lang exp/nnet3${nnet3_affix}/extractor ${dir} ${dir}_online
 
   msg "$0: online decode"
