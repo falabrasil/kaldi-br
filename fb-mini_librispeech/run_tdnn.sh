@@ -320,7 +320,19 @@ if $test_online_decoding && [ $stage -le 17 ]; then
   done
 fi
 
-msg "$0: success!"
+# https://github.com/kaldi-asr/kaldi/blob/master/egs/librispeech/s5/local/lookahead/run_lookahead.sh
+if [ $stage -le 18 ]; then
+  msg "$0: generating dnn graph (lookahead)"
+  export LD_LIBRARY_PATH=${KALDI_ROOT}/tools/openfst/lib/fst
+  /usr/bin/time -f "mkgraph (lookahead) $PRF" \
+    utils/mkgraph_lookahead.sh --self-loop-scale 1.0 \
+      data/lang_test_small $tree_dir $tree_dir/graph_small_lookahead || exit 1;
+fi
+
+model_dir=model-$(date +'%Y%m%d_%H%M')
+vosk/create_model_dir.sh $model_dir || exit 1
+
+msg "$0: success! check your model at '$model_dir'"
 
 # https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
 echo "------------ wrapping results up ------------"

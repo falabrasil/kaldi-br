@@ -21,16 +21,16 @@ set -e
 
 s_time=$(LC_ALL=C date)
 
-function msg { echo -e "\e[$(shuf -i 91-96 -n 1)m[$(date +'%F %T')] $1\e[0m" ; }
+function msg { echo -e "\e[$(shuf -i 92-96 -n 1)m[$(date +'%F %T')] $1\e[0m" ; }
 
 stage=1
 nj=1
 with_confidence=true
-data=data/decodeme
+data=$(mktemp -d)
 
-am_dir=exp/chain_online_cmn/tdnn1k_sp
-ie_dir=exp/nnet3_online_cmn/extractor
-tree_dir=exp/chain_online_cmn/tree_sp
+am_dir=exp/chain/tdnn1j_sp
+ie_dir=exp/nnet3/extractor
+tree_dir=exp/chain/tree_sp
 
 . path.sh
 . utils/parse_options.sh

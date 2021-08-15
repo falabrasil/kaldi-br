@@ -11,13 +11,13 @@ if len(sys.argv) != 3:
     print("usage: %s <model-dir> <wav-file>")
     sys.exit(1)
 
-model = Model(sys.argv[1])
-rec = KaldiRecognizer(model, wf.getframerate())
-
 wf = wave.open(sys.argv[2], "rb")
 if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
     print ("Audio file must be WAV format mono PCM.")
     exit (1)
+
+model = Model(sys.argv[1])
+rec = KaldiRecognizer(model, wf.getframerate())
 
 while True:
     data = wf.readframes(1000)
