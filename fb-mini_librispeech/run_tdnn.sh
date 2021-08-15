@@ -330,7 +330,7 @@ if [ $stage -le 18 ]; then
 fi
 
 model_dir=model-$(date +'%Y%m%d_%H%M')
-vosk/create_model_dir.sh $model_dir || exit 1
+fbvosk/create_model_dir.sh $model_dir || exit 1
 
 msg "$0: success! check your model at '$model_dir'"
 
