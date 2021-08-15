@@ -9,7 +9,7 @@ Debian-based distro might skip this part, as well as omit further `CC`,
 `CXX`, and other Makefile implicit variables.
 
 ```text
-# yay -S gcc8-libs gcc8-fortran gcc8
+$ yay -S gcc8-libs gcc8-fortran gcc8
 ```
 
 ```bash
@@ -93,6 +93,8 @@ deviceQuery, CUDA Driver = CUDART, CUDA Driver Version = 11.1, CUDA Runtime Vers
 Result = PASS
 ```
 
+Type `nvidia-smi` on your terminal to check the status as well.
+
 
 ## Download and install Kaldi
 
@@ -102,33 +104,31 @@ First, clone Kaldi from GitHub:
 $ git clone https://github.com/kaldi-asr/kaldi
 ```
 
-Then install Kaldi `tools` plus PortAudio lib:
+Then install Kaldi `tools` plus OpenBLAS lib (we don't like Intel MKL very much):
 
 ```bash
 $ cd kaldi/tools
 $ CC=gcc-8 CXX=g++-8 FC=gfortran-8 extras/check_dependencies.sh
 $ CC=gcc-8 CXX=g++-8 FC=gfortran-8 make -j 6
-$ CC=gcc-8 CXX=g++-8 FC=gfortran-8 extras/install_portaudio.sh
+$ CC=gcc-8 CXX=g++-8 FC=gfortran-8 extras/install_openblas.sh
 ```
 
 Finally, install Kaldi `src`.
-Source extras (`ext`) should also be compiled.
-If you do not have an NVIDIA driver, then CUDA dir is optional, On the other
+If you do not have an NVIDIA driver, then CUDA dir is optional. On the other
 hand, if you do have a GPU and your distro is Debian-based (e.g., Ubuntu), the
 `cudatk-dir` parameter is also optional because it's automatically inferred by
 the `configure` script.
 
 ```bash
 $ cd kaldi/src
-$ CC=gcc-8 CXX=g++-8 FC=gfortran-8 ./configure --shared --cudatk-dir=/opt/cuda/
+$ CC=gcc-8 CXX=g++-8 FC=gfortran-8 ./configure --shared --cudatk-dir=/opt/cuda/ --mathlib=OPENBLAS
 $ CC=gcc-8 CXX=g++-8 FC=gfortran-8 make depend -j 6
 $ CC=gcc-8 CXX=g++-8 FC=gfortran-8 make -j 6
-$ CC=gcc-8 CXX=g++-8 FC=gfortran-8 make ext -j 6
 ```
 
-To guarantee Kaldi installation was successful, run the scripts on the yes/no
+To guarantee Kaldi installation was successful, run the scripts on the `yes/no`
 dataset. It doesn't take long to finish since the dataset is pretty small and
-the pipeline only trains and decodes a monophone-bases model. This does not
+the pipeline only trains and decodes a monophone-based model. This does not
 guarantee that the GPU is working, though.
 
 ```bash

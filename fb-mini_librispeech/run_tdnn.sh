@@ -34,25 +34,11 @@ decode_nj=10
 train_set=train  # CB: changed
 test_sets=test   # CB: changed
 gmm=tri3b
-nnet3_affix=_online_cmn
-
-# CB: added for easy switch between CPU clusters and GPUs
-use_gpu=
-jobs_initial=
-jobs_final=
-num_epochs=
-
-# Setting 'online_cmvn' to true replaces 'apply-cmvn' by
-# 'apply-cmvn-online' both for i-vector extraction and TDNN input.
-# The i-vector extractor uses the config 'conf/online_cmvn.conf' for
-# both the UBM and the i-extractor. The TDNN input is configured via
-# '--feat.cmvn-opts' that is set to the same config, so we use the
-# same cmvn for i-extractor and the TDNN input.
-online_cmvn=true
+nnet3_affix=
 
 # The rest are configs specific to this script.  Most of the parameters
 # are just hardcoded at this level, in the commands below.
-affix=1k   # affix for the TDNN directory name
+affix=1j   # affix for the TDNN directory name
 tree_affix=
 train_stage=-10
 get_egs_stage=-10
@@ -93,12 +79,11 @@ echo "$0 $@"  # Print the command line for logging
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
-/usr/bin/time -f "run ivector common took %U secs.\tRAM: %M KB" \
+/usr/bin/time -f "run ivector common $PRF" \
   ./run_ivector_common.sh --stage $stage \
                           --train-set $train_set \
                           --test-sets $test_sets \
                           --gmm $gmm \
-                          --online-cmvn-iextractor $online_cmvn \
                           --nnet3-affix "$nnet3_affix" || exit 1;
 
 # Problem: We have removed the "train_" prefix of our training set in
@@ -137,7 +122,7 @@ if [ $stage -le 10 ]; then
     nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
     # Use our special topology... note that later on may have to tune this
     # topology.
-    /usr/bin/time -f "gen topo took %U secs.\tRAM: %M KB" \
+    /usr/bin/time -f "gen topo $PRF" \
       steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
   fi
 fi
@@ -146,7 +131,7 @@ if [ $stage -le 11 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
   msg "$0: align lattices with fmllr"
-  /usr/bin/time -f "align lattices took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "align lattices $PRF" \
     steps/align_fmllr_lats.sh --nj 6 --cmd "$train_cmd" ${lores_train_data_dir} \
       data/lang $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
@@ -162,7 +147,7 @@ if [ $stage -le 12 ]; then
      echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
      exit 1;
   fi
-  /usr/bin/time -f "build tree took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "build tree $PRF" \
     steps/nnet3/chain/build_tree.sh \
       --frame-subsampling-factor 3 \
       --context-opts "--context-width=2 --central-position=1" \
@@ -223,11 +208,11 @@ fi
 
 if [ $stage -le 14 ]; then
   msg "$0: training DNN"
-  /usr/bin/time -f "training dnn took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "training dnn $PRF" \
     steps/nnet3/chain/train.py --stage=$train_stage \
       --cmd="$decode_cmd" \
       --feat.online-ivector-dir=$train_ivector_dir \
-      --feat.cmvn-opts="--config=conf/online_cmvn.conf" \
+      --feat.cmvn-opts="--norm-means=false --norm-vars=false" \
       --chain.xent-regularize $xent_regularize \
       --chain.leaky-hmm-coefficient=0.1 \
       --chain.l2-regularize=0.0 \
@@ -236,18 +221,18 @@ if [ $stage -le 14 ]; then
       --trainer.add-option="--optimization.memory-compression-level=2" \
       --trainer.srand=$srand \
       --trainer.max-param-change=2.0 \
-      --trainer.num-epochs=$num_epochs \
+      --trainer.num-epochs=5 \
       --trainer.frames-per-iter=3000000 \
-      --trainer.optimization.num-jobs-initial=$jobs_initial \
-      --trainer.optimization.num-jobs-final=$jobs_final \
+      --trainer.optimization.num-jobs-initial=1 \
+      --trainer.optimization.num-jobs-final=1 \
       --trainer.optimization.initial-effective-lrate=0.002 \
       --trainer.optimization.final-effective-lrate=0.0002 \
       --trainer.num-chunk-per-minibatch=128,64 \
       --egs.chunk-width=$chunk_width \
       --egs.dir="$common_egs_dir" \
-      --egs.opts="--frames-overlap-per-eg 0 --online-cmvn $online_cmvn --max-jobs-run 6 --max-shuffle-jobs-run 6" \
+      --egs.opts="--frames-overlap-per-eg 0 --max-jobs-run 6 --max-shuffle-jobs-run 6" \
       --cleanup.remove-egs=$remove_egs \
-      --use-gpu=$use_gpu \
+      --use-gpu=true \
       --reporting.email="$reporting_email" \
       --feat-dir=$train_data_dir \
       --tree-dir=$tree_dir \
@@ -260,7 +245,7 @@ if [ $stage -le 15 ]; then
   # matched topology (since it gets the topology file from the model).
   # CB: changed 'lang_test_tgsmall' to 'lang_test'
   msg "$0: generating dnn graph"
-  /usr/bin/time -f "mkgraph took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "mkgraph $PRF" \
     utils/mkgraph.sh --self-loop-scale 1.0 \
       data/lang_test_small $tree_dir $tree_dir/graph_small || exit 1;
 fi
@@ -271,7 +256,7 @@ if [ $stage -le 16 ]; then
 
   msg "$0: decoding dnn"
   for data in $test_sets; do
-    /usr/bin/time -f "decoding took %U secs.\tRAM: %M KB" \
+    /usr/bin/time -f "decoding $PRF" \
       steps/nnet3/decode.sh \
         --acwt 1.0 --post-decode-acwt 10.0 \
         --frames-per-chunk $frames_per_chunk \
@@ -283,7 +268,7 @@ if [ $stage -le 16 ]; then
     grep -Rn WER $dir/decode_small_$data | \
         utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      /usr/bin/time -f "rescoring lattices took %U secs.\tRAM: %M KB" \
+      /usr/bin/time -f "rescoring lattices $PRF" \
         steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
           data/lang_test_large \
@@ -306,14 +291,13 @@ if $test_online_decoding && [ $stage -le 17 ]; then
   msg "$0: prepare online decoding"
   steps/online/nnet3/prepare_online_decoding.sh \
     --mfcc-config conf/mfcc_hires.conf \
-    --online-cmvn-config conf/online_cmvn.conf \
     $lang exp/nnet3${nnet3_affix}/extractor ${dir} ${dir}_online
 
   msg "$0: online decode"
   for data in $test_sets; do
     # note: we just give it "data/${data}" as it only uses the wav.scp, the
     # feature type does not matter.
-    /usr/bin/time -f "online decoding took %U secs.\tRAM: %M KB" \
+    /usr/bin/time -f "online decoding $PRF" \
       steps/online/nnet3/decode.sh \
         --acwt 1.0 --post-decode-acwt 10.0 \
         --nj 6 --cmd "$decode_cmd" \
@@ -323,7 +307,7 @@ if $test_online_decoding && [ $stage -le 17 ]; then
     grep -Rn WER ${dir}_online/decode_small_$data | \
         utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      /usr/bin/time -f "rescoring lattices took %U secs.\tRAM: %M KB" \
+      /usr/bin/time -f "rescoring lattices $PRF" \
         steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
           data/lang_test_large \
@@ -336,7 +320,19 @@ if $test_online_decoding && [ $stage -le 17 ]; then
   done
 fi
 
-msg "$0: success!"
+# https://github.com/kaldi-asr/kaldi/blob/master/egs/librispeech/s5/local/lookahead/run_lookahead.sh
+if [ $stage -le 18 ]; then
+  msg "$0: generating dnn graph (lookahead)"
+  export LD_LIBRARY_PATH=${KALDI_ROOT}/tools/openfst/lib/fst
+  /usr/bin/time -f "mkgraph (lookahead) $PRF" \
+    utils/mkgraph_lookahead.sh --self-loop-scale 1.0 \
+      data/lang_test_small $tree_dir $tree_dir/graph_small_lookahead || exit 1;
+fi
+
+model_dir=model-$(date +'%Y%m%d_%H%M')
+fbvosk/create_model_dir.sh $model_dir || exit 1
+
+msg "$0: success! check your model at '$model_dir'"
 
 # https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
 echo "------------ wrapping results up ------------"
