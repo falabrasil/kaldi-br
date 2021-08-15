@@ -79,7 +79,7 @@ echo "$0 $@"  # Print the command line for logging
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
-/usr/bin/time -f "run ivector common took %U secs.\tRAM: %M KB" \
+/usr/bin/time -f "run ivector common $PRF" \
   ./run_ivector_common.sh --stage $stage \
                           --train-set $train_set \
                           --test-sets $test_sets \
@@ -122,7 +122,7 @@ if [ $stage -le 10 ]; then
     nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
     # Use our special topology... note that later on may have to tune this
     # topology.
-    /usr/bin/time -f "gen topo took %U secs.\tRAM: %M KB" \
+    /usr/bin/time -f "gen topo $PRF" \
       steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
   fi
 fi
@@ -131,7 +131,7 @@ if [ $stage -le 11 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
   msg "$0: align lattices with fmllr"
-  /usr/bin/time -f "align lattices took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "align lattices $PRF" \
     steps/align_fmllr_lats.sh --nj 6 --cmd "$train_cmd" ${lores_train_data_dir} \
       data/lang $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
@@ -147,7 +147,7 @@ if [ $stage -le 12 ]; then
      echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
      exit 1;
   fi
-  /usr/bin/time -f "build tree took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "build tree $PRF" \
     steps/nnet3/chain/build_tree.sh \
       --frame-subsampling-factor 3 \
       --context-opts "--context-width=2 --central-position=1" \
@@ -208,7 +208,7 @@ fi
 
 if [ $stage -le 14 ]; then
   msg "$0: training DNN"
-  /usr/bin/time -f "training dnn took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "training dnn $PRF" \
     steps/nnet3/chain/train.py --stage=$train_stage \
       --cmd="$decode_cmd" \
       --feat.online-ivector-dir=$train_ivector_dir \
@@ -245,7 +245,7 @@ if [ $stage -le 15 ]; then
   # matched topology (since it gets the topology file from the model).
   # CB: changed 'lang_test_tgsmall' to 'lang_test'
   msg "$0: generating dnn graph"
-  /usr/bin/time -f "mkgraph took %U secs.\tRAM: %M KB" \
+  /usr/bin/time -f "mkgraph $PRF" \
     utils/mkgraph.sh --self-loop-scale 1.0 \
       data/lang_test_small $tree_dir $tree_dir/graph_small || exit 1;
 fi
@@ -256,7 +256,7 @@ if [ $stage -le 16 ]; then
 
   msg "$0: decoding dnn"
   for data in $test_sets; do
-    /usr/bin/time -f "decoding took %U secs.\tRAM: %M KB" \
+    /usr/bin/time -f "decoding $PRF" \
       steps/nnet3/decode.sh \
         --acwt 1.0 --post-decode-acwt 10.0 \
         --frames-per-chunk $frames_per_chunk \
@@ -268,7 +268,7 @@ if [ $stage -le 16 ]; then
     grep -Rn WER $dir/decode_small_$data | \
         utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      /usr/bin/time -f "rescoring lattices took %U secs.\tRAM: %M KB" \
+      /usr/bin/time -f "rescoring lattices $PRF" \
         steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
           data/lang_test_large \
@@ -297,7 +297,7 @@ if $test_online_decoding && [ $stage -le 17 ]; then
   for data in $test_sets; do
     # note: we just give it "data/${data}" as it only uses the wav.scp, the
     # feature type does not matter.
-    /usr/bin/time -f "online decoding took %U secs.\tRAM: %M KB" \
+    /usr/bin/time -f "online decoding $PRF" \
       steps/online/nnet3/decode.sh \
         --acwt 1.0 --post-decode-acwt 10.0 \
         --nj 6 --cmd "$decode_cmd" \
@@ -307,7 +307,7 @@ if $test_online_decoding && [ $stage -le 17 ]; then
     grep -Rn WER ${dir}_online/decode_small_$data | \
         utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      /usr/bin/time -f "rescoring lattices took %U secs.\tRAM: %M KB" \
+      /usr/bin/time -f "rescoring lattices $PRF" \
         steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
           data/lang_test_large \
