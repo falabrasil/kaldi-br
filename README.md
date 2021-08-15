@@ -17,7 +17,7 @@ directly: https://github.com/kaldi-asr/kaldi
 ## Model training for speech recognition (Vosk)
 
 See [`fb-mini_librispeech/`](./fb-mini_librispeech) dir.
-Based on Mini-librispeech `nnet3` recipe.
+Based on Mini-librispeech `nnet3` recipe (`local/chain/tuning/run_tdnn_1j.sh`).
 
 ```bash
 $ ./prep_minilibri.sh /path/to/kaldi/egs/myproject
@@ -25,7 +25,9 @@ $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run.sh
 ```
 
-For online decoding, please check [`utils/online/`](./utils/online) dir.
+For online decoding, please check
+[`fb-mini_librispeech/vosk/`](./fb-mini_librispeech/online) dir.
+Dir [`utils/online/`](./utils/online) is deprecated.
 
 ## Model training for phonetic alignment (Gentle)
 
