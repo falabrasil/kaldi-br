@@ -26,7 +26,7 @@ $ ./run.sh
 ```
 
 For online decoding, please check
-[`fb-mini_librispeech/vosk/`](./fb-mini_librispeech/online) dir.
+[`fb-mini_librispeech/fbvosk/`](./fb-mini_librispeech/fbvosk) dir.
 Dir [`utils/online/`](./utils/online) is deprecated.
 
 ## Model training for phonetic alignment (Gentle)

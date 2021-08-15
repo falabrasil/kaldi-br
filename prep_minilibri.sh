@@ -41,8 +41,8 @@ KALDI_ROOT=$(readlink -f $(dirname $(dirname $proj_dir)))
 minilibri_dir=$KALDI_ROOT/egs/mini_librispeech/s5
 proj_dir=$(readlink -f $proj_dir)/s5
 mkdir -p $proj_dir
-ln -sf $src_dir/{fblocal,fbutils} $proj_dir
-cp -v $src_dir/{fb_commons,path,run*}.sh $proj_dir || exit 1
+ln -sf $src_dir/{fblocal,fbutils,fbvosk} $proj_dir
+cp -v $src_dir/{fb_commons,path,run_*}.sh $proj_dir || exit 1
 ln -sf $minilibri_dir/{conf,local,steps,utils} $proj_dir
 sed 's/"queue.pl/"run.pl/g' $minilibri_dir/cmd.sh > $proj_dir/cmd.sh
 
