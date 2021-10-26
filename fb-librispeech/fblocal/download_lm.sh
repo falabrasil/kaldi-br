@@ -18,21 +18,10 @@ data_dir=$1
 lm_url=$2
 link_dir=$3
 
-mkdir -p $data_dir || exit 1
-mkdir -p $link_dir || exit 1
-
-sha=e4062301e4c131b1f9c686b40288edab650b33c2
+mkdir -p $data_dir $link_dir || exit 1
 filename=$(basename $lm_url)
-if [ ! -f $data_dir/$filename ] ; then
-    wget -q --show-progress $lm_url -P $data_dir || exit 1
-else
-    echo "$0: file '$filename' exists under $data_dir. skipping download"
-fi
-
-if [ "$(sha1sum $data_dir/$filename | awk '{print $1}')" != $sha ] ; then
-    echo "$0: error: SHA1 digest key mismatch. please redownload file"
-    rm -f $data_dir/$filename
-    exit 1
-fi
+[ ! -f $data_dir/$filename ] && \
+  { wget -q --show-progress $lm_url -P $data_dir || exit 1 ; } || \
+  echo "$0: file '$filename' exists under $data_dir. skipping download"
 
 ln -sf $(readlink -f ${data_dir}/${filename}) ${link_dir}/lm_tglarge.arpa.gz

@@ -62,7 +62,7 @@ if [ $stage -le 3 ]; then
   utils/data/perturb_data_dir_volume.sh data/train_sp_hires
 
   for datadir in train_sp test; do
-    steps/make_mfcc.sh --nj 8 --mfcc-config conf/mfcc_hires.conf --cmd "$train_cmd" data/${datadir}_hires
+    steps/make_mfcc.sh --nj 16 --mfcc-config conf/mfcc_hires.conf --cmd "$train_cmd" data/${datadir}_hires
     steps/compute_cmvn_stats.sh data/${datadir}_hires
     utils/fix_data_dir.sh data/${datadir}_hires
   done
@@ -91,7 +91,7 @@ if [ $stage -le 4 ]; then
 
   msg "$0: training the diagonal UBM."
   # Use 512 Gaussians in the UBM.
-  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 6 \
+  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 8 \
     --num-frames 700000 --num-threads 2 \
     ${temp_data_root}/train_sp_hires_subset 512 \
     exp/nnet3/pca_transform exp/nnet3/diag_ubm
@@ -102,7 +102,7 @@ if [ $stage -le 5 ]; then
   # this one has a fairly small dim (defaults to 100) so we don't use all of it,
   # we use just the 60k subset (about one fifth of the data, or 200 hours).
   msg "$0: training the iVector extractor"
-  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 2 \
+  steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 4 \
     --num-processes 2 --num-threads 2 \
     data/train_sp_hires exp/nnet3/diag_ubm exp/nnet3/extractor
 fi
@@ -115,7 +115,7 @@ fi
 if [ $stage -le 6 ]; then
   # having a larger number of speakers is helpful for generalization, and to
   # handle per-utterance decoding well (iVector starts at zero).
-  utils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
+  fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
     data/train_sp_hires exp/nnet3/ivectors_train_sp_hires/train_sp_hires_max2
 
   # extract feats from training data
