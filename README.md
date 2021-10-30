@@ -74,7 +74,7 @@ under [`utils/clustering/`](utils/clustering) dir.
 If you use these codes or want to mention the paper referred above, please cite 
 us as one of the following: 
 
-## [IberSPEECH 2018](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)
+## [IberSPEECH 2018](https://www.isca-speech.org/archive/iberspeech_2018/batista18_iberspeech.html)
 
 > Batista, C., Dias, A.L., Sampaio Neto, N. (2018) Baseline Acoustic Models for
 > Brazilian Portuguese Using Kaldi Tools. Proc. IberSPEECH 2018, 77-81, DOI:
