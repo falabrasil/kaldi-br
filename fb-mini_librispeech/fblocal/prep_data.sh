@@ -45,7 +45,7 @@ data_dir=$2
 if $split_random ; then
     echo -n "$0: dataset will be random split. "
     echo "this might take a while... "
-    find "$corpus_dir" -name '*.wav' | sort -R |\
+    find -L "$corpus_dir" -name '*.wav' | shuf | \
         awk '{print $NF}' | sed 's/.wav//g' > filelist.tmp
     ntotal=$(cat filelist.tmp | wc -l)
     ntest=$((ntotal/10))     # 10% test
@@ -56,9 +56,9 @@ if $split_random ; then
 elif [ ! -z "$test_dir" ] ; then
     echo -n "$0: NOTE: using only '$test_dir' for test! "
     echo "this might take a while... "
-    find $corpus_dir -name '*.wav' | grep -v "${test_dir}" |\
+    find -L $corpus_dir -name '*.wav' | grep -v "${test_dir}" | \
            sed 's/.wav//g' > train.list
-    find $corpus_dir/$test_dir -name '*.wav' |\
+    find -L $corpus_dir/$test_dir -name '*.wav' | \
             sed 's/.wav//g' > test.list
     ntrain=$(wc -l train.list | awk '{print $1}')
     ntest=$(wc -l test.list | awk '{print $1}')
