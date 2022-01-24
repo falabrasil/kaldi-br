@@ -11,8 +11,8 @@ data=./corpus/
 
 data_url=https://gitlab.com/fb-audio-corpora/lapsbm16k/-/archive/master/lapsbm16k-master.tar.gz
 lex_url=https://gitlab.com/fb-resources/dicts-br/-/raw/main/res/lexicon.vocab.txt.gz
-lm_small_url=https://gitlab.com/fb-resources/lm-br/-/raw/main/res/3-gram.1e-7.arpa.gz
-lm_large_url=https://gitlab.com/fb-resources/lm-br/-/raw/main/res/4-gram.arpa.gz
+lm_small_url=https://gitlab.com/fb-resources/lm-br/-/raw/main/res/3-gram.2e-7.arpa.gz
+lm_large_url=https://gitlab.com/fb-resources/lm-br/-/raw/main/res/4-gram.unpruned.arpa.gz
 
 # set this up if you want to run with your own data.
 # then execute this script as follows:
