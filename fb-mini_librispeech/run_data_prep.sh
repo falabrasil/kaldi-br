@@ -130,7 +130,7 @@ if [ $stage -le 1 ]; then
   msg "$0: creating G.fst from low-order ARPA LM"
   cp -r data/lang_nosp data/lang_nosp_test_small
   /usr/bin/time -f "arpa2fst $PRF" \
-    gunzip -c data/local/lm/small.arpa.gz | \
+    gunzip -c data/local/lm/small.arpa.gz | sed "s/<unk>/<UNK>/g" | \
     arpa2fst --disambig-symbol=#0 \
     --read-symbol-table=data/lang_nosp_test_small/words.txt \
     - data/lang_nosp_test_small/G.fst
@@ -139,10 +139,15 @@ if [ $stage -le 1 ]; then
 
   # Create ConstArpaLm format language model for full 3-gram and 4-gram LMs
   if ! $skip_rescoring ; then
+    cp -r data/lang_nosp data/lang_nosp_test_large
     msg "$0: creating G.carpa from high-order ARPA LM"
-    /usr/bin/time -f "arpa2carpa $PRF" \
-      utils/build_const_arpa_lm.sh data/local/lm/large.arpa.gz \
-      data/lang_nosp data/lang_nosp_test_large
+    gunzip -c data/local/lm/large.arpa.gz | sed "s/<unk>/<UNK>/g" | \
+      utils/map_arpa_lm.pl data/lang_nosp_test_large/words.txt | \
+      arpa-to-const-arpa \
+        --bos-symbol=$(grep "^<s>\s"  data/lang_nosp_test_large/words.txt | awk '{print $2}') \
+        --eos-symbol=$(grep "^</s>\s" data/lang_nosp_test_large/words.txt | awk '{print $2}') \
+        --unk-symbol=$(grep "<UNK>\s" data/lang_nosp_test_large/words.txt | awk '{print $2}') \
+        - data/lang_nosp_test_large/G.carpa  || exit 1;
     # TODO no validate_lang??
   fi
 fi
@@ -171,3 +176,4 @@ if [ $stage -le 2 ]; then
   utils/subset_data_dir.sh --shortest data/train $n data/train_500short
 fi
 
+msg "$0: success!"

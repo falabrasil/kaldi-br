@@ -154,3 +154,5 @@ if [ $stage -le 6 ]; then
         exp/nnet3${nnet3_affix}/ivectors_${data}_hires
   done
 fi
+
+msg "$0: done extracting ivectors"

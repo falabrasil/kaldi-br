@@ -88,16 +88,21 @@ if [ $stage -le 4 ]; then
   #fblocal/format_lms.sh --src-dir data/lang data/local/lm
   cp -r data/lang data/lang_test_small
   /usr/bin/time -f "arpa2fst $PRF" \
-    gunzip -c data/local/lm/small.arpa.gz | \
+    gunzip -c data/local/lm/small.arpa.gz | sed "s/<unk>/<UNK>/g" | \
       arpa2fst --disambig-symbol=#0 \
                --read-symbol-table=data/lang_test_small/words.txt \
                - data/lang_test_small/G.fst
   utils/validate_lang.pl --skip-determinization-check data/lang_test_small
 
   if [ -f data/local/lm/large.arpa.gz ] ; then
-    /usr/bin/time -f "arpa2carpa $PRF" \
-      utils/build_const_arpa_lm.sh data/local/lm/large.arpa.gz \
-          data/lang data/lang_test_large
+    cp -r data/lang data/lang_test_large
+    gunzip -c data/local/lm/large.arpa.gz | sed "s/<unk>/<UNK>/g" | \
+      utils/map_arpa_lm.pl data/lang_test_large/words.txt | \
+      arpa-to-const-arpa \
+        --bos-symbol=$(grep "^<s>\s"  data/lang_test_large/words.txt | awk '{print $2}') \
+        --eos-symbol=$(grep "^</s>\s" data/lang_test_large/words.txt | awk '{print $2}') \
+        --unk-symbol=$(grep "<UNK>\s" data/lang_test_large/words.txt | awk '{print $2}') \
+        - data/lang_test_large/G.carpa  || exit 1;
     # TODO no validate_lang??
   fi
 
