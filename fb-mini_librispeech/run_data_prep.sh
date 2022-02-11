@@ -3,8 +3,10 @@
 # author: jan 2022
 # cassio batista - https://cassota.gitlab.io
 
+set -euo pipefail
+
 stage=0
-skip_rescoring=false
+skip_rescoring=false  # if your machine is memory-contrained then turn this on
 
 # Change this location to somewhere where you want to put the data.
 data=./corpus/
@@ -26,18 +28,16 @@ lex_file=
 lm_small_file=
 lm_large_file=
 
-. ./cmd.sh
-. ./path.sh
-. ./fb_commons.sh
+. ./cmd.sh || exit 1
+. ./path.sh || exit 1
+. ./fb_commons.sh || exit 1
 
 . utils/parse_options.sh
-
-set -euo pipefail
 
 # sanity check on file extensions: must be .gz files
 for f in $lm_small_file $lm_large_file $lex_file ; do
   [ ! -z $f ] && [[ "$f" != *".gz" ]] && \
-    echo "$0: error: model $f must be gunzip-compressed" && exit 1
+    echo "$0: error: model $f must be gzip-compressed" && exit 1
 done
 
 mkdir -p $data
@@ -51,37 +51,40 @@ if [ $stage -le 0 ]; then
     if [ -f $data/$(basename $data_url) ] ; then
       echo "$0: data is already in place. skipping download"
     else
-      wget --quiet --show-progress $data_url -P $data || exit 1
+      wget --quiet --show-progress $data_url -P $data || \
+        { echo >&2 "$0: ERROR: problem downloading lapsbm" && exit 1 ; }
     fi
     tar -zxf $data/$(basename $data_url) -C $data || exit 1;
   else
     msg "$0: gathering data from '$audio_dir'"
-    [ ! -d $data ] && echo "$0: error: data dir $data must exist" && exit 1
+    [ ! -d $data ] && echo >&2 "$0: ERROR: data dir $data must exist" && exit 1
     ln -rsf $audio_dir $data
   fi
 
   # prepare lexicon
   if [ -z "$lex_file" ] ; then
-    msg "$0: downloading dict from FalaBrasil GitLab"
+    msg "$0: downloading dict from FalaBrasil GitLab (1.5M)"
     if [ -f $data/$(basename $lex_url) ] ; then
       echo "$0: lexicon already in place. skipping download"
     else
-      wget --quiet --show-progress $lex_url -P $data || exit 1
+      wget --quiet --show-progress $lex_url -P $data || \
+        { echo >&2 "$0: ERROR: problem downloading dict" && exit 1 ; }
     fi
-    gzip -cd $data/$(basename $lex_url) > data/local/dict_nosp/lexicon.txt
+    gunzip -c $data/$(basename $lex_url) > data/local/dict_nosp/lexicon.txt
   else
     msg "$0: copying lexicon from '$lex_file'"
     cp -v $lex_file $data
-    gzip -cd $data/$(basename $lex_file) > data/local/dict_nosp/lexicon.txt
+    gunzip -c $data/$(basename $lex_file) > data/local/dict_nosp/lexicon.txt
   fi
 
   # prepare 1st pass decoding n-gram ARPA language model
   if [ -z "$lm_small_file" ] ; then
-    msg "$0: downloading 3-gram 1st pass decoding LM from FalaBrasil GitLab"
+    msg "$0: downloading 3-gram 1st pass decoding LM from FalaBrasil GitLab (18M)"
     if [ -f $data/$(basename $lm_small_url) ] ; then
       echo "$0: 3-gram lm for 1st pass decoding already in place. skipping download"
     else
-      wget --quiet --show-progress $lm_small_url -P $data || exit 1
+      wget --quiet --show-progress $lm_small_url -P $data || \
+        { echo >&2 "$0: ERROR: problem downloading lm" && exit 1 ; }
     fi
     ln -rsf $data/$(basename $lm_small_url) data/local/lm/small.arpa.gz
   else
@@ -93,11 +96,12 @@ if [ $stage -le 0 ]; then
   # prepare 2nd pass rescoring n-gram ARPA language model
   if ! $skip_rescoring ; then
     if [ -z "$lm_large_file" ] ; then
-      msg "$0: downloading 4-gram 2nd pass rescoring LM from FalaBrasil GitLab"
+      msg "$0: downloading 4-gram 2nd pass rescoring LM from FalaBrasil GitLab (2G)"
       if [ -f $data/$(basename $lm_large_url) ] ; then
         echo "$0: 4-gram lm for 2nd pass rescoring already in place. skipping download"
       else
-        wget --quiet --show-progress $lm_large_url -P $data || exit 1
+        wget --quiet --show-progress $lm_large_url -P $data || \
+          { echo >&2 "$0: ERROR: problem downloading lm" && exit 1 ; }
       fi
       ln -rsf $data/$(basename $lm_large_url) data/local/lm/large.arpa.gz
     else
@@ -113,41 +117,42 @@ if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   msg "$0: prep data"
   /usr/bin/time -f "prep data $PRF" \
-    fblocal/prep_data.sh --nj 6 --split-random true $data data
-  #fblocal/prep_data.sh --nj 8 --test-dir lapsbm16k $data ./data
+    local/prep_data.sh --nj 6 --split-random true $data data
+  #local/prep_data.sh --nj 8 --test-dir lapsbm16k $data ./data
 
   # stage 3 doesn't need local/lm dir
   msg "$0: prep dict"
   /usr/bin/time -f "prep dict $PRF" \
-    fblocal/prep_dict.sh --nj 6 data/local/dict_nosp
+    local/prep_dict.sh --nj 6 data/local/dict_nosp
 
   # leave as it is
   msg "$0: prep lang"
   /usr/bin/time -f "prep lang $PRF" \
     utils/prepare_lang.sh data/local/dict_nosp \
-    "<UNK>" data/local/lang_tmp_nosp data/lang_nosp
+      "<UNK>" data/local/lang_tmp_nosp data/lang_nosp
 
   msg "$0: creating G.fst from low-order ARPA LM"
   cp -r data/lang_nosp data/lang_nosp_test_small
-  /usr/bin/time -f "arpa2fst $PRF" \
-    gunzip -c data/local/lm/small.arpa.gz | sed "s/<unk>/<UNK>/g" | \
-    arpa2fst --disambig-symbol=#0 \
-    --read-symbol-table=data/lang_nosp_test_small/words.txt \
-    - data/lang_nosp_test_small/G.fst
+  gunzip -c data/local/lm/small.arpa.gz | sed "s/<unk>/<UNK>/g" | \
+    arpa2fst \
+      --disambig-symbol=#0 \
+      --read-symbol-table=data/lang_nosp_test_small/words.txt \
+      - data/lang_nosp_test_small/G.fst || exit 1
   utils/validate_lang.pl --skip-determinization-check data/lang_nosp_test_small
-  #fblocal/format_lms.sh --src-dir data/lang_nosp data/local/lm
+  #local/format_lms.sh --src-dir data/lang_nosp data/local/lm
 
   # Create ConstArpaLm format language model for full 3-gram and 4-gram LMs
+  # NOTE carpa generation consumes a lot of RAM
   if ! $skip_rescoring ; then
     cp -r data/lang_nosp data/lang_nosp_test_large
     msg "$0: creating G.carpa from high-order ARPA LM"
     gunzip -c data/local/lm/large.arpa.gz | sed "s/<unk>/<UNK>/g" | \
-      utils/map_arpa_lm.pl data/lang_nosp_test_large/words.txt | \
+        utils/map_arpa_lm.pl data/lang_nosp_test_large/words.txt | \
       arpa-to-const-arpa \
         --bos-symbol=$(grep "^<s>\s"  data/lang_nosp_test_large/words.txt | awk '{print $2}') \
         --eos-symbol=$(grep "^</s>\s" data/lang_nosp_test_large/words.txt | awk '{print $2}') \
         --unk-symbol=$(grep "<UNK>\s" data/lang_nosp_test_large/words.txt | awk '{print $2}') \
-        - data/lang_nosp_test_large/G.carpa  || exit 1;
+        - data/lang_nosp_test_large/G.carpa || exit 1;
     # TODO no validate_lang??
   fi
 fi

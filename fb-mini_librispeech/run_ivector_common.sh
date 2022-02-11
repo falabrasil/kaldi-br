@@ -137,7 +137,7 @@ if [ $stage -le 6 ]; then
   # having a larger number of speakers is helpful for generalization, and to
   # handle per-utterance decoding well (iVector starts at zero).
   temp_data_root=${ivectordir}
-  fbutils/data/modify_speaker_info.sh --utts-per-spk-max 2 \
+  local/modify_speaker_info.sh --utts-per-spk-max 2 \
     data/${train_set}_sp_hires ${temp_data_root}/${train_set}_sp_hires_max2
 
   /usr/bin/time -f "extracting ivectors $PRF" \

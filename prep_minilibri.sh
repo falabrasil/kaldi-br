@@ -29,7 +29,7 @@ if [ -d "$proj_dir" ] ; then
   if [ "$ans" != "y" ] ; then
     echo "$0: aborted." && exit 0
   else
-    rm -rf $proj_dir/s5/{data,exp,mfcc,fblocal,fbutils,fbvosk,model-*}
+    rm -rf $proj_dir/s5/{data,exp,mfcc,local,fbvosk,model-*}
   fi
 # https://stackoverflow.com/questions/8426058/getting-the-parent-of-a-directory-in-bash
 elif [ $(basename $(readlink -f $(dirname $proj_dir))) != "egs" ] ; then
@@ -41,9 +41,9 @@ KALDI_ROOT=$(readlink -f $(dirname $(dirname $proj_dir)))
 minilibri_dir=$KALDI_ROOT/egs/mini_librispeech/s5
 proj_dir=$(readlink -f $proj_dir)/s5
 mkdir -p $proj_dir
-ln -sf $src_dir/{fblocal,fbutils,fbvosk} $proj_dir
+ln -sf $src_dir/{local,fbvosk} $proj_dir
 cp -v $src_dir/{fb_commons,path,run_*}.sh $proj_dir || exit 1
-ln -sf $minilibri_dir/{conf,local,steps,utils} $proj_dir
+ln -sf $minilibri_dir/{conf,steps,utils} $proj_dir
 sed 's/"queue.pl/"run.pl/g' $minilibri_dir/cmd.sh > $proj_dir/cmd.sh
 
 tree -C $proj_dir -I corpus 2> /dev/null
