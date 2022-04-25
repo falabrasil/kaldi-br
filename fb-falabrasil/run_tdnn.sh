@@ -64,7 +64,7 @@ echo "$0 $@"  # Print the command line for logging
 
 . ./cmd.sh
 . ./path.sh
-. ./fb_commons.sh
+. ./commons.sh
 . ./utils/parse_options.sh
 
 ## commented -- CB
@@ -330,7 +330,7 @@ if [ $stage -le 18 ]; then
 fi
 
 model_dir=model-$(date +'%Y%m%d_%H%M')
-fbvosk/create_model_dir.sh $model_dir || exit 1
+local/vosk/create_model_dir.sh $model_dir || exit 1
 
 msg "$0: success! check your model at '$model_dir'"
 

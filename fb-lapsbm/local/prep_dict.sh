@@ -54,6 +54,7 @@ data_dir=$1
 # five f ay v
 # four f ao r
 function create_lexicon() {
+    # FIXME sort -u ... -o ... + sed -i '1\' is more elegant - cassio
     echo "$0: adding UNK and SIL to lexicon.txt..."
     echo -e "!SIL\tsil"     > dict.tmp
     echo -e "<UNK>\tspn"   >> dict.tmp

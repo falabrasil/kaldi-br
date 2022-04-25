@@ -1,5 +1,10 @@
 # Kaldi installation instructions
 
+:warning: these instructions are meant for **Arch Linux** distro.
+If you are on a Debian-based such as Ubuntu, read the following with extra
+care before blaming us (yes, it already happened =)
+
+
 ## Install GCC 8 suite (Arch Linux only)
 
 :warning: Since I am running Arch Linux, which defaults to GCC 11.1.0 as of
@@ -143,8 +148,8 @@ The last line should print the word error rate:
 ```
 
 
-[![FalaBrasil](doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
+[![FalaBrasil](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_fb_git_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_ufpa_git_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
-__Grupo FalaBrasil (2021)__ - https://ufpafalabrasil.gitlab.io/      
+__Grupo FalaBrasil (2022)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
 Cassio Batista - https://cassota.gitlab.io/    

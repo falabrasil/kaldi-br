@@ -12,7 +12,7 @@ stage=0
 
 . ./cmd.sh || exit 1
 . ./path.sh || exit 1
-. ./fb_commons.sh || exit 1
+. ./commons.sh || exit 1
 
 . utils/parse_options.sh
 

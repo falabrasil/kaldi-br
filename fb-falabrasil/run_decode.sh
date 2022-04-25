@@ -33,7 +33,7 @@ train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires
 
 . ./cmd.sh
 . ./path.sh
-. ./fb_commons.sh
+. ./commons.sh
 . utils/parse_options.sh
 
 set -euo pipefail

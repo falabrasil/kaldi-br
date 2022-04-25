@@ -1,33 +1,60 @@
-# FalaBrasil Scripts for Kaldi :br:
+# FalaBrasil Scripts for Kaldi :brazil:
 
 This repo contains instructions and scripts to train acoustic models using
-Kaldi over the datasets of the FalaBrasil Group in Brazilian Portuguese.
+Kaldi over the datasets in Brazilian Portuguese (or just "general Portuguese").
 
-:fox_face: Looking for speech datasets in Brazilian Portuguese? Check out our
-"Audio Corpora" GitLab group: https://gitlab.com/fb-audio-corpora
+:fox_face: Looking for speech datasets in Brazilian Portuguese?
+Check out our "Speech Datasets" GitHub repo (based on DVC for storage):
+https://github.com/falabrasil/speech-datasets
 
-:fox_face: Looking for language models or phonetic dictionaries? Check out our
-"NLP resources" GitLab group: https://gitlab.com/fb-nlp
+:fox_face: Looking for language models or phonetic dictionaries?
+Check out either of the following (notice there's a pair repo on GitLab for LFS
+storage):
+
+- https://github.com/falabrasil/lm-br
+- https://github.com/falabrasil/dicts-br
 
 :coffee: Looking for Kaldi installation instructions? Check out our install
 guide on [`INSTALL.md`](INSTALL.md) file or just go follow Kaldi documentation 
 directly: https://github.com/kaldi-asr/kaldi
 
 
-## Model training for speech recognition (Vosk)
+## Model training for speech recognition (Vosk + LapsBM)
 
-See [`fb-mini_librispeech/`](./fb-mini_librispeech) dir.
-Based on Mini-librispeech `nnet3` recipe (`local/chain/tuning/run_tdnn_1j.sh`).
+See [`fb-lapsbm/`](./fb-lapsbm) dir.
+Based on Mini-librispeech `nnet3` recipe (`local/chain/tuning/run_tdnn_1j.sh`),
+adapted for a quick train exec over LapsBenchmark.
 
 ```bash
-$ ./prep_minilibri.sh /path/to/kaldi/egs/myproject
+$ ./prep_lapsbm.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run.sh
 ```
 
 For online decoding, please check
-[`fb-mini_librispeech/fbvosk/`](./fb-mini_librispeech/fbvosk) dir.
-Dir [`utils/online/`](./utils/online) is deprecated.
+[`fb-lapsbm/local/vosk/`](./fb-lapsbm/local/vosk) dir.
+
+
+## Model training for speech recognition (Vosk + Datasets)
+
+See [`fb-falabrasil/`](./fb-falabrasil) dir.
+This is expected to become the main recipe for Brazilian Portuguese, as we are
+planning on releasing the acoustic models as well.
+
+Also based on Mini-librispeech recipe, same as above, but now it runs over all
+public speech datasets in Portugese (NOTE: not only "Brazilian" Portuguese!) we
+are aware of, which have been gathered here:
+https://github.com/falabrasil/speech-datasets
+
+```bash
+$ ./prep_falabrasil.sh /path/to/kaldi/egs/myproject
+$ cd /path/to/kaldi/egs/myproject/s5/
+$ ./run.sh
+```
+
+For online decoding, please check
+[`fb-falabrasil/local/vosk/`](./fb-falabrasil/local/vosk) dir.
+
 
 ## Model training for phonetic alignment (Gentle)
 
@@ -56,7 +83,7 @@ transcription you may stick with Mini-libri recipe.
 
 ## Speaker diarization
 
-See [`fb-callhome/`](./fb-callhome) dir.
+See [`fb-callhome_diarization/`](./fb-callhome_diarization) dir.
 Based on CALLHOME v2 recipe.
 
 ```bash
@@ -123,7 +150,7 @@ scripts, you may find them on tag `nnet2`. Try running `git tag`.
 Coming soon.
 
 
-[![FalaBrasil](doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
+[![FalaBrasil](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_fb_git_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_ufpa_git_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
 __Grupo FalaBrasil (2021)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
