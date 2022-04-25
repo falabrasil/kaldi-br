@@ -3,20 +3,25 @@
 This repo contains instructions and scripts to train acoustic models using
 Kaldi over the datasets in Brazilian Portuguese (or just "general Portuguese").
 
-:fox_face: Looking for speech datasets in Brazilian Portuguese?
+:octocat: Looking for speech datasets in Brazilian Portuguese?
 Check out our "Speech Datasets" GitHub repo (based on DVC for storage):
 https://github.com/falabrasil/speech-datasets
 
-:fox_face: Looking for language models or phonetic dictionaries?
-Check out either of the following (notice there's a pair repo on GitLab for LFS
-storage):
+:octocat: :fox_face: Looking for language models or phonetic dictionaries?
+Check out the following (notice there's a pair repo on GitLab for LFS storage):
 
-- https://github.com/falabrasil/lm-br
-- https://github.com/falabrasil/dicts-br
+| :octocat:                               | :fox_face:                                |
+|:---------------------------------------:|:-----------------------------------------:|
+| https://github.com/falabrasil/lm-br     | https://gitlab.com/fb-resources/lm-br     |
+| https://github.com/falabrasil/dicts-br  | https://gitlab.com/fb-resources/dicts-br  |
 
 :coffee: Looking for Kaldi installation instructions? Check out our install
 guide on [`INSTALL.md`](INSTALL.md) file or just go follow Kaldi documentation 
 directly: https://github.com/kaldi-asr/kaldi
+
+If you're looking for a tutorial on data preparation and a step-by-step guide
+on how to train acoustic models from scratch using Kaldi, the best we can offer
+is this [written tutorial](TUTORIAL.md).
 
 
 ## Model training for speech recognition (Vosk + LapsBM)
@@ -81,10 +86,11 @@ $ ./run_all.sh
 :warning: These scripts are experimental for forced phonetic alignment. For
 transcription you may stick with Mini-libri recipe.
 
-## Speaker diarization
+## Speaker diarization (Inference)
 
 See [`fb-callhome_diarization/`](./fb-callhome_diarization) dir.
-Based on CALLHOME v2 recipe.
+Based on CALLHOME v2 recipe. This uses pre-trained models on English data
+rather than training one from scratch.
 
 ```bash
 $ ./prep_callhome.sh /path/to/kaldi/egs/myproject
@@ -108,14 +114,14 @@ us as one of the following:
 > 10.21437/IberSPEECH.2018-17.
 
 ```bibtex
-@inproceedings{Batista2018,
-  author    = {Cassio Batista and Ana Larissa Dias and Nelson {Sampaio Neto}},
-  title     = {{Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools}},
-  year      = {2018},
-  booktitle = {Proc. IberSPEECH 2018},
-  pages     = {77--81},
-  doi       = {10.21437/IberSPEECH.2018-17},
-  url       = {http://dx.doi.org/10.21437/IberSPEECH.2018-17}
+@inproceedings{Batista18,
+  author     = {Cassio Batista and Ana Larissa Dias and Nelson {Sampaio Neto}},
+  title      = {{Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools}},
+  year       = {2018},
+  booktitle  = {Proc. IberSPEECH 2018},
+  pages      = {77--81},
+  doi        = {10.21437/IberSPEECH.2018-17},
+  url        = {http://dx.doi.org/10.21437/IberSPEECH.2018-17}
 }
 ```
 
@@ -145,13 +151,31 @@ scripts, you may find them on tag `nnet2`. Try running `git tag`.
 }
 ```
 
-## EURASIP 2021
+## [EURASIP 2022](https://asp-eurasipjournals.springeropen.com/articles/10.1186/s13634-022-00844-9)
 
-Coming soon.
+> Batista, C., Dias, A.L. & Neto, N.
+> Free resources for forced phonetic alignment in Brazilian Portuguese based on Kaldi toolkit.
+> EURASIP J. Adv. Signal Process. 2022, 11 (2022).
+> https://doi.org/10.1186/s13634-022-00844-9
+
+@article{Batista22,
+  author     = {Batista, Cassio and Dias, Ana Larissa and Neto, Nelson},
+  title      = {Free resources for forced phonetic alignment in Brazilian Portuguese based on Kaldi toolkit},
+  journal    = {EURASIP Journal on Advances in Signal Processing},
+  year       = {2022},
+  month      = {Feb},
+  day        = {19},
+  volume     = {2022},
+  number     = {1},
+  pages      = {11},
+  issn       = {1687-6180},
+  doi        = {10.1186/s13634-022-00844-9},
+  url        = {https://doi.org/10.1186/s13634-022-00844-9}
+}
 
 
 [![FalaBrasil](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_fb_git_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_ufpa_git_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
-__Grupo FalaBrasil (2021)__ - https://ufpafalabrasil.gitlab.io/      
+__Grupo FalaBrasil (2022)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
 Cassio Batista - https://cassota.gitlab.io/    

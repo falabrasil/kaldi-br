@@ -13,6 +13,7 @@ preparation occurs on stage one, GMM training on stages two until eight, and
 finally DNN training on stage nine.
 
 ## Data preparation
+
 According to Kaldi's [tutorial for dummies](http://kaldi-asr.org/doc/kaldi_for_dummies.html),
 the directory tree for new projects must follow the structure below:
 
@@ -46,6 +47,7 @@ file structure tree, mostly by making symbolic links to the `mini_librispeech`
 stuff. But the resources are create by the first stage of `run.sh`.
 
 ### Audio corpus
+
 The default data downloaded by the scripts and used during training is the
 LapsBenchmark dataset (check the
 [`lapsbm16k`](https://gitlab.com/fb-audio-corpora/lapsbm16k) repo).
@@ -80,6 +82,7 @@ you probably need hundreds or rather thousands of hours of recorded data for a
 proper recognizer to reliably work.
 
 ### Dictionary (lexicon)
+
 The recipe downloads a phonetic dictionary from 
 [`nlp-resources`](https://gitlab.com/fb-nlp/nlp-resources), which was
 generated over the 200k most frequent words of Brazilian Portuguese language.
@@ -90,11 +93,13 @@ generate the G2P conversion for such missing words. Java is required to be
 installed for the generator.
 
 ### Language model
+
 An already-trained 3-gram language model is available at our 
 [`nlp-resources`](https://gitlab.com/fb-nlp/nlp-resources)
 repo. It is also automatically downloaded.
 
 ## GMM model training
+
 The schematic below shows the pipeline to training a HMM-DNN acoustic model
 using Kaldi (for more details read our 
 [paper](https://www.isca-speech.org/archive/IberSPEECH_2018/abstracts/IberS18_P1-13_Batista.html)).
@@ -121,6 +126,7 @@ run on a 64-core cluster (~5h).
 
 
 ## Log
+
 We recorded an entire training over LapsBM corpus via Linux's 
 [`script`](https://www.ostechnix.com/how-to-replay-the-recorded-terminal-sessions-using-scriptreplay-command/)
 command. You can watch us training the model in a sort of live manner by
@@ -137,9 +143,10 @@ thread on GPU, which speeds things up by a lot.
 
 ![](doc/run_tdnn.png)
 
-[![FalaBrasil](../doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](../doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
-__Grupo FalaBrasil (2020)__ - https://ufpafalabrasil.gitlab.io/      
+[![FalaBrasil](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_fb_git_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_ufpa_git_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
+
+__Grupo FalaBrasil (2022)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
 Cassio Batista - https://cassota.gitlab.io/    
 Larissa Dias - larissa.engcomp@gmail.com    
