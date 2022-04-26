@@ -8,10 +8,7 @@
 
 set -e
 
-if [ $# -ne 2 ] ; then
-  echo "usage: $0 <list-file> <data-dir>"
-  exit 1
-fi
+[ $# -ne 2 ] && echo "usage: $0 <list-file> <data-dir>" && exit 1
 list_file=$1
 data_dir=$2
 

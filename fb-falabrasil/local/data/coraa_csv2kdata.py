@@ -53,10 +53,13 @@ if __name__ == "__main__":
               columns=['uttid', 'file_path'], header=False, index=False)
               #quoting=csv.QUOTE_NONE, quotechar="", escapechar=" ")
     # FIXME there may be implicit speaker markers on this dataset. a careful
-    # inspection could be done later to find clues
+    # inspection could be done later to find patterns
     df.to_csv(os.path.join(data_dir, "utt2spk"), sep="\t",
               columns=['uttid', 'uttid'], header=False, index=False)
               #quoting=csv.QUOTE_NONE, quotechar="", escapechar=" ")
     df.to_csv(os.path.join(data_dir, "text"), sep="\t", 
               columns=['uttid', 'text'], header=False, index=False)
               #quoting=csv.QUOTE_NONE, quotechar="")
+    # FIXME subprocess.Popen wouldn\'t\'ve been that bad
+    os.system(f"utils/utt2spk_to_spk2utt.pl {data_dir}/utt2spk > {data_dir}/spk2utt")
+    os.system(f"utils/validate_data_dir.sh {data_dir} --no-feats --non-print")

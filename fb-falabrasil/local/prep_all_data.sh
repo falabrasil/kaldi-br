@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# call all other tailored-written data prep scripts to come out and play
+#
+# TODO add 'train' to all subsets after debugging
+#
+# author: apr 2022
+# cassio batista - https://cassota.gitlab.io
+
+set -e
+
+nj=12
+
+utils/parse_options.sh || exit 1
+
+[ $# -ne 2 ] && echo "usage: $0 [--nj <nj>] <corpus-dir> <data-dir>" && exit 1
+corpus_dir=$1
+data_dir=$2
+
+[ ! -d $corpus_dir ] && echo "$0: error: bad dir: $corpus_dir" && exit 1
+[ ! -d $data_dir ] && echo "$0: error: bad dir: $data_dir" && exit 1
+
+# coraa, voxforge and common voice
+for subset in dev test ; do
+  (local/data/coraa_csv2kdata.py \
+    $corpus_dir/datasets/coraa/metadata_${subset}_final.csv \
+    $data_dir/${subset}_coraa || touch .derr)&
+  (local/data/cv_tsv2kdata.sh \
+    $corpus_dir/datasets/cv-corpus-8.0-2022-01-19/pt/$subset.tsv \
+    $data_dir/${subset}_cv || touch .derr)&
+  (local/data/vf_list2kdata.sh \
+    $corpus_dir/datasets/voxforge/$subset.list \
+    $data_dir/${subset}_vf || touch .derr)&
+  sleep 1
+  while [ $(jobs -p | wc -l) -gt $nj ] ; do sleep 10 ; done
+done
+[ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
+wait
+
+# falabrasil (the usual) 
+for dataset in cetuc coddef constituicao lapsbm lapsstory spoltech westpoint ; do
+  for subset in dev test ; do
+    list_file=$corpus_dir/datasets/$dataset/$subset.list
+    [ ! -f $list_file ] && continue
+    (local/data/fb_list2kdata.sh \
+      $list_file \
+      $data_dir/${subset}_${dataset} || touch .derr)&
+  done
+  while [ $(jobs -p | wc -l) -gt $nj ] ; do sleep 10 ; done
+  [ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
+done
+wait

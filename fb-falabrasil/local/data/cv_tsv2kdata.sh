@@ -24,3 +24,5 @@ corpus_dir=$(dirname $tsv_file)/clips
 cut -f2 $tsv_file | tail -n +2 | cut -d'.' -f1 | sort -u | awk -v dir=$corpus_dir '{print $1" sox -G "dir"/"$1".mp3 -c1 -b16 -r16k -esigned -t wav - |"}' > $data_dir/wav.scp
 cut -f2 $tsv_file | tail -n +2 | cut -d'.' -f1 | sort -u | awk '{print $1" "$1}' > $data_dir/utt2spk
 cut -f2-3 $tsv_file | tail -n +2 | sort -u | sed -e 's/\.mp3\t/ /g' | sed 's/['\''«»"”?!,;:\.]//g' | awk '{print tolower($0)}' > $data_dir/text
+utils/utt2spk_to_spk2utt.pl $data_dir/utt2spk > $data_dir/spk2utt
+utils/validate_data_dir.sh $data_dir --no-feats --non-print || exit 1

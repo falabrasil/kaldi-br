@@ -101,33 +101,7 @@ rm -f .derr
 if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   msg "$0: prep data"
-
-  # coraa and common voice
-  for subset in train dev test ; do
-    (local/data/coraa_csv2kdata.py \
-      $speech_datasets_dir/datasets/coraa/metadata_${subset}_final.csv \
-      data/${subset}_coraa || touch .derr)&
-    (local/data/cv_tsv2kdata.sh \
-      $speech_datasets_dir/datasets/cv-corpus-8.0-2022-01-19/pt/$subset.tsv \
-      data/${subset}_cv || touch .derr)&
-    sleep 1
-    while [ $(jobs -p | wc -l) -gt $nj ] ; do sleep 10 ; done
-  done
-  [ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
-  wait
-
-  # TODO add 'cetuc', takes a fucking while when debugging
-  # falabrasil (the usual) and voxforge
-  for dataset in coddef constituicao lapsbm lapsstory spoltech westpoint voxforge ; do
-    for subset in train dev test ; do
-      list_file=$speech_datasets_dir/datasets/$dataset/$subset.list
-      [ ! -f $list_file ] && continue
-      (local/data/list2kdata.sh $list_file data/${subset}_${dataset} || touch .derr)&
-    done
-    while [ $(jobs -p | wc -l) -gt $nj ] ; do sleep 10 ; done
-    [ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
-  done
-  wait
+  local/prep_all_data.sh --nj $nj $speech_datasets_dir data || exit 1
 
   # merge/combine stuff. use all dev for train because not enough data
   # do not merge test subsets because we want to keep WER scores separated
