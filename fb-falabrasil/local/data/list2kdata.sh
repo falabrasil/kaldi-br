@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# parses a *.list file that accompanies dataset in DVC remote repo
+# into Kaldi data files such as wav.scp, text and utt2spk.
+#
 # author: apr 2022
 # cassio batista - https://cassota.gitlab.io
 
