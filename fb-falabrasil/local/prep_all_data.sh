@@ -31,10 +31,13 @@ for subset in dev test ; do
   (local/data/vf_list2kdata.sh \
     $corpus_dir/datasets/voxforge/$subset.list \
     $data_dir/${subset}_vf || touch .derr)&
+  (local/data/mls2kdata.sh \
+    $corpus_dir/datasets/mls/data/mls_portuguese_opus/$subset \
+    $data_dir/${subset}_mls || touch .derr)&
   sleep 1
-  while [ $(jobs -p | wc -l) -gt $nj ] ; do sleep 10 ; done
+  while [ $(jobs -p | wc -l) -ge $nj ] ; do sleep 10 ; done
+  [ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
 done
-[ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
 wait
 
 # falabrasil (the usual) 
@@ -46,7 +49,7 @@ for dataset in cetuc coddef constituicao lapsbm lapsstory spoltech westpoint ; d
       $list_file \
       $data_dir/${subset}_${dataset} || touch .derr)&
   done
-  while [ $(jobs -p | wc -l) -gt $nj ] ; do sleep 10 ; done
+  while [ $(jobs -p | wc -l) -ge $nj ] ; do sleep 10 ; done
   [ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
 done
 wait
