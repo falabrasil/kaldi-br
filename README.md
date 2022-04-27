@@ -2,18 +2,22 @@
 
 This repo contains instructions and scripts to train acoustic models using
 Kaldi over the datasets in Brazilian Portuguese (or just "general Portuguese").
+You may also find some scripts for forced alignment and speaker diarization.
 
-:octocat: Looking for speech datasets in Brazilian Portuguese?
+:speaking_head: Looking for speech datasets in Brazilian Portuguese?
 Check out our "Speech Datasets" GitHub repo (based on DVC for storage):
 https://github.com/falabrasil/speech-datasets
 
-:octocat: :fox_face: Looking for language models or phonetic dictionaries?
-Check out the following (notice there's a pair repo on GitLab for LFS storage):
+:spiral_notepad: Looking for language models (LM)? Check out the following 
+GitHub repo (notice there's a pair repo on GitLab for LFS storage):
+https://github.com/falabrasil/lm-br
 
-| :octocat:                               | :fox_face:                                |
-|:---------------------------------------:|:-----------------------------------------:|
-| https://github.com/falabrasil/lm-br     | https://gitlab.com/fb-resources/lm-br     |
-| https://github.com/falabrasil/dicts-br  | https://gitlab.com/fb-resources/dicts-br  |
+:newspaper: Looking for phonetic dictionaries? Check out the following 
+GitHub repo (notice there's a pair repo on GitLab for LFS storage):
+https://github.com/falabrasil/dicts-br
+
+:label: Wanna create your own phonetic dictionary? Check out our tagger tool
+GitLab repo: https://gitlab.com/fb-nlp/nlp-generator
 
 :coffee: Looking for Kaldi installation instructions? Check out our install
 guide on [`INSTALL.md`](INSTALL.md) file or just go follow Kaldi documentation 
