@@ -4,20 +4,23 @@ This repo contains instructions and scripts to train acoustic models using
 Kaldi over the datasets in Brazilian Portuguese (or just "general Portuguese").
 You may also find some scripts for forced alignment and speaker diarization.
 
-:speaking_head: Looking for speech datasets in Brazilian Portuguese?
+:speaking_head: :octocat: Looking for speech datasets in Brazilian Portuguese?
 Check out our "Speech Datasets" GitHub repo (based on DVC for storage):
 https://github.com/falabrasil/speech-datasets
 
-:spiral_notepad: Looking for language models (LM)? Check out the following 
-GitHub repo (notice there's a pair repo on GitLab for LFS storage):
+:spiral_notepad: :octocat: :fox_face: Looking for language models (LM)? 
+Check out the following GitHub repo 
+(notice there's a pair repo on GitLab for LFS storage):
 https://github.com/falabrasil/lm-br
 
-:newspaper: Looking for phonetic dictionaries? Check out the following 
-GitHub repo (notice there's a pair repo on GitLab for LFS storage):
+:newspaper: :octocat: :fox_face: Looking for phonetic dictionaries? 
+Check out the following GitHub repo 
+(notice there's a pair repo on GitLab for LFS storage):
 https://github.com/falabrasil/dicts-br
 
-:label: Wanna create your own phonetic dictionary? Check out our tagger tool
-GitLab repo: https://gitlab.com/fb-nlp/nlp-generator
+:label: :fox_face: :whale: Wanna create your own phonetic dictionary? Check out our tagger tool
+GitLab repo (there's also their dockerized version): 
+https://gitlab.com/fb-nlp/nlp-generator
 
 :coffee: Looking for Kaldi installation instructions? Check out our install
 guide on [`INSTALL.md`](INSTALL.md) file or just go follow Kaldi documentation 
@@ -162,6 +165,7 @@ scripts, you may find them on tag `nnet2`. Try running `git tag`.
 > EURASIP J. Adv. Signal Process. 2022, 11 (2022).
 > https://doi.org/10.1186/s13634-022-00844-9
 
+```bibtex
 @article{Batista22,
   author     = {Batista, Cassio and Dias, Ana Larissa and Neto, Nelson},
   title      = {Free resources for forced phonetic alignment in Brazilian Portuguese based on Kaldi toolkit},
@@ -176,6 +180,7 @@ scripts, you may find them on tag `nnet2`. Try running `git tag`.
   doi        = {10.1186/s13634-022-00844-9},
   url        = {https://doi.org/10.1186/s13634-022-00844-9}
 }
+```
 
 
 [![FalaBrasil](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_fb_git_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_ufpa_git_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
