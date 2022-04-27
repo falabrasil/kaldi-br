@@ -20,7 +20,7 @@ done
 [ -z "$(locale -a | grep ^pt_BR)" ] && ok=false && \
   echo "$0: please enable 'pt_BR' in your linux locale"
 
-for f in dvc pandas ; do
+for f in dvc pandas num2words ; do
   ! python3 -c "import $f" > /dev/null 2>&1 && ok=false && \
     echo "$0: error: please install python package '$f'"
 done

@@ -22,7 +22,7 @@ awk '{print $1}' $data_dir/text | \
 paste > $data_dir/wav.scp \
   <(awk '{print $1}' $data_dir/text) \
   <(find $corpus_dir -name "*.opus" | sort | \
-    awk '{printf "opusdec --quiet --rate 16000 --force-wav %s - |\n", $0}')
+      awk '{printf "opusdec --quiet --rate 16000 --force-wav %s - |\n", $0}')
 
 #sort -u $data_dir/wav.scp -o $data_dir/wav.scp
 #sort -u $data_dir/text -o $data_dir/text

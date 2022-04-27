@@ -18,7 +18,6 @@ corpus_dir=$1
 data_dir=$2
 
 [ ! -d $corpus_dir ] && echo "$0: error: bad dir: $corpus_dir" && exit 1
-[ ! -d $data_dir ] && echo "$0: error: bad dir: $data_dir" && exit 1
 
 # coraa, voxforge and common voice
 for subset in dev test ; do
@@ -34,6 +33,9 @@ for subset in dev test ; do
   (local/data/mls2kdata.sh \
     $corpus_dir/datasets/mls/data/mls_portuguese_opus/$subset \
     $data_dir/${subset}_mls || touch .derr)&
+  (local/data/mtedx2kdata.sh \
+    $corpus_dir/datasets/mtedx/data/pt-pt/data/$subset \
+    $data_dir/${subset}_mtedx || touch .derr)&
   sleep 1
   while [ $(jobs -p | wc -l) -ge $nj ] ; do sleep 10 ; done
   [ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
