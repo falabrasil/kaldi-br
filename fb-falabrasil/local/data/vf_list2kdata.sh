@@ -23,7 +23,7 @@ while read line ; do
   [ ! -f $wav ] && echo >&2 "$0: error: bad wav file: $wav" && exit 1
   wavid=$(basename ${wav%.wav})
   basedir=$(dirname $(dirname $wav))
-  uttid=$(basename $basedir | sed "s/-/_/g")_${wavid}
+  uttid=$(basename $basedir | sed "s/-/_/g" | awk '{print tolower($0)}')_${wavid}
   spkid=$(awk '{print tolower($0)}' $basedir/etc/README | dos2unix | \
     grep '^user name:' | cut -d':' -f2 | xargs | sed 's/-/_/g')
   [[ -z "$spkid" || "$spkid" == "anonymous" ]] && \

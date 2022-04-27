@@ -11,8 +11,6 @@ set -e
 
 nj=12
 
-utils/parse_options.sh || exit 1
-
 [ $# -ne 2 ] && echo "usage: $0 [--nj <nj>] <corpus-dir> <data-dir>" && exit 1
 corpus_dir=$1
 data_dir=$2
@@ -21,6 +19,7 @@ data_dir=$2
 
 # coraa, voxforge and common voice
 for subset in dev test ; do
+  [[ "$subset" == "dev" ]] && ss=valid || ss=$subset
   (local/data/coraa_csv2kdata.py \
     $corpus_dir/datasets/coraa/metadata_${subset}_final.csv \
     $data_dir/${subset}_coraa || touch .derr)&
@@ -34,7 +33,7 @@ for subset in dev test ; do
     $corpus_dir/datasets/mls/data/mls_portuguese_opus/$subset \
     $data_dir/${subset}_mls || touch .derr)&
   (local/data/mtedx2kdata.sh \
-    $corpus_dir/datasets/mtedx/data/pt-pt/data/$subset \
+    $corpus_dir/datasets/mtedx/data/pt-pt/data/$ss \
     $data_dir/${subset}_mtedx || touch .derr)&
   sleep 1
   while [ $(jobs -p | wc -l) -ge $nj ] ; do sleep 10 ; done
@@ -55,3 +54,5 @@ for dataset in cetuc coddef constituicao lapsbm lapsstory spoltech westpoint ; d
   [ -f .derr ] && rm .derr && echo "$0: error at data prep stage" && exit 1
 done
 wait
+
+echo "$0: success!"

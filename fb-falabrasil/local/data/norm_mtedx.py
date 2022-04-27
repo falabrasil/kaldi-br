@@ -31,6 +31,7 @@ MAX_NUM_LEN = 18  # ~1,000,000,000,000 (1 tri)
 # FIXME looks safer to add bos and eos, something like ^\s+\w(\s|$)
 COMMON_MAPS = {
     r"ü": "u",
+    r"d'água": "dágua",
     r"§": " parágrafo ",
     r"&": " e ",
     r"e/ou": "e ou",
@@ -53,6 +54,7 @@ COMMON_MAPS = {
     r"(\d+).?[°º]": "\g<1>º",
     r"(\d+).?[ª]": "\g<1>ª",
     r"mp(3|4)": "mp \g<1>",
+    r"(2|3|4)d": "\g<1> d",
     r"óm": "ôm",
     r"ãeste": "ão",  # what the actual fuck?
     r"(\d+([.,]\d+)?)(mm|cm|m|km|m²|m³|km²|hz|mg|g|kg|km/h|[º°]c)": "\g<1> \g<3>",

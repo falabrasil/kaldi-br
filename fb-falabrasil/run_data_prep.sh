@@ -101,12 +101,12 @@ rm -f .derr
 if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   msg "$0: prep data"
-  local/prep_all_data.sh --nj $nj $speech_datasets_dir data || exit 1
+  local/prep_all_data.sh $speech_datasets_dir data || exit 1
 
   # merge/combine stuff. use all dev for train because not enough data.
   # do not merge test subsets because we want to keep WER scores separated.
   # also, do not rm individual train_* because experiments must be perf'ed.
-  utils/combine_data_dir.sh data/train_all data/train_* data/dev_* || exit 1
+  utils/combine_data.sh data/train_all data/train_* data/dev_* || exit 1
 
   # stage 3 doesn't need local/lm dir
   msg "$0: prep dict"
