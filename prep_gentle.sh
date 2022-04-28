@@ -11,7 +11,7 @@
 
 utils/check_dependencies.sh || exit 1
 
-src_dir=$(readlink -f fb-aspire)
+src_dir=$(readlink -f fb-gentle)
 
 if test $# -ne 1 ; then
   echo "usage: $0 [options] <proj_dir>"

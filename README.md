@@ -18,17 +18,17 @@ Check out the following GitHub repo
 (notice there's a pair repo on GitLab for LFS storage):
 https://github.com/falabrasil/dicts-br
 
-:label: :fox_face: :whale: Wanna create your own phonetic dictionary? Check out our tagger tool
-GitLab repo (there's also their dockerized version): 
+:label: :fox_face: :whale: Wanna create your own phonetic dictionary?
+Check out our tagger tool GitLab repo (there's also a dockerized version): 
 https://gitlab.com/fb-nlp/nlp-generator
 
 :coffee: Looking for Kaldi installation instructions? Check out our install
 guide on [`INSTALL.md`](INSTALL.md) file or just go follow Kaldi documentation 
 directly: https://github.com/kaldi-asr/kaldi
 
-If you're looking for a tutorial on data preparation and a step-by-step guide
-on how to train acoustic models from scratch using Kaldi, the best we can offer
-is this [written tutorial](TUTORIAL.md).
+:footprints: If you're looking for a tutorial on data preparation and a
+step-by-step guide on how to train acoustic models from scratch using Kaldi,
+the best we can offer is this [written tutorial](TUTORIAL.md).
 
 
 ## Model training for speech recognition (Vosk + LapsBM)
@@ -70,34 +70,34 @@ For online decoding, please check
 
 ## Model training for phonetic alignment (Gentle)
 
-See [`fb-aspire/`](./fb-aspire) dir.
+See [`fb-gentle/`](./fb-gentle) dir.
 Based on ASpIRE `nnet3` recipe.
 
 ```bash
-$ ./prep_aspire.sh /path/to/kaldi/egs/myproject
+$ ./prep_gentle.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run.sh
 ```
 
-## Model training for phonetic alignment (LibriSpeech)
+:warning: it didn't work. See README inside.
 
-See [`fb-librispeech/`](./fb-librispeech) dir.
-Based on LibriSpeech `nnet3` recipe.
+## Model training for phonetic alignment (UFPAlign)
+
+See [`fb-ufpalign/`](./fb-ufpalign) dir.
+Based on LibriSpeech `nnet3` recipe, in the hopes of future compatibility with
+MFA.
 
 ```bash
-$ ./prep_libri.sh /path/to/kaldi/egs/myproject
+$ ./prep_ufpalign.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run_all.sh
 ```
 
-:warning: These scripts are experimental for forced phonetic alignment. For
-transcription you may stick with Mini-libri recipe.
+## Speaker diarization (CallHome)
 
-## Speaker diarization (Inference)
-
-See [`fb-callhome_diarization/`](./fb-callhome_diarization) dir.
-Based on CALLHOME v2 recipe. This uses pre-trained models on English data
-rather than training one from scratch.
+See [`fb-callhome/`](./fb-callhome) dir.
+Based on CALLHOME v2 recipe. This uses pre-trained models on English data for
+inference only rather than training one from scratch.
 
 ```bash
 $ ./prep_callhome.sh /path/to/kaldi/egs/myproject
@@ -105,8 +105,8 @@ $ cd /path/to/kaldi/egs/myproject/v2/
 $ ./run.sh
 ```
 
-Standalone clustering procedure based on pyanote-audio lib can also be found
-under [`utils/clustering/`](utils/clustering) dir.
+Standalone clustering procedure based on `pyannote.audio` lib can also be
+found under [`utils/clustering/`](utils/clustering)_diarization dir.
 
 
 # Citation

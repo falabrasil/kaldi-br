@@ -13,7 +13,7 @@
 
 utils/check_dependencies.sh || exit 1
 
-src_dir=$(readlink -f fb-librispeech)
+src_dir=$(readlink -f fb-ufpalign)
 
 if test $# -ne 1 ; then
   echo "usage: $0 [options] <proj_dir>"
