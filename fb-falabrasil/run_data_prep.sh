@@ -103,11 +103,6 @@ if [ $stage -le 1 ]; then
   msg "$0: prep data"
   local/prep_all_data.sh $speech_datasets_dir data || exit 1
 
-  # merge/combine stuff. use all dev for train because not enough data.
-  # do not merge test subsets because we want to keep WER scores separated.
-  # also, do not rm individual train_* because experiments must be perf'ed.
-  utils/combine_data.sh data/train_all data/train_* data/dev_* || exit 1
-
   # stage 3 doesn't need local/lm dir
   msg "$0: prep dict"
   /usr/bin/time -f "prep dict $PRF" \
@@ -165,6 +160,11 @@ if [ $stage -le 2 ]; then
       data/$dir exp/make_mfcc/$dir $mfccdir
     steps/compute_cmvn_stats.sh data/$dir exp/make_mfcc/$dir $mfccdir
   done
+
+  # merge/combine stuff. use all dev for train because not enough data.
+  # do not merge test subsets because we want to keep WER scores separated.
+  # also, do not rm individual train_* because experiments must be perf'ed.
+  utils/combine_data.sh data/train_all data/train_* data/dev_* || exit 1
 
   # NOTE: gonna follow aspire recipe almost blindly on this one - cassio
   # TODO there are more subsets to create when more data has been prep'ed - cassio

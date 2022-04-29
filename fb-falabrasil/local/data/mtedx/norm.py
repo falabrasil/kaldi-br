@@ -22,7 +22,7 @@ from num2words import num2words
 
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
-MAX_SENT_LEN = 1000  # FIXME bunch of song lyrics not being filtered out
+MAX_SENT_LEN = 800  # FIXME bunch of song lyrics not being filtered out
 MAX_WORD_LEN = 35
 MAX_NUM_LEN = 18  # ~1,000,000,000,000 (1 tri)
 
@@ -31,7 +31,6 @@ MAX_NUM_LEN = 18  # ~1,000,000,000,000 (1 tri)
 # FIXME looks safer to add bos and eos, something like ^\s+\w(\s|$)
 COMMON_MAPS = {
     r"ü": "u",
-    r"d'água": "dágua",
     r"§": " parágrafo ",
     r"&": " e ",
     r"e/ou": "e ou",
@@ -57,7 +56,7 @@ COMMON_MAPS = {
     r"(2|3|4)d": "\g<1> d",
     r"óm": "ôm",
     r"ãeste": "ão",  # what the actual fuck?
-    r"(\d+([.,]\d+)?)(mm|cm|m|km|m²|m³|km²|hz|mg|g|kg|km/h|[º°]c)": "\g<1> \g<3>",
+    r"(\d+([.,]\d+)?)(mm|cm|m|km|m2|m²|m³|cm³|km³|km²|hz|mg|g|kg|km/h|[º°]c)": "\g<1> \g<3>",
 }
 
 # TODO MB GB KB
@@ -67,6 +66,9 @@ UNIT_MAPS = {
     "^m$": "metros",
     "^km$": "quilômetros",
     "^m²$": "metros quadrados",
+    "^m2$": "metros quadrados",
+    "^cm³$": "centímetros cúbicos",
+    "^km³$": "quilômetros cúbicos",
     "^m³$": "metros cúbicos",
     "^km²$": "quilômetros quadrados",
     "^km/h$": "quilômetros por hora",
@@ -82,38 +84,6 @@ NUM_CARD_FEM = {
     "dois": "duas",
     "zentos": "zentas",
     "centos": "centas",
-}
-
-# FIXME I guess changing the locale has an influence here
-#       since \W wasn't working all the time
-UF_BR = {
-    r"[/-]\s?AC([^A-Za-z0-9]|$)": " Acre\g<1>",
-    r"[/-]\s?AL([^A-Za-z0-9]|$)": " Alagoas\g<1>",
-    r"[/-]\s?AP([^A-Za-z0-9]|$)": " Amapá\g<1>",
-    r"[/-]\s?AM([^A-Za-z0-9]|$)": " Amazonas\g<1>",
-    r"[/-]\s?BA([^A-Za-z0-9]|$)": " Bahia\g<1>",
-    r"[/-]\s?CE([^A-Za-z0-9]|$)": " Ceará\g<1>",
-    r"[/-]\s?ES([^A-Za-z0-9]|$)": " Espírito Santo\g<1>",
-    r"[/-]\s?GO([^A-Za-z0-9]|$)": " Goiás\g<1>",
-    r"[/-]\s?MA([^A-Za-z0-9]|$)": " Maranhão\g<1>",
-    r"[/-]\s?MT([^A-Za-z0-9]|$)": " Mato Grosso\g<1>",
-    r"[/-]\s?MS([^A-Za-z0-9]|$)": " Mato Grosso do Sul\g<1>",
-    r"[/-]\s?MG([^A-Za-z0-9]|$)": " Minas Gerais\g<1>",
-    r"[/-]\s?PA([^A-Za-z0-9]|$)": " Pará\g<1>",
-    r"[/-]\s?PB([^A-Za-z0-9]|$)": " Paraíba\g<1>",
-    r"[/-]\s?PR([^A-Za-z0-9]|$)": " Paraná\g<1>",
-    r"[/-]\s?PE([^A-Za-z0-9]|$)": " Pernambuco\g<1>",
-    r"[/-]\s?PI([^A-Za-z0-9]|$)": " Piauí\g<1>",
-    r"[/-]\s?RJ([^A-Za-z0-9]|$)": " Rio de Janeiro\g<1>",
-    r"[/-]\s?RN([^A-Za-z0-9]|$)": " Rio Grande do Norte\g<1>",
-    r"[/-]\s?RS([^A-Za-z0-9]|$)": " Rio Grande do Sul\g<1>",
-    r"[/-]\s?RO([^A-Za-z0-9]|$)": " Rondônia\g<1>",
-    r"[/-]\s?RR([^A-Za-z0-9]|$)": " Roraima\g<1>",
-    r"[/-]\s?SC([^A-Za-z0-9]|$)": " Santa Catarina\g<1>",
-    r"[/-]\s?SP([^A-Za-z0-9]|$)": " São Paulo\g<1>",
-    r"[/-]\s?SE([^A-Za-z0-9]|$)": " Sergipe\g<1>",
-    r"[/-]\s?TO([^A-Za-z0-9]|$)": " Tocantins\g<1>",
-    r"[/-]\s?DF([^A-Za-z0-9]|$)": " Distrito Federal\g<1>",
 }
 
 logging.basicConfig(format="%(filename)s %(levelname)8s %(message)s")
@@ -258,16 +228,24 @@ def parse_number(curr_str_num, next_str_num=""):
         width, height = num2words(width, lang='pt_BR'), num2words(height, lang='pt_BR')
         return "%s por %s" % (width, height)
 
-    logger.error("» ! bad number ! %s" % curr_str_num)
-    return curr_str_num
+    #logger.error("» ! bad number ! %s" % curr_str_num)
+    new_str = []
+    for char in " ".join(list(re.sub(r"[\-\.\,]", " ", curr_str_num))):
+        if re.match(r"(.*?)\d(.*?)", char):
+            new_str.append(parse_number(char, None))
+        else:
+            new_str.append(char)
+    return " ".join(new_str)
 
 
 def prenorm_word(word):
 
     # strip commas and quotes, then convert unit measures
     #logger.debug("word in : %s" % word)
-    word = re.sub(r"[–―—\+\[\]«»]+|\.{3}", "", word)
-    word = re.sub(r"^[,“”♪‘’\"'({.•-]+|[,“”‘’\"')}.-]+$", "", word)
+    word = re.sub(r"[–―—\+\[\]‰ˆ‡œ˜‹›«»ž]+|\.{3}", "", word)
+    word = re.sub(r"^[,“”‘’™\"'({.•-]+|[,“”‘’\"')}.-]+$", "", word)
+    word = re.sub(r"í’|’í", "í", word)
+    word = re.sub(r"’s", "'s", word)
     word = re.sub(r"[.!?…]+(\s|$)", "", word)
     for k, v in UNIT_MAPS.items():
         word = re.sub(k, v, word)
@@ -308,38 +286,46 @@ def normalize(old_sent):
             if len(curr_word) > MAX_NUM_LEN:
                 logger.error("! number overflow ! %s" % curr_word)
                 return None
-            #logger.debug("number in : %s", curr_word)
             try:
                 next_word = prenorm_word(words[0])  # do not pop!
                 word = parse_number(curr_word, next_word).replace(",", "")
             except IndexError:
                 word = parse_number(curr_word).replace(",", "")
-            #logger.debug("number out: %s", word)
         else:
             word = curr_word
-        new_sent.append(word.replace("/", " ").replace("\"", " "))
+        new_sent.append(re.sub(r"[/\",:#@\$\?_=\.]", " ", word.replace("%", " por cento ")))
     return re.sub(r"\s\s+", " ", " ".join(new_sent)).strip()
 
+def firewall(line):
+    if "♪" in line:
+        return True
+    return False
 
-if __name__ == "__main__":
 
-    for line in sys.stdin:
-        sent = re.sub(r"[.!?…;:|]+(\s|$)", " ", line.strip()).strip()
-        for k, v in UF_BR.items():
-            sent = re.sub(k, v, sent)
-        sent = re.sub(r"\$\s", "$", sent).lower()
-        for k, v in COMMON_MAPS.items():
-            sent = re.sub(k, v, sent)
-        sent = sent.strip()
-        if sent:
-            logger.debug("« %s" % sent)
-            if len(sent) > MAX_SENT_LEN:
-                logger.error("! sentence overflow ! %s" % sent)
-                continue
-            sent = normalize(sent)
-            if sent and re.match(r"^[a-zàáéíóúâêôãõç \-]+$", sent):
-                logger.debug("» %s" % sent)
-                print(sent)
+for lineno, line in enumerate(sys.stdin):
+    line = line.strip()
+    if firewall(line):
+        logger.error("%d ! bad line ! %s" % (lineno + 1, line))
+        continue
+
+    sent = re.sub(r"[.!?…;:|]+(\s|$)", " ", line).strip()
+    sent = re.sub(r"\$\s", "$", sent).lower()
+    for k, v in COMMON_MAPS.items():
+        sent = re.sub(k, v, sent)
+    sent = sent.strip()
+    if sent:
+        if len(sent) > MAX_SENT_LEN:
+            logger.error("%d ! sentence overflow ! %s" % (lineno + 1, sent))
+            continue
+        sent = normalize(sent)
+        sent = re.sub(r"<i>|< i>|< i >", " ", sent).strip()
+        if sent == "aplausos":
+            logger.error("%d ! bad sentence ! %s" % (lineno + 1, sent))
+            continue
+        if sent and re.match(r"^[a-zàáéíóúâêôãõçèïöñ \-']+$", sent):
+            print(sent)
+        else:
+            if sent:
+                logger.error("%d ! bad sentence ! %s" % (lineno + 1, sent))
             else:
-                if sent:
-                    logger.error("» ! bad sentence ! %s" % sent)
+                logger.error("%d ! bad line ! %s" % (lineno + 1, line))

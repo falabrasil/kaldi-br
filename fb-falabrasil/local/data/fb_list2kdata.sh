@@ -23,7 +23,7 @@ while read line ; do
   txt=${wav%.wav}.txt
   [[ ! -f $wav || ! -f $txt ]] && \
     echo >&2 "$0: error: bad wav or txt file: '$wav' vs. '$txt'" && exit 1
-  spkid=$(basename $(dirname $wav) | sed 's/-/_/g')
+  spkid=$(basename $(dirname $wav) | sed 's/-/_/g' | awk '{print tolower($0)}')
   uttid=${spkid}_$(basename ${wav%.wav} | sed 's/-/_/g')
   echo "$uttid sox -G $wav -c1 -b16 -r16k -esigned -t wav - |" >> $data_dir/wav.scp
   echo "$uttid $(cat $txt)" >> $data_dir/text
