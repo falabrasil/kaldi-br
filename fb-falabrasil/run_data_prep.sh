@@ -153,12 +153,14 @@ fi
 if [ $stage -le 2 ]; then
   mfccdir=mfcc
   msg "$0: compute mfcc and cmvn"
-  for dir in data/train_all data/test_* ; do
-    njobs=$((nj * 2))
-    [ $njobs -gt $(wc -l < $dir/spk2utt) ] && njobs=$(wc -l < $dir/spk2utt)
-    steps/make_mfcc.sh --cmd "$train_cmd" --nj $njobs \
-      data/$dir exp/make_mfcc/$dir $mfccdir
-    steps/compute_cmvn_stats.sh data/$dir exp/make_mfcc/$dir $mfccdir
+  for dataset in cetuc coddef constituicao lapsbm lapsstory spoltech westpoint coraa cv vf mls mtedx ; do
+    for subset in train dev test ; do
+      dir=${subset}_${dataset} && [ ! -d data/$dir ] && continue
+      njobs=$((nj * 3)) && [ $njobs -gt $(wc -l < data/$dir/spk2utt) ] && \
+        njobs=$(wc -l < data/$dir/spk2utt)
+      steps/make_mfcc.sh --nj $njobs data/$dir exp/make_mfcc/$dir $mfccdir || exit 1
+      steps/compute_cmvn_stats.sh data/$dir exp/make_mfcc/$dir $mfccdir || exit 1
+    done
   done
 
   # merge/combine stuff. use all dev for train because not enough data.

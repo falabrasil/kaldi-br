@@ -26,7 +26,7 @@ def path2uttid(path):
 
 def soxify_path(basedir, old_path):
     new_path = os.path.join(basedir, old_path)
-    return f"sox -G ${new_path} -c1 -b16 -r16k -esigned -t wav - |"
+    return f"sox -G {new_path} -c1 -b16 -r16k -esigned -t wav - |"
 
 
 if __name__ == "__main__":
