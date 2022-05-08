@@ -8,6 +8,10 @@ You may also find some scripts for forced alignment and speaker diarization.
 Check out our "Speech Datasets" GitHub repo (based on DVC for storage):
 https://github.com/falabrasil/speech-datasets
 
+:memo: :octocat: Looking for text datasets in Brazilian Portuguese?
+Check out our "Text Datasets" GitHub repo:
+https://github.com/falabrasil/text-datasets
+
 :spiral_notepad: :octocat: :fox_face: Looking for language models (LM)? 
 Check out the following GitHub repo 
 (notice there's a pair repo on GitLab for LFS storage):

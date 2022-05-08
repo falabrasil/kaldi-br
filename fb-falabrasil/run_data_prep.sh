@@ -12,7 +12,7 @@ skip_rescoring=false  # if your machine is memory-contrained then turn this on
 # Change this location to somewhere where you want to put the data.
 data=./corpus/
 
-speech_datasets_dir=$HOME/work/ufpa/github/speech-datasets 
+speech_datasets_dir=/mnt/speech-datasets
 lex_url=https://gitlab.com/fb-resources/dicts-br/-/raw/main/res/lexicon.vocab.txt.gz
 lm_small_url=https://gitlab.com/fb-resources/lm-br/-/raw/main/res/3-gram.2e-7.arpa.gz
 lm_large_url=https://gitlab.com/fb-resources/lm-br/-/raw/main/res/4-gram.unpruned.arpa.gz
@@ -101,18 +101,16 @@ rm -f .derr
 if [ $stage -le 1 ]; then
   # format the data as Kaldi data directories
   msg "$0: prep data"
-  local/prep_all_data.sh $speech_datasets_dir data || exit 1
+  prf local/prep_all_data.sh $speech_datasets_dir data || exit 1
 
   # stage 3 doesn't need local/lm dir
   msg "$0: prep dict"
-  /usr/bin/time -f "prep dict $PRF" \
-    local/prep_dict.sh --nj $nj data/local/dict_nosp
+  prf local/prep_dict.sh --nj $nj data/local/dict_nosp
 
   # leave as it is
   msg "$0: prep lang"
-  /usr/bin/time -f "prep lang $PRF" \
-    utils/prepare_lang.sh data/local/dict_nosp \
-      "<UNK>" data/local/lang_tmp_nosp data/lang_nosp
+  prf utils/prepare_lang.sh \
+    data/local/dict_nosp "<UNK>" data/local/lang_tmp_nosp data/lang_nosp
 
   msg "$0: creating G.fst from low-order ARPA LM"
   symtab=data/lang_nosp_test_small/words.txt
@@ -150,30 +148,37 @@ if [ $stage -le 1 ]; then
   fi
 fi
 
+# mfcc extraction is cheap so we can exaggerate on the parallel jobs
 if [ $stage -le 2 ]; then
   mfccdir=mfcc
   msg "$0: compute mfcc and cmvn"
   for dataset in cetuc coddef constituicao lapsbm lapsstory spoltech westpoint coraa cv vf mls mtedx ; do
     for subset in train dev test ; do
       dir=${subset}_${dataset} && [ ! -d data/$dir ] && continue
-      njobs=$((nj * 3)) && [ $njobs -gt $(wc -l < data/$dir/spk2utt) ] && \
+      njobs=$((nj * 6)) && [ $njobs -gt $(wc -l < data/$dir/spk2utt) ] && \
         njobs=$(wc -l < data/$dir/spk2utt)
       steps/make_mfcc.sh --nj $njobs data/$dir exp/make_mfcc/$dir $mfccdir || exit 1
       steps/compute_cmvn_stats.sh data/$dir exp/make_mfcc/$dir $mfccdir || exit 1
+      utils/fix_data_dir.sh data/$dir || exit 1
     done
   done
+fi
 
-  # merge/combine stuff. use all dev for train because not enough data.
+if [ $stage -le 3 ]; then
+  # merge/combine stuff.
   # do not merge test subsets because we want to keep WER scores separated.
   # also, do not rm individual train_* because experiments must be perf'ed.
-  utils/combine_data.sh data/train_all data/train_* data/dev_* || exit 1
+  # TODO: use all dev for train in the future because not enough data.
+  msg "$0: combine data dir"
+  rm -rf data/train_all
+  utils/combine_data.sh data/train_all data/train_* || exit 1  # data/dev_*
 
-  # NOTE: gonna follow aspire recipe almost blindly on this one - cassio
-  # TODO there are more subsets to create when more data has been prep'ed - cassio
-  msg "$0: subset data dir"
-  utils/subset_data_dir.sh --shortest data/train_all 50000 data/train_50kshort
-  utils/subset_data_dir.sh  data/train_50kshort 10000 data/train_10k
-  utils/data/remove_dup_utts.sh 50 data/train_10k data/train_10k_nodup
+  ## TODO: create individual subsets for mono tri-deltas and tri-sat by
+  ## following aspire recipe even if blindly
+  #msg "$0: subset data dir"
+  #utils/subset_data_dir.sh --shortest data/train_all 50000 data/train_50kshort
+  #utils/subset_data_dir.sh  data/train_50kshort 10000 data/train_10k
+  #utils/data/remove_dup_utts.sh 50 data/train_10k data/train_10k_nodup
 fi
 
 msg "$0: success!"
