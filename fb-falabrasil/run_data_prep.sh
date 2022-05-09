@@ -8,6 +8,7 @@ set -euo pipefail
 stage=0
 nj=12
 skip_rescoring=false  # if your machine is memory-contrained then turn this on
+use_dev_as_train=false
 
 # Change this location to somewhere where you want to put the data.
 data=./corpus/
@@ -168,17 +169,23 @@ if [ $stage -le 3 ]; then
   # merge/combine stuff.
   # do not merge test subsets because we want to keep WER scores separated.
   # also, do not rm individual train_* because experiments must be perf'ed.
-  # TODO: use all dev for train in the future because not enough data.
   msg "$0: combine data dir"
   rm -rf data/train_all
-  utils/combine_data.sh data/train_all data/train_* || exit 1  # data/dev_*
+  if $use_dev_as_train ; then
+    utils/combine_data.sh data/train_all data/train_* data/dev_* || exit 1
+  else
+    utils/combine_data.sh data/train_all data/train_* || exit 1
+  fi
 
-  ## TODO: create individual subsets for mono tri-deltas and tri-sat by
-  ## following aspire recipe even if blindly
-  #msg "$0: subset data dir"
-  #utils/subset_data_dir.sh --shortest data/train_all 50000 data/train_50kshort
-  #utils/subset_data_dir.sh  data/train_50kshort 10000 data/train_10k
-  #utils/data/remove_dup_utts.sh 50 data/train_10k data/train_10k_nodup
+  # create individual subsets for mono, tri-deltas, and tri-sat.
+  # librispeech and aspire recipes have been combined almost blindly.
+  # TODO: check wetpoint's piece of words here
+  msg "$0: subset data dir"
+  utils/subset_data_dir.sh --shortest data/train_all 50000 data/train_50kshort
+  utils/subset_data_dir.sh data/train_50kshort 5000 data/train_5k
+  utils/data/remove_dup_utts.sh 50 data/train_5k data/train_5k_nodup
+  utils/subset_data_dir.sh data/train_all 10000 data/train_10k
+  utils/subset_data_dir.sh data/train_all 30000 data/train_30k
 fi
 
 msg "$0: success!"

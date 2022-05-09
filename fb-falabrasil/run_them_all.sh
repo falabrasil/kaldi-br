@@ -9,9 +9,10 @@ set -e
 
 s_time=$(date +'%F_%T')
 
-bash run_data_prep.sh --skip-rescoring true || exit 1
+bash run_data_prep.sh --skip-rescoring true --use-dev-as-train true || exit 1
 
-bash run_gmm.sh                             || exit 1
+bash run_gmm.sh || exit 1
+#bas run_gmm_b.sh || exit 1  # for an "in-depth", dataset-wise analysis.
 
 # README README README README README README README README README README README 
 # README README README README README README README README README README README 
@@ -34,7 +35,7 @@ bash run_gmm.sh                             || exit 1
 #           --trainer.optimization.num-jobs-final=4
 #           --use-gpu=true
 #       (the example above assumes you have 4 NVIDIA cards)
-bash run_tdnn.sh                            || exit 1
+bash run_tdnn.sh || exit 1
 
 e_time=$(date +'%F_%T')
 
