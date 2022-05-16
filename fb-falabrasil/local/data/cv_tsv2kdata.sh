@@ -18,6 +18,8 @@ data_dir=$2
 mkdir -p $data_dir || exit 1
 #rm -f $data_dir/{wav.scp,text,utt2spk}
 
+export LC_ALL=pt_BR.utf8
+
 # TODO I could use client_id as uttid but I didn\'t want to (lazy)
 # hopefully files don\'t need to be uniquely sorted again - cassio
 corpus_dir=$(dirname $tsv_file)/clips
@@ -25,4 +27,5 @@ cut -f2 $tsv_file | tail -n +2 | cut -d'.' -f1 | sort -u | awk -v dir=$corpus_di
 cut -f2 $tsv_file | tail -n +2 | cut -d'.' -f1 | sort -u | awk '{print $1" "$1}' > $data_dir/utt2spk
 cut -f2-3 $tsv_file | tail -n +2 | sort -u | sed -e 's/\.mp3\t/ /g' | sed 's/['\''«»"”?!,;:\.]//g' | awk '{print tolower($0)}' > $data_dir/text
 utils/utt2spk_to_spk2utt.pl $data_dir/utt2spk > $data_dir/spk2utt
+utils/fix_data_dir.sh $data_dir
 utils/validate_data_dir.sh $data_dir --no-feats --non-print || exit 1

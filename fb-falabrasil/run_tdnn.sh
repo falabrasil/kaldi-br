@@ -29,10 +29,10 @@ set -euo pipefail
 
 # First the options that are passed through to run_ivector_common.sh
 # (some of which are also used in this script directly).
+nj=12
 stage=0
-decode_nj=10
-train_set=train  # CB: changed
-test_sets=test   # CB: changed
+train_set=train_all  # CB: changed
+test_sets="test_coddef test_cetuc test_constituicao test_coraa test_cv test_lapsbm test_lapsstory test_mls test_mtedx test_spoltech test_vf test_westpoint"
 gmm=tri3b
 nnet3_affix=
 
@@ -67,24 +67,12 @@ echo "$0 $@"  # Print the command line for logging
 . ./commons.sh
 . ./utils/parse_options.sh
 
-## commented -- CB
-#if ! cuda-compiled; then
-#  cat <<EOF && exit 1
-#This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
-#If you want to use GPUs (and have them), go to src/, and configure and make on a machine
-#where "nvcc" is installed.
-#EOF
-#fi
-
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
-/usr/bin/time -f "run ivector common $PRF" \
-  bash run_ivector_common.sh --stage $stage \
-                             --train-set $train_set \
-                             --test-sets $test_sets \
-                             --gmm $gmm \
-                             --nnet3-affix "$nnet3_affix" || exit 1;
+prf bash run_ivector_common.sh --nj $nj --stage $stage \
+                               --train-set "$train_set" --test-sets "$test_sets" \
+                               --gmm $gmm --nnet3-affix "$nnet3_affix" || exit 1;
 
 # Problem: We have removed the "train_" prefix of our training set in
 # the alignment directory names! Bad!
@@ -122,8 +110,7 @@ if [ $stage -le 10 ]; then
     nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
     # Use our special topology... note that later on may have to tune this
     # topology.
-    /usr/bin/time -f "gen topo $PRF" \
-      steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
+    steps/nnet3/chain/gen_topo.py $nonsilphonelist $silphonelist >$lang/topo
   fi
 fi
 
@@ -131,8 +118,7 @@ if [ $stage -le 11 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
   msg "$0: align lattices with fmllr"
-  /usr/bin/time -f "align lattices $PRF" \
-    steps/align_fmllr_lats.sh --nj 6 --cmd "$train_cmd" ${lores_train_data_dir} \
+  prf steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" ${lores_train_data_dir} \
       data/lang $gmm_dir $lat_dir
   rm $lat_dir/fsts.*.gz # save space
 fi
@@ -147,8 +133,7 @@ if [ $stage -le 12 ]; then
      echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
      exit 1;
   fi
-  /usr/bin/time -f "build tree $PRF" \
-    steps/nnet3/chain/build_tree.sh \
+  prf steps/nnet3/chain/build_tree.sh \
       --frame-subsampling-factor 3 \
       --context-opts "--context-width=2 --central-position=1" \
       --cmd "$train_cmd" 3500 ${lores_train_data_dir} \
@@ -208,8 +193,7 @@ fi
 
 if [ $stage -le 14 ]; then
   msg "$0: training DNN"
-  /usr/bin/time -f "training dnn $PRF" \
-    steps/nnet3/chain/train.py --stage=$train_stage \
+  prf steps/nnet3/chain/train.py --stage=$train_stage \
       --cmd="$decode_cmd" \
       --feat.online-ivector-dir=$train_ivector_dir \
       --feat.cmvn-opts="--norm-means=false --norm-vars=false" \
@@ -230,7 +214,7 @@ if [ $stage -le 14 ]; then
       --trainer.num-chunk-per-minibatch=128,64 \
       --egs.chunk-width=$chunk_width \
       --egs.dir="$common_egs_dir" \
-      --egs.opts="--frames-overlap-per-eg 0 --max-jobs-run 6 --max-shuffle-jobs-run 6" \
+      --egs.opts="--frames-overlap-per-eg 0 --max-jobs-run $nj --max-shuffle-jobs-run $nj" \
       --cleanup.remove-egs=$remove_egs \
       --use-gpu=true \
       --reporting.email="$reporting_email" \
@@ -245,8 +229,7 @@ if [ $stage -le 15 ]; then
   # matched topology (since it gets the topology file from the model).
   # CB: changed 'lang_test_tgsmall' to 'lang_test'
   msg "$0: generating dnn graph"
-  /usr/bin/time -f "mkgraph $PRF" \
-    utils/mkgraph.sh --self-loop-scale 1.0 \
+  prf utils/mkgraph.sh --self-loop-scale 1.0 \
       data/lang_test_small $tree_dir $tree_dir/graph_small || exit 1;
 fi
 
@@ -255,12 +238,13 @@ if [ $stage -le 16 ]; then
   rm $dir/.error 2>/dev/null || true
 
   msg "$0: decoding dnn"
-  for data in $test_sets; do
-    /usr/bin/time -f "decoding $PRF" \
-      steps/nnet3/decode.sh \
+  for data in $test_sets ; do
+    njobs=$nj && [ $njobs -gt $(wc -l < data/${data}/spk2utt) ] && \
+      njobs=$(wc -l < data/${data}/spk2utt)
+    prf steps/nnet3/decode.sh \
         --acwt 1.0 --post-decode-acwt 10.0 \
         --frames-per-chunk $frames_per_chunk \
-        --nj 4 --cmd "$decode_cmd" --num-threads 2 \
+        --nj $njobs --cmd "$decode_cmd" --num-threads 1 \
         --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${data}_hires \
         $tree_dir/graph_small \
         data/${data}_hires \
@@ -268,11 +252,10 @@ if [ $stage -le 16 ]; then
     grep -Rn WER $dir/decode_small_$data | \
         utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      /usr/bin/time -f "rescoring lattices $PRF" \
-        steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
+      prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
           data/lang_test_large \
-           data/${data}_hires \
+          data/${data}_hires \
           ${dir}/decode_small_${data} \
           ${dir}/decode_large_${data}
       grep -Rn WER $dir/decode_large_$data | \
@@ -294,21 +277,21 @@ if $test_online_decoding && [ $stage -le 17 ]; then
     $lang exp/nnet3${nnet3_affix}/extractor ${dir} ${dir}_online
 
   msg "$0: online decode"
-  for data in $test_sets; do
+  for data in $test_sets ; do
     # note: we just give it "data/${data}" as it only uses the wav.scp, the
     # feature type does not matter.
-    /usr/bin/time -f "online decoding $PRF" \
-      steps/online/nnet3/decode.sh \
+    njobs=$nj && [ $njobs -gt $(wc -l < data/${data}/spk2utt) ] && \
+      njobs=$(wc -l < data/${data}/spk2utt)
+    prf steps/online/nnet3/decode.sh \
         --acwt 1.0 --post-decode-acwt 10.0 \
-        --nj 6 --cmd "$decode_cmd" \
+        --nj $njobs --cmd "$decode_cmd" \
         $tree_dir/graph_small \
         data/${data} \
         ${dir}_online/decode_small_${data}
     grep -Rn WER ${dir}_online/decode_small_$data | \
         utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      /usr/bin/time -f "rescoring lattices $PRF" \
-        steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
+      prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
           data/lang_test_large \
           data/${data}_hires \
@@ -324,8 +307,7 @@ fi
 if [ $stage -le 18 ]; then
   msg "$0: generating dnn graph (lookahead)"
   export LD_LIBRARY_PATH=${KALDI_ROOT}/tools/openfst/lib/fst
-  /usr/bin/time -f "mkgraph (lookahead) $PRF" \
-    utils/mkgraph_lookahead.sh --self-loop-scale 1.0 \
+  prf utils/mkgraph_lookahead.sh --self-loop-scale 1.0 \
       data/lang_test_small $tree_dir $tree_dir/graph_small_lookahead || exit 1;
 fi
 

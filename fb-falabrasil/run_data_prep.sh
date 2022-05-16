@@ -156,7 +156,9 @@ if [ $stage -le 2 ]; then
   for dataset in cetuc coddef constituicao lapsbm lapsstory spoltech westpoint coraa cv vf mls mtedx ; do
     for subset in train dev test ; do
       dir=${subset}_${dataset} && [ ! -d data/$dir ] && continue
-      njobs=$((nj * 6)) && [ $njobs -gt $(wc -l < data/$dir/spk2utt) ] && \
+      [ -f data/$dir/feats.scp ] && \
+        echo "$0: warn: feats.scp exists in $dir. skipping..." && continue
+      njobs=$((nj * 2)) && [ $njobs -gt $(wc -l < data/$dir/spk2utt) ] && \
         njobs=$(wc -l < data/$dir/spk2utt)
       steps/make_mfcc.sh --nj $njobs data/$dir exp/make_mfcc/$dir $mfccdir || exit 1
       steps/compute_cmvn_stats.sh data/$dir exp/make_mfcc/$dir $mfccdir || exit 1
@@ -165,10 +167,10 @@ if [ $stage -le 2 ]; then
   done
 fi
 
+# merge/combine stuff.
+# do not merge test subsets because we want to keep WER scores separated.
+# also, do not rm individual train_* because experiments must be perf'ed.
 if [ $stage -le 3 ]; then
-  # merge/combine stuff.
-  # do not merge test subsets because we want to keep WER scores separated.
-  # also, do not rm individual train_* because experiments must be perf'ed.
   msg "$0: combine data dir"
   rm -rf data/train_all
   if $use_dev_as_train ; then
@@ -178,8 +180,8 @@ if [ $stage -le 3 ]; then
   fi
 
   # create individual subsets for mono, tri-deltas, and tri-sat.
-  # librispeech and aspire recipes have been combined almost blindly.
-  # TODO: check wetpoint's piece of words here
+  # librispeech and aspire recipes have been combined almost blindly. see #8
+  # TODO: check westpoint's piece of words here
   msg "$0: subset data dir"
   utils/subset_data_dir.sh --shortest data/train_all 50000 data/train_50kshort
   utils/subset_data_dir.sh data/train_50kshort 5000 data/train_5k

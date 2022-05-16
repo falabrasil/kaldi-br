@@ -17,22 +17,22 @@ Check out the following GitHub repo
 (notice there's a pair repo on GitLab for LFS storage):
 https://github.com/falabrasil/lm-br
 
-:newspaper: :octocat: :fox_face: Looking for phonetic dictionaries? 
+:newspaper: :octocat: :fox_face: Looking for phonetic dictionaries (lexicon)? 
 Check out the following GitHub repo 
 (notice there's a pair repo on GitLab for LFS storage):
 https://github.com/falabrasil/dicts-br
 
-:label: :fox_face: :whale: Wanna create your own phonetic dictionary?
-Check out our tagger tool GitLab repo (there's also a dockerized version): 
-https://gitlab.com/fb-nlp/nlp-generator
+:label: :octocat: :whale: Wanna create your own phonetic dictionary?
+Check out our annotator tool's GitHub repo (there's also a dockerized version):
+https://github.com/falabrasil/annotator
 
 :coffee: Looking for Kaldi installation instructions? Check out our install
 guide on [`INSTALL.md`](INSTALL.md) file or just go follow Kaldi documentation 
 directly: https://github.com/kaldi-asr/kaldi
 
 :footprints: If you're looking for a tutorial on data preparation and a
-step-by-step guide on how to train acoustic models from scratch using Kaldi,
-the best we can offer is this [written tutorial](TUTORIAL.md).
+step-by-step guide on how to train your own acoustic models from scratch using
+Kaldi, the best we can offer is this [written tutorial](TUTORIAL.md).
 
 
 ## Model training for speech recognition (Vosk + LapsBM)

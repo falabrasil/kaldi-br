@@ -145,40 +145,26 @@ if [ $stage -le 4 ]; then
     prf utils/prepare_lang.sh \
       data/local/dict_$dataset "<UNK>" data/local/lang_tmp data/lang_$dataset
 
-    symtab=data/lang_test_small/words.txt
-    if [ -f data/lang_test_${dataset}_small/G.fst ] ; then
-      echo "$0: warn: G.fst exists. skipping compilation..."
-    else
-      cp -r data/lang data/lang_test_${dataset}_small
-      gunzip -c data/local/lm/small.arpa.gz | \
-        sed "s/<unk>/<UNK>/g" | \
-        arpa2fst \
-          --disambig-symbol=#0 \
-          --read-symbol-table=$symtab \
-          - data/lang_test_${dataset}_small/G.fst || exit 1
-    fi
-    utils/validate_lang.pl --skip-determinization-check \
-      data/lang_test_${dataset}_small || exit 1
+    # this is only needed for decoding so we can throw it to a
+    # background process right now
+    (
+      symtab=data/lang_test_${dataset}_small/words.txt
+      if [ -f data/lang_test_${dataset}_small/G.fst ] ; then
+        echo "$0: warn: G.fst exists. skipping compilation..."
+      else
+        cp -r data/lang_$dataset data/lang_test_${dataset}_small
+        gunzip -c data/local/lm/small.arpa.gz | \
+          sed "s/<unk>/<UNK>/g" | \
+          arpa2fst \
+            --disambig-symbol=#0 \
+            --read-symbol-table=$symtab \
+            - data/lang_test_${dataset}_small/G.fst || touch .gerr
+      fi
+      utils/validate_lang.pl --skip-determinization-check \
+        data/lang_test_${dataset}_small || touch .gerr
+    )&
 
-    ## TODO uncomment for real recipe
-    ## FIXME -L untested
-    ## NOTE carpa generation consumes a lot of RAM
-    #if [ -L data/local/lm/large.arpa.gz ] ; then
-    #  symtab=data/lang_test_large/words.txt
-    #  if [ -f data/lang_test_large/G.carpa ] ; then
-    #    echo "$0: warn: G.carpa exists. skipping compilation..."
-    #  else
-    #    cp -r data/lang data/lang_test_large
-    #    gunzip -c data/local/lm/large.arpa.gz | \
-    #      sed "s/<unk>/<UNK>/g" | utils/map_arpa_lm.pl $symtab | \
-    #      arpa-to-const-arpa \
-    #        --bos-symbol=$(grep "^<s>\s"  $symtab | awk '{print $2}') \
-    #        --eos-symbol=$(grep "^</s>\s" $symtab | awk '{print $2}') \
-    #        --unk-symbol=$(grep "<UNK>\s" $symtab | awk '{print $2}') \
-    #        - data/lang_test_large/G.carpa || exit 1
-    #  fi
-    #  # TODO no validate_lang??
-    #fi
+    # carpa regeneration not really needed here
 
     njobs=$nj && [ $njobs -gt $(wc -l < data/train_$dataset/spk2utt) ] && \
       njobs=$(wc -l < data/train_$dataset/spk2utt)
@@ -187,7 +173,7 @@ if [ $stage -le 4 ]; then
         data/train_$dataset data/lang_$dataset exp/tri3b_$dataset exp/tri3b_ali_train_$dataset || touch .aerr
     )&
     sleep 1
-    [ -f .aerr ] && rm .aerr && exit 1
+    [[ -f .aerr  || -f .gerr ]] && rm -f .aerr .gerr && exit 1
     [ $njobs -ge $nj ] && wait
   done
 fi

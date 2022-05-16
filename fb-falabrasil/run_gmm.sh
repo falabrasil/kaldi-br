@@ -25,32 +25,32 @@ if [ $stage -le 0 ]; then
   prf steps/train_mono.sh --boost-silence 1.25 --nj $nj --cmd "$train_cmd" \
     data/train_5k_nodup data/lang_nosp exp/mono || exit 1
   prf steps/align_si.sh --boost-silence 1.25 --nj $nj --cmd "$train_cmd" \
-    data/train_10k data/lang_nosp exp/mono exp/mono_ali || exit 1
+    data/train_10k data/lang_nosp exp/mono exp/mono_ali_10k || exit 1
 fi
 
 # train a first delta + delta-delta triphone system on all utterances
 if [ $stage -le 1 ]; then
   msg "$0: train deltas"
   prf steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" \
-    2000 10000 data/train_10k data/lang_nosp exp/mono_ali exp/tri1 || exit 1
+    2000 10000 data/train_10k data/lang_nosp exp/mono_ali_10k exp/tri1 || exit 1
   prf steps/align_si.sh --nj $nj --cmd "$train_cmd" \
-    data/train_30k data/lang_nosp exp/tri1 exp/tri1_ali || exit 1
+    data/train_30k data/lang_nosp exp/tri1 exp/tri1_ali_30k || exit 1
 fi
 
 # train an LDA+MLLT system.
 if [ $stage -le 2 ]; then
   msg "$0: train lda mllt"
   prf steps/train_lda_mllt.sh --cmd "$train_cmd" --splice-opts "--left-context=3 --right-context=3" 2500 15000 \
-    data/train_30k data/lang_nosp exp/tri1_ali exp/tri2b || exit 1
+    data/train_30k data/lang_nosp exp/tri1_ali_30k exp/tri2b || exit 1
   prf steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true \
-    data/train_30k data/lang_nosp exp/tri2b exp/tri2b_ali || exit 1
+    data/train_30k data/lang_nosp exp/tri2b exp/tri2b_ali_30k || exit 1
 fi
 
 # Train tri3b, which is LDA+MLLT+SAT
 if [ $stage -le 3 ]; then
   msg "$0: train sat"
   prf steps/train_sat.sh --cmd "$train_cmd" 2500 15000 \
-    data/train_30k data/lang_nosp exp/tri2b_ali exp/tri3b || exit 1
+    data/train_all data/lang_nosp exp/tri2b_ali_30k exp/tri3b || exit 1
 fi
 
 # Now we compute the pronunciation and silence probabilities from training data,
@@ -106,7 +106,7 @@ if [ $stage -le 4 ]; then
 
   # finally, align sat
   prf steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
-    data/train_all data/lang exp/tri3b exp/tri3b_ali || exit 1
+    data/train_all data/lang exp/tri3b exp/tri3b_ali_train_all || exit 1
 fi
 
 # Test the tri3b system with the silprobs and pron-probs.

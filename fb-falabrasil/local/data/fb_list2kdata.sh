@@ -15,6 +15,8 @@ data_dir=$2
 [ ! -f $list_file ] && echo >&2 "$0: error: bad list file: $list_file" && exit 1
 mkdir -p $data_dir || exit 1
 
+export LC_ALL=pt_BR.utf8
+
 i=0
 corpus_dir=$(dirname $list_file)
 rm -f $data_dir/{wav.scp,text,utt2spk}
@@ -34,5 +36,6 @@ sort -u $data_dir/wav.scp -o $data_dir/wav.scp
 sort -u $data_dir/text -o $data_dir/text
 sort -u $data_dir/utt2spk -o $data_dir/utt2spk
 utils/utt2spk_to_spk2utt.pl $data_dir/utt2spk > $data_dir/spk2utt
+utils/fix_data_dir.sh $data_dir
 utils/validate_data_dir.sh $data_dir --no-feats --non-print || exit 1
 #echo "$0: success! $i audio files processed in $list_file"

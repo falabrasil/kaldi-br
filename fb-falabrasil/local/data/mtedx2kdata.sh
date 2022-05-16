@@ -15,6 +15,8 @@ set -e
 corpus_dir=$1
 data_dir=$2
 
+export LC_ALL=pt_BR.utf8
+
 [ ! -d $corpus_dir ] && echo "$0: error: bad dir: $corpus_dir" && exit 1
 mkdir -p $data_dir || exit 1
 
@@ -39,5 +41,6 @@ done | sort -u > $data_dir/wav.scp
 #sort -u $data_dir/wav.scp -o $data_dir/wav.scp
 
 utils/utt2spk_to_spk2utt.pl $data_dir/utt2spk > $data_dir/spk2utt
+utils/fix_data_dir.sh $data_dir
 utils/validate_data_dir.sh $data_dir --no-feats --non-print || exit 1
 #echo "$0: success! $(wc -l < $data_dir/segments) utts processed in $corpus_dir"
