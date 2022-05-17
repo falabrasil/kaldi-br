@@ -1,0 +1,1 @@
+../../fb-lapsbm/local/score.sh

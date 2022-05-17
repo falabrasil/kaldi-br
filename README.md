@@ -1,63 +1,107 @@
-# FalaBrasil Scripts for Kaldi :br:
+# FalaBrasil Scripts for Kaldi :brazil:
 
 This repo contains instructions and scripts to train acoustic models using
-Kaldi over the datasets of the FalaBrasil Group in Brazilian Portuguese.
+Kaldi over the datasets in Brazilian Portuguese (or just "general Portuguese").
+You may also find some scripts for forced alignment and speaker diarization.
 
-:fox_face: Looking for speech datasets in Brazilian Portuguese? Check out our
-"Audio Corpora" GitLab group: https://gitlab.com/fb-audio-corpora
+:speaking_head: :octocat: Looking for speech datasets in Brazilian Portuguese?
+Check out our "Speech Datasets" GitHub repo (based on DVC for storage):
+https://github.com/falabrasil/speech-datasets
 
-:fox_face: Looking for language models or phonetic dictionaries? Check out our
-"NLP resources" GitLab group: https://gitlab.com/fb-nlp
+:memo: :octocat: Looking for text datasets in Brazilian Portuguese?
+Check out our "Text Datasets" GitHub repo:
+https://github.com/falabrasil/text-datasets
+
+:spiral_notepad: :octocat: :fox_face: Looking for language models (LM)? 
+Check out the following GitHub repo 
+(notice there's a pair repo on GitLab for LFS storage):
+https://github.com/falabrasil/lm-br
+
+:newspaper: :octocat: :fox_face: Looking for phonetic dictionaries (lexicon)? 
+Check out the following GitHub repo 
+(notice there's a pair repo on GitLab for LFS storage):
+https://github.com/falabrasil/dicts-br
+
+:label: :octocat: :whale: Wanna create your own phonetic dictionary?
+Check out our annotator tool's GitHub repo (there's also a dockerized version):
+https://github.com/falabrasil/annotator
 
 :coffee: Looking for Kaldi installation instructions? Check out our install
 guide on [`INSTALL.md`](INSTALL.md) file or just go follow Kaldi documentation 
 directly: https://github.com/kaldi-asr/kaldi
 
+:footprints: If you're looking for a tutorial on data preparation and a
+step-by-step guide on how to train your own acoustic models from scratch using
+Kaldi, the best we can offer is this [written tutorial](TUTORIAL.md).
 
-## Model training for speech recognition (Vosk)
 
-See [`fb-mini_librispeech/`](./fb-mini_librispeech) dir.
-Based on Mini-librispeech `nnet3` recipe (`local/chain/tuning/run_tdnn_1j.sh`).
+## Model training for speech recognition (Vosk + LapsBM)
+
+See [`fb-lapsbm/`](./fb-lapsbm) dir.
+Based on Mini-librispeech `nnet3` recipe (`local/chain/tuning/run_tdnn_1j.sh`),
+adapted for a quick train exec over LapsBenchmark.
 
 ```bash
-$ ./prep_minilibri.sh /path/to/kaldi/egs/myproject
+$ ./prep_lapsbm.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run.sh
 ```
 
 For online decoding, please check
-[`fb-mini_librispeech/fbvosk/`](./fb-mini_librispeech/fbvosk) dir.
-Dir [`utils/online/`](./utils/online) is deprecated.
+[`fb-lapsbm/local/vosk/`](./fb-lapsbm/local/vosk) dir.
 
-## Model training for phonetic alignment (Gentle)
 
-See [`fb-aspire/`](./fb-aspire) dir.
-Based on ASpIRE `nnet3` recipe.
+## Model training for speech recognition (Vosk + Datasets)
+
+See [`fb-falabrasil/`](./fb-falabrasil) dir.
+This is expected to become the main recipe for Brazilian Portuguese, as we are
+planning on releasing the acoustic models as well.
+
+Also based on Mini-librispeech recipe, same as above, but now it runs over all
+public speech datasets in Portugese (NOTE: not only "Brazilian" Portuguese!) we
+are aware of, which have been gathered here:
+https://github.com/falabrasil/speech-datasets
 
 ```bash
-$ ./prep_aspire.sh /path/to/kaldi/egs/myproject
+$ ./prep_falabrasil.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run.sh
 ```
 
-## Model training for phonetic alignment (LibriSpeech)
+For online decoding, please check
+[`fb-falabrasil/local/vosk/`](./fb-falabrasil/local/vosk) dir.
 
-See [`fb-librispeech/`](./fb-librispeech) dir.
-Based on LibriSpeech `nnet3` recipe.
+
+## Model training for phonetic alignment (Gentle)
+
+See [`fb-gentle/`](./fb-gentle) dir.
+Based on ASpIRE `nnet3` recipe.
 
 ```bash
-$ ./prep_libri.sh /path/to/kaldi/egs/myproject
+$ ./prep_gentle.sh /path/to/kaldi/egs/myproject
+$ cd /path/to/kaldi/egs/myproject/s5/
+$ ./run.sh
+```
+
+:warning: it didn't work. See README inside.
+
+## Model training for phonetic alignment (UFPAlign)
+
+See [`fb-ufpalign/`](./fb-ufpalign) dir.
+Based on LibriSpeech `nnet3` recipe, in the hopes of future compatibility with
+MFA.
+
+```bash
+$ ./prep_ufpalign.sh /path/to/kaldi/egs/myproject
 $ cd /path/to/kaldi/egs/myproject/s5/
 $ ./run_all.sh
 ```
 
-:warning: These scripts are experimental for forced phonetic alignment. For
-transcription you may stick with Mini-libri recipe.
-
-## Speaker diarization
+## Speaker diarization (CallHome)
 
 See [`fb-callhome/`](./fb-callhome) dir.
-Based on CALLHOME v2 recipe.
+Based on CALLHOME v2 recipe. This uses pre-trained models on English data for
+inference only rather than training one from scratch.
 
 ```bash
 $ ./prep_callhome.sh /path/to/kaldi/egs/myproject
@@ -65,8 +109,8 @@ $ cd /path/to/kaldi/egs/myproject/v2/
 $ ./run.sh
 ```
 
-Standalone clustering procedure based on pyanote-audio lib can also be found
-under [`utils/clustering/`](utils/clustering) dir.
+Standalone clustering procedure based on `pyannote.audio` lib can also be
+found under [`utils/clustering/`](utils/clustering)_diarization dir.
 
 
 # Citation
@@ -81,14 +125,14 @@ us as one of the following:
 > 10.21437/IberSPEECH.2018-17.
 
 ```bibtex
-@inproceedings{Batista2018,
-  author    = {Cassio Batista and Ana Larissa Dias and Nelson {Sampaio Neto}},
-  title     = {{Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools}},
-  year      = {2018},
-  booktitle = {Proc. IberSPEECH 2018},
-  pages     = {77--81},
-  doi       = {10.21437/IberSPEECH.2018-17},
-  url       = {http://dx.doi.org/10.21437/IberSPEECH.2018-17}
+@inproceedings{Batista18,
+  author     = {Cassio Batista and Ana Larissa Dias and Nelson {Sampaio Neto}},
+  title      = {{Baseline Acoustic Models for Brazilian Portuguese Using Kaldi Tools}},
+  year       = {2018},
+  booktitle  = {Proc. IberSPEECH 2018},
+  pages      = {77--81},
+  doi        = {10.21437/IberSPEECH.2018-17},
+  url        = {http://dx.doi.org/10.21437/IberSPEECH.2018-17}
 }
 ```
 
@@ -118,13 +162,33 @@ scripts, you may find them on tag `nnet2`. Try running `git tag`.
 }
 ```
 
-## EURASIP 2021
+## [EURASIP 2022](https://asp-eurasipjournals.springeropen.com/articles/10.1186/s13634-022-00844-9)
 
-Coming soon.
+> Batista, C., Dias, A.L. & Neto, N.
+> Free resources for forced phonetic alignment in Brazilian Portuguese based on Kaldi toolkit.
+> EURASIP J. Adv. Signal Process. 2022, 11 (2022).
+> https://doi.org/10.1186/s13634-022-00844-9
+
+```bibtex
+@article{Batista22,
+  author     = {Batista, Cassio and Dias, Ana Larissa and Neto, Nelson},
+  title      = {Free resources for forced phonetic alignment in Brazilian Portuguese based on Kaldi toolkit},
+  journal    = {EURASIP Journal on Advances in Signal Processing},
+  year       = {2022},
+  month      = {Feb},
+  day        = {19},
+  volume     = {2022},
+  number     = {1},
+  pages      = {11},
+  issn       = {1687-6180},
+  doi        = {10.1186/s13634-022-00844-9},
+  url        = {https://doi.org/10.1186/s13634-022-00844-9}
+}
+```
 
 
-[![FalaBrasil](doc/logo_fb_github_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](doc/logo_ufpa_github_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
+[![FalaBrasil](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_fb_git_footer.png)](https://ufpafalabrasil.gitlab.io/ "Visite o site do Grupo FalaBrasil") [![UFPA](https://gitlab.com/falabrasil/avatars/-/raw/main/logo_ufpa_git_footer.png)](https://portal.ufpa.br/ "Visite o site da UFPA")
 
-__Grupo FalaBrasil (2021)__ - https://ufpafalabrasil.gitlab.io/      
+__Grupo FalaBrasil (2022)__ - https://ufpafalabrasil.gitlab.io/      
 __Universidade Federal do Pará (UFPA)__ - https://portal.ufpa.br/     
 Cassio Batista - https://cassota.gitlab.io/    

@@ -1,0 +1,1 @@
+../../fb-lapsbm/local/link_local_data.sh

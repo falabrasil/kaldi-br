@@ -1,0 +1,1 @@
+../../fb-lapsbm/local/prep_dict.sh
