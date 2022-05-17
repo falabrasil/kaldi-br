@@ -205,7 +205,7 @@ if [ $stage -le 14 ]; then
       --trainer.add-option="--optimization.memory-compression-level=2" \
       --trainer.srand=$srand \
       --trainer.max-param-change=2.0 \
-      --trainer.num-epochs=5 \
+      --trainer.num-epochs=4 \
       --trainer.frames-per-iter=3000000 \
       --trainer.optimization.num-jobs-initial=1 \
       --trainer.optimization.num-jobs-final=1 \
@@ -233,7 +233,8 @@ if [ $stage -le 15 ]; then
       data/lang_test_small $tree_dir $tree_dir/graph_small || exit 1;
 fi
 
-if [ $stage -le 16 ]; then
+# NOTE I'm more interested in the online part, so I'm disabling this one
+if false && [ $stage -le 16 ]; then
   frames_per_chunk=$(echo $chunk_width | cut -d, -f1)
   rm $dir/.error 2>/dev/null || true
 
@@ -246,11 +247,12 @@ if [ $stage -le 16 ]; then
         --frames-per-chunk $frames_per_chunk \
         --nj $njobs --cmd "$decode_cmd" --num-threads 1 \
         --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${data}_hires \
+        --beam 10 --lattice-beam 6.0 \
         $tree_dir/graph_small \
         data/${data}_hires \
         ${dir}/decode_small_${data}
-    grep -Rn WER $dir/decode_small_$data | \
-        utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
+    grep -Rn WER $dir/decode_small_$data/wer_* | \
+      utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
       prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
@@ -258,8 +260,8 @@ if [ $stage -le 16 ]; then
           data/${data}_hires \
           ${dir}/decode_small_${data} \
           ${dir}/decode_large_${data}
-      grep -Rn WER $dir/decode_large_$data | \
-          utils/best_wer.sh | tee $dir/decode_large_$data/fbwer.txt
+      grep -Rn WER $dir/decode_large_$data/wer_* | \
+        utils/best_wer.sh | tee $dir/decode_large_$data/fbwer.txt
     fi
   done
 fi
@@ -285,11 +287,12 @@ if $test_online_decoding && [ $stage -le 17 ]; then
     prf steps/online/nnet3/decode.sh \
         --acwt 1.0 --post-decode-acwt 10.0 \
         --nj $njobs --cmd "$decode_cmd" \
+        --beam 10 --lattice-beam 6.0 \
         $tree_dir/graph_small \
         data/${data} \
         ${dir}_online/decode_small_${data}
-    grep -Rn WER ${dir}_online/decode_small_$data | \
-        utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
+    grep -Rn WER ${dir}_online/decode_small_$data/wer_* | \
+      utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
       prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
@@ -297,8 +300,8 @@ if $test_online_decoding && [ $stage -le 17 ]; then
           data/${data}_hires \
           ${dir}_online/decode_small_${data} \
           ${dir}_online/decode_large_${data}
-      grep -Rn WER ${dir}_online/decode_large_$data | \
-          utils/best_wer.sh | tee ${dir}_online/decode_large_$data/fbwer.txt
+      grep -Rn WER ${dir}_online/decode_large_$data/wer_* | \
+        utils/best_wer.sh | tee ${dir}_online/decode_large_$data/fbwer.txt
     fi
   done
 fi
@@ -318,4 +321,5 @@ msg "$0: success! check your model at '$model_dir'"
 
 # https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
 echo "------------ wrapping results up ------------"
-find -name fbwer.txt -printf "%T@ %Tc %p\n" | sort -n | awk '{print $NF}' | xargs cat
+find -name fbwer.txt -printf "%T@ %Tc %p\n" | sort -n | awk '{print $NF}' | \
+  xargs cat | grep online | grep large
