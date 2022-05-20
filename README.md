@@ -12,6 +12,10 @@ https://github.com/falabrasil/speech-datasets
 Check out our "Text Datasets" GitHub repo:
 https://github.com/falabrasil/text-datasets
 
+:studio_microphone: :fox_face: Looking for acoustic models (AM, probably for Vosk)? 
+Check out the following GitLab repo (with LFS storage):
+https://gitlab.com/fb-resources/kaldi-br
+
 :spiral_notepad: :octocat: :fox_face: Looking for language models (LM)? 
 Check out the following GitHub repo 
 (notice there's a pair repo on GitLab for LFS storage):
