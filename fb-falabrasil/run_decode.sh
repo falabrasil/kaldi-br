@@ -21,8 +21,8 @@ nnet3_affix=
 affix=1j   # affix for the TDNN directory name
 tree_affix=
 
-beam=8
-lattice_beam=4.0
+beam=10
+lattice_beam=6.0
 
 tree_dir=exp/chain${nnet3_affix}/tree_sp${tree_affix:+_$tree_affix}
 lang=data/lang_chain
@@ -53,8 +53,6 @@ if $decode_mono ; then
       exp/mono/graph_nosp_small \
       data/$data \
       exp/mono/decode_nosp_small_$data
-    grep -Rn WER exp/mono/decode_nosp_small_$data | \
-      utils/best_wer.sh | tee exp/mono/decode_nosp_small_$data/fbwer.txt
   done
 fi
 
@@ -73,8 +71,6 @@ if $decode_deltas ; then
       exp/tri1/graph_nosp_small \
       data/$data \
       exp/tri1/decode_nosp_small_$data
-    grep -Rn WER exp/tri1/decode_nosp_small_$data | \
-        utils/best_wer.sh | tee exp/tri1/decode_nosp_small_$data/fbwer.txt
   done
 fi
 
@@ -93,8 +89,6 @@ if $decode_lda ; then
       exp/tri2b/graph_nosp_small_$data \
       data/$data \
       exp/tri2b/decode_nosp_small_$data
-    grep -Rn WER exp/tri2b/decode_nosp_small_$data | \
-      utils/best_wer.sh | tee exp/tri2b/decode_nosp_small_$data/fbwer.txt
   done
 fi
 
@@ -113,8 +107,6 @@ if $decode_sat ; then
       exp/tri3b/graph_small \
       data/$data \
       exp/tri3b/decode_small_$data
-    grep -Rn WER exp/tri3b/decode_small_$data | \
-      utils/best_wer.sh | tee exp/tri3b/decode_small_$data/fbwer.txt
   done
 fi
 
@@ -141,8 +133,6 @@ if $decode_nnet ; then
         $tree_dir/graph_small \
         data/${data}_hires \
         ${dir}/decode_small_${data}
-    grep -Rn WER $dir/decode_small_$data/wer_* | \
-      utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
       prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
@@ -150,8 +140,6 @@ if $decode_nnet ; then
           data/${data}_hires \
           ${dir}/decode_small_${data} \
           ${dir}/decode_large_${data}
-      grep -Rn WER $dir/decode_large_$data/wer_* | \
-        utils/best_wer.sh | tee $dir/decode_large_$data/fbwer.txt
     fi
   done
 
@@ -168,8 +156,6 @@ if $decode_nnet ; then
         $tree_dir/graph_small \
         data/${data} \
         ${dir}_online/decode_small_${data}
-    grep -Rn WER ${dir}_online/decode_small_$data/wer_* | \
-      utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
     if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
       prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
           data/lang_test_small \
@@ -177,19 +163,18 @@ if $decode_nnet ; then
           data/${data}_hires \
           ${dir}_online/decode_small_${data} \
           ${dir}_online/decode_large_${data}
-      grep -Rn WER ${dir}_online/decode_large_$data/wer_* | \
-        utils/best_wer.sh | tee ${dir}_online/decode_large_$data/fbwer.txt
     fi
   done
 fi
 
 if $decode_vosk ; then
+  msg "$0: preparing vosk's slim model"
   [ ! -d $vosk_model_dir ] && \
     echo "$0: error: bad vosk model dir: $vosk_model_dir" && exit 1
 
   export LD_LIBRARY_PATH=$KALDI_ROOT/tools/openfst/lib/fst
 
-  msg "$0: link data, model and config files"
+  echo "$0: link data, model and config files"
   mkdir -p $vosk_subegs_dir/{conf,data/lang/phones,exp/model/{graph/phones,ivector_extractor}}
   #ln -sfv $PWD/examples/audio16.wav $egs_dir/data
   ln -rsf $vosk_model_dir/{ivector/online_cmvn.conf,mfcc.conf} $vosk_subegs_dir/conf
@@ -202,17 +187,17 @@ if $decode_vosk ; then
   echo "1:2:3:4:5:6:7:8:9:10" >                                $vosk_subegs_dir/data/lang/phones/silence.csl
   echo "1:2:3:4:5:6:7:8:9:10" >                                $vosk_subegs_dir/exp/model/graph/phones/silence.csl
 
-  msg "$0: mkgraph-like"
+  echo "$0: mkgraph-like"
   fstcompose $vosk_subegs_dir/exp/model/graph/HCLr.fst $vosk_subegs_dir/exp/model/graph/Gr.fst | \
     fstrmsymbols $vosk_subegs_dir/exp/model/graph/disambig_tid.int | \
     fstconvert --fst_type=const > $vosk_subegs_dir/exp/model/graph/HCLG.fst
 
-  msg "$0: prepare online decoding"
+  echo "$0: prepare online decoding"
   steps/online/nnet3/prepare_online_decoding.sh \
     --mfcc-config $vosk_subegs_dir/conf/mfcc.conf --online-cmvn-config $vosk_subegs_dir/conf/online_cmvn.conf \
     $vosk_subegs_dir/data/lang $vosk_subegs_dir/exp/model/ivector_extractor $vosk_subegs_dir/exp/model $vosk_subegs_dir/exp/online
 
-  msg "$0: extracting words.txt from graph"
+  echo "$0: extracting words.txt from graph"
   fstprint --save_osymbols=$vosk_subegs_dir/exp/model/graph/words.txt \
     $vosk_subegs_dir/exp/model/graph/Gr.fst > /dev/null
 
@@ -225,12 +210,10 @@ if $decode_vosk ; then
       --acwt 1.0 --post-decode-acwt 10.0 \
       --beam $beam --lattice-beam $lattice_beam \
       $vosk_subegs_dir/exp/model/graph data/$data $vosk_subegs_dir/exp/online/decode_small_$data
-    grep -Rn WER $vosk_subegs_dir/exp/online/decode_small_$data/wer_* | \
-      utils/best_wer.sh | tee $vosk_subegs_dir/exp/online/decode_small_$data/fbwer.txt
   done
 fi
 
 # https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
 echo "------------ wrapping results up ------------"
-find -name fbwer.txt -printf "%T@ %Tc %p\n" | sort -n | awk '{print $NF}' | \
+find -name best_wer.txt -printf "%T@ %Tc %p\n" | sort -n | awk '{print $NF}' | \
   xargs cat

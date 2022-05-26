@@ -55,3 +55,5 @@ for wip in $(echo $word_ins_penalty | sed 's/,/ /g'); do
     cat $dir/scoring/LMWT.$wip.tra \| sed 's:\<UNK\>::g' \| \
     compute-wer --text --mode=present ark:$data/text ark,p:- ">&" $dir/wer_LMWT_$wip || exit 1
 done
+
+grep WER $dir/wer_* | utils/best_wer.sh | tee $dir/best_wer.txt
