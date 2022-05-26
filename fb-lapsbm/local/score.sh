@@ -41,23 +41,17 @@ done
 
 mkdir -p $dir/scoring/log
 
-cat $data/text | sed 's:<NOISE>::g' | sed 's:<SPOKEN_NOISE>::g' > $dir/scoring/test_filt.txt
-
 for wip in $(echo $word_ins_penalty | sed 's/,/ /g'); do
   $cmd LMWT=$min_lmwt:$max_lmwt $dir/scoring/log/best_path.LMWT.$wip.log \
     lattice-scale --inv-acoustic-scale=LMWT "ark:gunzip -c $dir/lat.*.gz|" ark:- \| \
     lattice-add-penalty --word-ins-penalty=$wip ark:- ark:- \| \
-    lattice-best-path --word-symbol-table=$symtab \
-      ark:- ark,t:$dir/scoring/LMWT.$wip.tra || exit 1;
+    lattice-best-path --word-symbol-table=$symtab ark:- ark,t:- \| \
+    utils/int2sym.pl -f 2- $symtab ">" $dir/scoring/LMWT.$wip.tra || exit 1
 done
 
 # Note: the double level of quoting for the sed command
 for wip in $(echo $word_ins_penalty | sed 's/,/ /g'); do
   $cmd LMWT=$min_lmwt:$max_lmwt $dir/scoring/log/score.LMWT.$wip.log \
-    cat $dir/scoring/LMWT.$wip.tra \| \
-    utils/int2sym.pl -f 2- $symtab \| sed 's:\<UNK\>::g' \| \
-    compute-wer --text --mode=present \
-    ark:$dir/scoring/test_filt.txt  ark,p:- ">&" $dir/wer_LMWT_$wip || exit 1;
+    cat $dir/scoring/LMWT.$wip.tra \| sed 's:\<UNK\>::g' \| \
+    compute-wer --text --mode=present ark:$data/text ark,p:- ">&" $dir/wer_LMWT_$wip || exit 1
 done
-
-exit 0;

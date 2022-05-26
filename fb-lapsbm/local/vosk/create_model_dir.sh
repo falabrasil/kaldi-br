@@ -56,10 +56,10 @@ cp $tree_dir/graph_small/disambig_tid.int  $dir/graph || exit 1
 cp -r $tree_dir/graph_small/phones         $dir/graph || exit 1
 cp $tree_dir/graph_small/words.txt         $dir/graph || exit 1
 cp $tree_dir/graph_small/phones.txt        $dir/graph || exit 1
+cp $tree_dir/graph_small/HCLG.fst          $dir/graph || exit 1
 [ -f $tree_dir/graph_small_lookahead/HCLr.fst ] && \
   [ -f $tree_dir/graph_small_lookahead/Gr.fst ] && \
-  cp $tree_dir/graph_small_lookahead/{HCLr,Gr}.fst $dir/graph || \
-  cp $tree_dir/graph_small/HCLG.fst $dir/graph
+  cp $tree_dir/graph_small_lookahead/{HCLr,Gr}.fst $dir/graph
 
 # ivector files
 cp $ie_dir/*             $dir/ivector || exit 1

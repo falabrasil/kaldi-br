@@ -55,10 +55,6 @@ srand=0
 remove_egs=true
 reporting_email=
 
-#decode options
-test_online_decoding=true  # if true, it will run the last decoding stage.
-
-
 # End configuration section.
 echo "$0 $@"  # Print the command line for logging
 
@@ -227,99 +223,19 @@ fi
 if [ $stage -le 15 ]; then
   # Note: it's not important to give mkgraph.sh the lang directory with the
   # matched topology (since it gets the topology file from the model).
-  # CB: changed 'lang_test_tgsmall' to 'lang_test'
   msg "$0: generating dnn graph"
   prf utils/mkgraph.sh --self-loop-scale 1.0 \
       data/lang_test_small $tree_dir $tree_dir/graph_small || exit 1;
 fi
 
-# NOTE I'm more interested in the online part, so I'm disabling this one
-if false && [ $stage -le 16 ]; then
-  frames_per_chunk=$(echo $chunk_width | cut -d, -f1)
-  rm $dir/.error 2>/dev/null || true
-
-  msg "$0: decoding dnn"
-  for data in $test_sets ; do
-    njobs=$nj && [ $njobs -gt $(wc -l < data/${data}/spk2utt) ] && \
-      njobs=$(wc -l < data/${data}/spk2utt)
-    prf steps/nnet3/decode.sh \
-        --acwt 1.0 --post-decode-acwt 10.0 \
-        --frames-per-chunk $frames_per_chunk \
-        --nj $njobs --cmd "$decode_cmd" --num-threads 1 \
-        --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${data}_hires \
-        --beam 10 --lattice-beam 6.0 \
-        $tree_dir/graph_small \
-        data/${data}_hires \
-        ${dir}/decode_small_${data}
-    grep -Rn WER $dir/decode_small_$data/wer_* | \
-      utils/best_wer.sh | tee $dir/decode_small_$data/fbwer.txt
-    if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
-          data/lang_test_small \
-          data/lang_test_large \
-          data/${data}_hires \
-          ${dir}/decode_small_${data} \
-          ${dir}/decode_large_${data}
-      grep -Rn WER $dir/decode_large_$data/wer_* | \
-        utils/best_wer.sh | tee $dir/decode_large_$data/fbwer.txt
-    fi
-  done
-fi
-
-# Not testing the 'looped' decoding separately, because for
-# TDNN systems it would give exactly the same results as the
-# normal decoding.
-
-if $test_online_decoding && [ $stage -le 17 ]; then
-  # note: if the features change (e.g. you add pitch features), you will have to
-  # change the options of the following command line.
-  msg "$0: prepare online decoding"
-  steps/online/nnet3/prepare_online_decoding.sh \
-    --mfcc-config conf/mfcc_hires.conf \
-    $lang exp/nnet3${nnet3_affix}/extractor ${dir} ${dir}_online
-
-  msg "$0: online decode"
-  for data in $test_sets ; do
-    # note: we just give it "data/${data}" as it only uses the wav.scp, the
-    # feature type does not matter.
-    njobs=$nj && [ $njobs -gt $(wc -l < data/${data}/spk2utt) ] && \
-      njobs=$(wc -l < data/${data}/spk2utt)
-    prf steps/online/nnet3/decode.sh \
-        --acwt 1.0 --post-decode-acwt 10.0 \
-        --nj $njobs --cmd "$decode_cmd" \
-        --beam 10 --lattice-beam 6.0 \
-        $tree_dir/graph_small \
-        data/${data} \
-        ${dir}_online/decode_small_${data}
-    grep -Rn WER ${dir}_online/decode_small_$data/wer_* | \
-      utils/best_wer.sh | tee ${dir}_online/decode_small_$data/fbwer.txt
-    if [ -f data/lang_test_large/G.carpa ] ; then  # TODO check
-      prf steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
-          data/lang_test_small \
-          data/lang_test_large \
-          data/${data}_hires \
-          ${dir}_online/decode_small_${data} \
-          ${dir}_online/decode_large_${data}
-      grep -Rn WER ${dir}_online/decode_large_$data/wer_* | \
-        utils/best_wer.sh | tee ${dir}_online/decode_large_$data/fbwer.txt
-    fi
-  done
-fi
-
 # https://github.com/kaldi-asr/kaldi/blob/master/egs/librispeech/s5/local/lookahead/run_lookahead.sh
-if [ $stage -le 18 ]; then
+if [ $stage -le 16 ]; then
   msg "$0: generating dnn graph (lookahead)"
-  export LD_LIBRARY_PATH=${KALDI_ROOT}/tools/openfst/lib/fst
+  export LD_LIBRARY_PATH=$KALDI_ROOT/tools/openfst/lib/fst
   prf utils/mkgraph_lookahead.sh --self-loop-scale 1.0 \
       data/lang_test_small $tree_dir $tree_dir/graph_small_lookahead || exit 1;
 fi
 
 model_dir=model-$(date +'%Y%m%d_%H%M')
 local/vosk/create_model_dir.sh $model_dir || exit 1
-
 msg "$0: success! check your model at '$model_dir'"
-
-# https://superuser.com/questions/294161/unix-linux-find-and-sort-by-date-modified
-echo "------------ wrapping results up ------------"
-find -name fbwer.txt -printf "%T@ %Tc %p\n" | sort -n | awk '{print $NF}' | \
-  xargs cat | grep online | grep large

@@ -37,6 +37,8 @@ bash run_gmm.sh || exit 1
 #       (the example above assumes you have 4 NVIDIA cards)
 bash run_tdnn.sh || exit 1
 
+bash run_decode.sh || exit 1
+
 e_time=$(date +'%F_%T')
 
 echo "$0: success"
